@@ -1,3 +1,10 @@
 {
-  "builder": "dockerfile"
+  "build": {
+    "builder": "nixpacks"
+  },
+  "deploy": {
+    "startCommand": "bun dist/index.js",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 30
+  }
 }

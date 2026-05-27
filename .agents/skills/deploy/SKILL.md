@@ -1,37 +1,50 @@
 # Skill: deploy
 
 ## Description
-Validate, commit staged changes, and push to Codeberg to trigger a Railway redeploy.
+Push to Codeberg and deploy the current branch to Railway by uploading source directly via the Railway CLI.
 
 ## Triggers
 - When the user wants to ship changes to production
 - Invoked explicitly — never run automatically
 
+## How it works
+
+Railway is not connected to a git host. Instead, `railway up` uploads the current working directory directly to Railway, which builds it using Nixpacks (auto-detected from `bun.lock`) and deploys it.
+
+The pre-deploy gate (type-check + test + build) is run locally before upload so broken code never reaches Railway.
+
+## Prerequisites
+
+Railway CLI authenticated — one of:
+- `RAILWAY_TOKEN` environment variable set
+- Or run `bunx @railway/cli login` once to cache credentials locally
+
 ## Repository Context
 
 **Remote:** `https://codeberg.org/maenu/wyss-portofolio.git`  
-**Working branch:** `develop`  
-**Railway** auto-deploys on push to the configured branch.
+**Active branch:** `develop`  
+**Railway builder:** Nixpacks (configured in `railway.json`)  
+**Start command:** `bun dist/index.js`  
+**Health check:** `GET /health`
 
-**Never commit:**
-- `.env.local` (in `.gitignore`)
-- `.env` or any file containing secrets
-- `dist/` (build output)
-- `node_modules/`
-- `.astro/` (generated types)
-- `.claude/settings.local.json`
+**Never deploy with:**
+- `.env.local` — Nixpacks ignores `.gitignore`-listed files; confirm it is not uploaded
+- Failing type-check, tests, or build
 
 ## Steps
 
-1. Run `/type-check` skill — fix all TS errors first.
-2. Run `/test` skill — fix all test failures first.
-3. Run `/build` skill — confirm build passes.
-4. Run `git status` and `git diff --stat` — show the user a summary of what will be committed.
-5. Ask the user to confirm or provide a commit message. Write one if they don't.
-6. Stage only the relevant files by name — never `git add -A` or `git add .`.
-7. Commit with the confirmed message.
-8. Run `git push origin develop`.
-9. Confirm push succeeded. Remind the user to check the Railway dashboard for deploy status.
+1. Run `bun run type-check` — fix all errors before continuing.
+2. Run `bun test` — fix all failures before continuing.
+3. Run `bun run build` — confirm the build passes locally.
+4. Show `git status` — confirm no secrets or build artifacts are untracked.
+5. Push to Codeberg: `git push origin develop`.
+6. Upload and deploy to Railway:
+   ```bash
+   bunx @railway/cli up --detach
+   ```
+7. Confirm with: `bunx @railway/cli status` — wait for deploy status to show as `SUCCESS`.
 
 ## Success Criteria
-`git push` exits with code 0. The commit appears on Codeberg.
+- `git push` exits 0.
+- `railway up` exits 0 and prints a deployment URL.
+- `/health` on the Railway domain returns `{"status":"ok"}`.
