@@ -1,6 +1,6 @@
 import { buildConfig } from 'payload';
 import { postgresAdapter } from '@payloadcms/db-postgres';
-import { slateEditor } from '@payloadcms/richtext-slate';
+import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { s3Storage } from '@payloadcms/storage-s3';
 
 import { Posts } from './collections/Posts';
@@ -27,7 +27,7 @@ export default buildConfig({
     },
   }),
 
-  editor: slateEditor({}),
+  editor: lexicalEditor({}),
 
   plugins: [
     ...(r2Enabled
