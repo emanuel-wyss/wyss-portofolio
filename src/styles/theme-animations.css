@@ -1,0 +1,482 @@
+/* src/styles/theme-animations.css */
+/* Cutting-edge CSS animations, filters, and effects based on weather/season */
+
+:root {
+  /* Animation state variables */
+  --animation-intensity: 1;
+  --particle-count: 15;
+  --blur-amount: 0px;
+  --shadow-intensity: 0.3;
+  --wind-strength: 1;
+}
+
+/* ==================== PARTICLE SYSTEM ==================== */
+
+@property --particle-opacity {
+  syntax: '<number>';
+  initial-value: 0;
+  inherits: true;
+}
+
+@property --particle-y {
+  syntax: '<length>';
+  initial-value: 0px;
+  inherits: true;
+}
+
+@property --particle-x {
+  syntax: '<length>';
+  initial-value: 0px;
+  inherits: true;
+}
+
+/* Rain effect */
+@keyframes rainDrop {
+  0% {
+    --particle-y: 0px;
+    --particle-opacity: 0;
+  }
+  10% {
+    --particle-opacity: 1;
+  }
+  90% {
+    --particle-opacity: 1;
+  }
+  100% {
+    --particle-y: 100vh;
+    --particle-opacity: 0;
+  }
+}
+
+/* Snow effect */
+@keyframes snowFall {
+  0% {
+    --particle-y: -10px;
+    --particle-x: 0px;
+    --particle-opacity: 0;
+  }
+  10% {
+    --particle-opacity: 1;
+  }
+  90% {
+    --particle-opacity: 1;
+  }
+  100% {
+    --particle-y: 100vh;
+    --particle-x: calc(50px * sin(var(--particle-x, 0)));
+    --particle-opacity: 0;
+  }
+}
+
+/* Wind/Leaf effect */
+@keyframes windSway {
+  0% {
+    --particle-y: 0px;
+    --particle-x: 0px;
+    --particle-opacity: 0;
+    transform: rotate(0deg);
+  }
+  25% {
+    --particle-x: 30px;
+    --particle-opacity: 1;
+  }
+  50% {
+    --particle-x: -20px;
+  }
+  75% {
+    --particle-x: 40px;
+    --particle-opacity: 1;
+  }
+  100% {
+    --particle-y: 100vh;
+    --particle-x: -50px;
+    --particle-opacity: 0;
+    transform: rotate(360deg);
+  }
+}
+
+/* Lightning effect for storms */
+@keyframes lightning {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0;
+  }
+  22% {
+    opacity: 1;
+    filter: brightness(2) drop-shadow(0 0 20px var(--particle-color));
+  }
+  24% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Fog/mist effect */
+@keyframes fogDrift {
+  0% {
+    --particle-x: -100%;
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.2;
+  }
+  75% {
+    opacity: 0.3;
+  }
+  100% {
+    --particle-x: 100vw;
+    opacity: 0;
+  }
+}
+
+/* Sunny glow effect */
+@keyframes sunGlow {
+  0% {
+    filter: brightness(1) drop-shadow(0 0 0px var(--particle-color));
+  }
+  50% {
+    filter: brightness(1.1) drop-shadow(0 0 30px var(--particle-color));
+  }
+  100% {
+    filter: brightness(1) drop-shadow(0 0 0px var(--particle-color));
+  }
+}
+
+/* Cloud drift */
+@keyframes cloudDrift {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100vw);
+  }
+}
+
+/* ==================== BACKGROUND EFFECTS ==================== */
+
+/* Base effect layer */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  backdrop-filter: blur(var(--blur-amount));
+  background: radial-gradient(
+    circle at 20% 50%,
+    var(--primary-light) 0%,
+    transparent 50%
+  );
+  opacity: calc(0.05 * var(--animation-intensity));
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -2;
+  background: 
+    radial-gradient(circle at 80% 20%, var(--accent-light) 0%, transparent 30%),
+    radial-gradient(circle at 40% 80%, var(--primary-light) 0%, transparent 40%);
+  opacity: calc(0.03 * var(--animation-intensity));
+  animation: colorFlow 15s ease-in-out infinite;
+}
+
+@keyframes colorFlow {
+  0%, 100% {
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    filter: hue-rotate(5deg);
+  }
+}
+
+/* ==================== WEATHER-SPECIFIC EFFECTS ==================== */
+
+/* Rain */
+.weather-rain {
+  position: relative;
+  overflow: hidden;
+}
+
+.weather-rain::before {
+  content: '';
+  position: fixed;
+  top: -10px;
+  left: -10px;
+  width: calc(100% + 20px);
+  height: calc(100% + 20px);
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent calc(100% / var(--particle-count)),
+      var(--particle-color) calc(100% / var(--particle-count)),
+      var(--particle-color) calc(100% / var(--particle-count) + 1px)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent calc(100% / var(--particle-count) * 0.7),
+      var(--particle-color) calc(100% / var(--particle-count) * 0.7),
+      var(--particle-color) calc(100% / var(--particle-count) * 0.7 + 1px)
+    );
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.2;
+  animation: rainDrop calc(1s / var(--animation-intensity)) linear infinite;
+}
+
+/* Snow */
+.weather-snow::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  background: 
+    radial-gradient(circle, var(--particle-color) 2px, transparent 2px);
+  background-size: calc(100% / var(--particle-count)) calc(100% / var(--particle-count));
+  animation: snowFall calc(3s / var(--animation-intensity)) linear infinite;
+  opacity: 0.6;
+}
+
+/* Fog */
+.weather-fog {
+  filter: blur(var(--blur-amount));
+}
+
+.weather-fog::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  pointer-events: none;
+  background: 
+    radial-gradient(ellipse at 20% 50%, var(--particle-color) 0%, transparent 30%),
+    radial-gradient(ellipse at 60% 30%, var(--particle-color) 0%, transparent 40%),
+    radial-gradient(ellipse at 80% 70%, var(--particle-color) 0%, transparent 35%);
+  opacity: 0.15;
+  animation: fogDrift calc(8s / var(--animation-intensity)) ease-in-out infinite;
+  z-index: -1;
+}
+
+/* Storm */
+.weather-stormy::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: 
+    radial-gradient(circle 100px at 20% 30%, var(--particle-color) 0%, transparent 100%),
+    radial-gradient(circle 80px at 70% 60%, var(--particle-color) 0%, transparent 100%),
+    radial-gradient(circle 120px at 40% 80%, var(--particle-color) 0%, transparent 100%);
+  animation: lightning calc(8s / var(--animation-intensity)) infinite;
+  z-index: -1;
+}
+
+/* Windy */
+.weather-windy {
+  animation: pageWind calc(4s / var(--wind-strength)) ease-in-out infinite;
+}
+
+@keyframes pageWind {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(2px);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+}
+
+/* Sunny */
+.weather-sunny {
+  position: relative;
+}
+
+.weather-sunny::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: 
+    radial-gradient(
+      circle 300px at 10% 20%,
+      var(--particle-color) 0%,
+      transparent 100%
+    );
+  opacity: 0.15;
+  animation: sunGlow calc(3s / var(--animation-intensity)) ease-in-out infinite;
+  z-index: -1;
+}
+
+/* Cloudy */
+.weather-cloudy {
+  filter: brightness(0.95) saturate(0.9);
+}
+
+.weather-cloudy::before {
+  content: '';
+  position: fixed;
+  top: -100px;
+  left: 0;
+  width: 200%;
+  height: calc(100% + 200px);
+  pointer-events: none;
+  background: 
+    radial-gradient(ellipse 200px 100px at 25% 25%, var(--particle-color) 0%, transparent 60%),
+    radial-gradient(ellipse 250px 120px at 60% 40%, var(--particle-color) 0%, transparent 60%),
+    radial-gradient(ellipse 180px 90px at 85% 60%, var(--particle-color) 0%, transparent 60%);
+  opacity: 0.08;
+  animation: cloudDrift calc(20s / var(--wind-strength)) linear infinite;
+  z-index: -1;
+}
+
+/* ==================== ELEMENT-LEVEL EFFECTS ==================== */
+
+/* Page transition blur */
+html.page-transition {
+  animation: pageTransition 0.4s ease-out forwards;
+}
+
+@keyframes pageTransition {
+  from {
+    filter: blur(var(--blur-amount)) brightness(1);
+  }
+  to {
+    filter: blur(0px) brightness(1);
+  }
+}
+
+/* Floating elements in certain weathers */
+.weather-windy [class*='card'],
+.weather-windy [class*='section'] {
+  animation: subtleFloat calc(3s / var(--wind-strength)) ease-in-out infinite;
+}
+
+@keyframes subtleFloat {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-2px) translateX(1px);
+  }
+  50% {
+    transform: translateY(-4px) translateX(-1px);
+  }
+  75% {
+    transform: translateY(-2px) translateX(1px);
+  }
+}
+
+/* Glow effect for special events */
+.special-event {
+  animation: eventGlow calc(2s / var(--animation-intensity)) ease-in-out infinite;
+}
+
+@keyframes eventGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 0px var(--accent));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 15px var(--accent));
+    transform: scale(1.01);
+  }
+}
+
+/* ==================== TEXT EFFECTS ==================== */
+
+/* Text shadows with weather intensity */
+body {
+  text-shadow: 
+    calc(1px * var(--shadow-intensity)) calc(1px * var(--shadow-intensity)) 
+    calc(2px * var(--shadow-intensity)) rgba(0, 0, 0, 0.2);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  text-shadow: 
+    calc(2px * var(--shadow-intensity)) calc(2px * var(--shadow-intensity)) 
+    calc(4px * var(--shadow-intensity)) rgba(0, 0, 0, calc(0.3 * var(--shadow-intensity)));
+}
+
+/* ==================== TRANSITION SMOOTHING ==================== */
+
+/* Smooth color transitions when theme changes */
+:root,
+html,
+body,
+* {
+  transition: 
+    background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==================== PERFORMANCE OPTIMIZATION ==================== */
+
+/* Disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  :root {
+    --particle-count: 0;
+    --animation-intensity: 0.1;
+  }
+}
+
+/* ==================== PRINT STYLES ==================== */
+
+@media print {
+  body::before,
+  body::after,
+  .weather-rain::before,
+  .weather-snow::before,
+  .weather-fog::before,
+  .weather-stormy::before,
+  .weather-sunny::before,
+  .weather-cloudy::before {
+    display: none !important;
+  }
+  
+  :root {
+    --animation-intensity: 0;
+    --particle-count: 0;
+    --blur-amount: 0px;
+  }
+}

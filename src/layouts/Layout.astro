@@ -1,0 +1,284 @@
+---
+// src/layouts/Layout.astro
+import { ClientRouter } from 'astro:transitions';
+import SEO from '@/components/SEO.astro';
+import Footer from '@/components/Footer.astro';
+import ThemeProvider from '@/components/ThemeProvider.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  url?: string;
+  type?: 'website' | 'article' | 'profile';
+  tags?: string[];
+}
+
+const {
+  title,
+  description,
+  image,
+  url,
+  type = 'website',
+  tags = [],
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{title} | Wyss.rocks</title>
+    <SEO
+      title={title}
+      description={description}
+      image={image}
+      url={url}
+      type={type}
+      tags={tags}
+    />
+    <ThemeProvider />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <ClientRouter />
+  </head>
+  <body>
+    <main>
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    /* Colors */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --text-primary: #000000;
+    --text-secondary: #666666;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --accent: #0066ff;
+    --accent-light: #e6f0ff;
+
+    /* Typography */
+    --font-display: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'Geist Mono', monospace;
+
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 4rem;
+    --spacing-2xl: 8rem;
+
+    /* Z-index */
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-fixed: 300;
+    --z-modal: 400;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #999999;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --accent: #00a8ff;
+      --accent-light: #003d66;
+    }
+  }
+
+  /* Reset */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  main {
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* Typography */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: var(--spacing-md);
+  }
+
+  h1 {
+    font-size: 3rem;
+    animation: fadeInUp 0.8s ease-out;
+  }
+
+  h2 {
+    font-size: 2rem;
+    animation: fadeInUp 0.8s ease-out 0.1s backwards;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+  }
+
+  p {
+    margin-bottom: var(--spacing-md);
+    color: var(--text-secondary);
+  }
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  a:hover {
+    color: var(--text-primary);
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background: var(--accent-light);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+  }
+
+  pre code {
+    padding: 0;
+    background: transparent;
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Utilities */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+  }
+
+  .grid {
+    display: grid;
+    gap: var(--spacing-lg);
+  }
+
+  .grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  .grid-3 {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 2rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+    }
+
+    .container {
+      padding: 0 var(--spacing-md);
+    }
+  }
+
+  /* Page transitions */
+  ::view-transition-old(root) {
+    animation: fadeOut 0.3s ease-out;
+  }
+
+  ::view-transition-new(root) {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeOut {
+    to {
+      opacity: 0;
+    }
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+  }
+</style>

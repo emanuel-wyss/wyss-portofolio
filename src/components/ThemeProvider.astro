@@ -1,0 +1,237 @@
+---
+// src/components/ThemeProvider.astro
+/**
+ * ThemeProvider - Initializes and manages the dynamic theme system
+ * Place this in your main Layout component
+ */
+
+import { getCurrentSeason, getCurrentSpecialEvent, isDaytime, getThemeVariables, getThemeConfig } from '@/lib/theme';
+import type { WeatherType } from '@/lib/theme';
+
+// Get current theme config
+const season = getCurrentSeason();
+const specialEvent = getCurrentSpecialEvent();
+const daytime = isDaytime();
+const config = getThemeConfig();
+const theme = getThemeVariables(config);
+
+// Convert theme to CSS variable declarations
+const themeCSS = Object.entries(theme)
+  .map(([key, value]) => {
+    if (typeof value === 'number') {
+      return `${key}: ${value};`;
+    }
+    return `${key}: ${value};`;
+  })
+  .join('\n  ');
+---
+
+<!-- Import theme animations -->
+<link rel="stylesheet" href="/src/styles/theme-animations.css" />
+
+<!-- Apply theme CSS variables -->
+<style define:vars={theme}>
+  :root {
+    {themeCSS}
+  }
+</style>
+
+<!-- Theme script for runtime updates and weather selection -->
+<script>
+  import {
+    getThemeVariables,
+    getThemeConfig,
+    applyTheme,
+    getCurrentSeason,
+    getCurrentSpecialEvent,
+    isDaytime,
+    type WeatherType,
+  } from '@/lib/theme';
+
+  // Theme control interface
+  class ThemeManager {
+    private currentWeather: WeatherType | null = null;
+    private autoUpdate = true;
+
+    constructor() {
+      this.initializeTheme();
+      this.setupWeatherSelector();
+      this.setupAutoUpdate();
+    }
+
+    private initializeTheme(): void {
+      const config = getThemeConfig();
+      const variables = getThemeVariables(config);
+      applyTheme(variables);
+      this.updateWeatherClass(config.weather);
+    }
+
+    private updateWeatherClass(weather: WeatherType): void {
+      // Remove existing weather classes
+      document.documentElement.classList.remove(
+        'weather-sunny',
+        'weather-cloudy',
+        'weather-rainy',
+        'weather-foggy',
+        'weather-stormy',
+        'weather-windy',
+        'weather-snowy'
+      );
+
+      // Add new weather class
+      const className = `weather-${weather}`;
+      document.documentElement.classList.add(className);
+      this.currentWeather = weather;
+
+      // Store preference
+      localStorage.setItem('preferred-weather', weather);
+    }
+
+    public setWeather(weather: WeatherType): void {
+      this.autoUpdate = false;
+      const config = getThemeConfig(weather);
+      const variables = getThemeVariables(config);
+      applyTheme(variables);
+      this.updateWeatherClass(weather);
+    }
+
+    private setupWeatherSelector(): void {
+      // Create weather selector widget
+      const selector = document.createElement('div');
+      selector.id = 'weather-selector';
+      selector.className = 'weather-selector';
+      selector.innerHTML = `
+        <div class="weather-selector-content">
+          <label for="weather-toggle">Weather:</label>
+          <select id="weather-toggle" aria-label="Select weather theme">
+            <option value="">Auto (System)</option>
+            <option value="sunny">☀️ Sunny</option>
+            <option value="cloudy">☁️ Cloudy</option>
+            <option value="rainy">🌧️ Rainy</option>
+            <option value="foggy">🌫️ Foggy</option>
+            <option value="stormy">⛈️ Stormy</option>
+            <option value="windy">💨 Windy</option>
+            <option value="snowy">❄️ Snowy</option>
+          </select>
+        </div>
+      `;
+
+      // Add styles
+      const style = document.createElement('style');
+      style.textContent = `
+        #weather-selector {
+          position: fixed;
+          top: 1rem;
+          right: 1rem;
+          z-index: 1000;
+          background: var(--bg-secondary);
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          padding: 1rem;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          opacity: 0.9;
+          transition: opacity 0.3s ease;
+        }
+
+        #weather-selector:hover {
+          opacity: 1;
+        }
+
+        .weather-selector-content {
+          display: flex;
+          gap: 0.5rem;
+          align-items: center;
+          font-size: 0.875rem;
+        }
+
+        #weather-toggle {
+          background: var(--bg-primary);
+          color: var(--text-primary);
+          border: 1px solid var(--border-color);
+          padding: 0.5rem;
+          border-radius: 4px;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: 0.875rem;
+        }
+
+        #weather-toggle:hover {
+          border-color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+          #weather-selector {
+            top: auto;
+            bottom: 1rem;
+            right: 1rem;
+            padding: 0.75rem;
+          }
+
+          .weather-selector-content {
+            flex-direction: column;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+      document.body.appendChild(selector);
+
+      // Setup event listener
+      const select = document.getElementById('weather-toggle') as HTMLSelectElement;
+      if (select) {
+        select.addEventListener('change', (e) => {
+          const weather = (e.target as HTMLSelectElement).value as WeatherType;
+          if (weather) {
+            this.setWeather(weather);
+          } else {
+            this.autoUpdate = true;
+            this.initializeTheme();
+            localStorage.removeItem('preferred-weather');
+          }
+        });
+
+        // Restore preference
+        const preferred = localStorage.getItem('preferred-weather');
+        if (preferred) {
+          select.value = preferred;
+          this.setWeather(preferred as WeatherType);
+        }
+      }
+    }
+
+    private setupAutoUpdate(): void {
+      // Update theme every minute to catch season/special event changes
+      setInterval(() => {
+        if (!this.autoUpdate) return;
+
+        const config = getThemeConfig();
+        const variables = getThemeVariables(config);
+        applyTheme(variables);
+        this.updateWeatherClass(config.weather);
+      }, 60000);
+    }
+  }
+
+  // Initialize on page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      new ThemeManager();
+    });
+  } else {
+    new ThemeManager();
+  }
+
+  // Also update on visibility change (when user returns to tab)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      new ThemeManager();
+    }
+  });
+</script>
+
+<style>
+  /* Smooth theme transitions */
+  :global(:root) {
+    transition: --primary 0.8s ease, --accent 0.8s ease, --bg-primary 0.8s ease,
+      --text-primary 0.8s ease;
+  }
+</style>

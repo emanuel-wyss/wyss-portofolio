@@ -1,0 +1,1 @@
+Run `bun test` and fix every failing test. Read the test file and the source it exercises, understand why it fails, fix the source (not the test) unless the test itself is wrong. Re-run until all tests pass with 0 failures.
