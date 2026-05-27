@@ -8,6 +8,7 @@ import { Gallery } from './collections/Gallery';
 import { Snippets } from './collections/Snippets';
 import { Media } from './collections/Media';
 import { SiteConfig } from './collections/SiteConfig';
+import { Users } from './collections/Users';
 
 const r2Enabled = Boolean(process.env.R2_ACCOUNT_ID);
 
@@ -18,7 +19,7 @@ export default buildConfig({
     user: 'users',
   },
 
-  collections: [Posts, Gallery, Snippets, Media, SiteConfig],
+  collections: [Users, Posts, Gallery, Snippets, Media, SiteConfig],
 
   db: postgresAdapter({
     pool: {
@@ -55,11 +56,17 @@ export default buildConfig({
   csrf: [
     'https://wyss.rocks',
     'https://www.wyss.rocks',
+    'https://web-production-3e6e0.up.railway.app',
     'http://localhost:3000',
     'http://localhost:3001',
   ],
 
-  cors: ['https://wyss.rocks', 'https://www.wyss.rocks', 'http://localhost:3000'],
+  cors: [
+    'https://wyss.rocks',
+    'https://www.wyss.rocks',
+    'https://web-production-3e6e0.up.railway.app',
+    'http://localhost:3000',
+  ],
 
   telemetry: false,
 });

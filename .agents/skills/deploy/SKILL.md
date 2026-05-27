@@ -23,6 +23,7 @@ Railway CLI authenticated — one of:
 
 **Remote:** `https://codeberg.org/maenu/wyss-portofolio.git`  
 **Active branch:** `develop`  
+**Railway domain (develop):** `https://web-production-3e6e0.up.railway.app` (port 8080 — set via `PORT` env var on Railway)  
 **Railway builder:** Nixpacks (configured in `railway.json`)  
 **Start command:** `bun dist/index.js`  
 **Health check:** `GET /health`
@@ -47,4 +48,4 @@ Railway CLI authenticated — one of:
 ## Success Criteria
 - `git push` exits 0.
 - `railway up` exits 0 and prints a deployment URL.
-- `/health` on the Railway domain returns `{"status":"ok"}`.
+- `GET https://web-production-3e6e0.up.railway.app/health` returns `{"status":"ok"}`.

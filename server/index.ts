@@ -17,6 +17,7 @@ app.use(
       const allowedOrigins = [
         'https://wyss.rocks',
         'https://www.wyss.rocks',
+        'https://web-production-3e6e0.up.railway.app',
         'http://localhost:3000',
       ];
       return allowedOrigins.includes(origin || '') ? origin : 'https://wyss.rocks';
