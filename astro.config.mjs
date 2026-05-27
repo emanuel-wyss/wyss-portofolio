@@ -26,6 +26,7 @@ export default defineConfig({
 
   // Build output
   output: 'static',
+  outDir: './dist/public',
   
   vite: {
     ssr: {

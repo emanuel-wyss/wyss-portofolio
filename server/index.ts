@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { serveStatic } from 'hono/bun';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { getPayload } from 'payload';
@@ -281,6 +282,9 @@ app.get('/api/site-config', async (c) => {
     return c.json({ success: false, error: 'Failed to fetch site config' }, 500);
   }
 });
+
+// Serve Astro static build for all other routes
+app.use('*', serveStatic({ root: './dist/public' }));
 
 // Error handling
 app.onError((err, c) => {
