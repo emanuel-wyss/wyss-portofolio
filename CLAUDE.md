@@ -9,7 +9,7 @@ Reusable agent skills for this repository live in `.agents/skills/`. Each skill 
 | Run / fix tests | `.agents/skills/test/SKILL.md` |
 | Production build | `.agents/skills/build/SKILL.md` |
 | Start dev server | `.agents/skills/dev/SKILL.md` |
-| Commit + push | `.agents/skills/deploy/SKILL.md` |
+| Commit + push | `.agents/skills/commit/SKILL.md` |
 | DB migrations | `.agents/skills/migrate/SKILL.md` |
 | New content type | `.agents/skills/add-collection/SKILL.md` |
 | New route/page | `.agents/skills/add-page/SKILL.md` |
