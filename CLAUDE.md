@@ -1,4 +1,21 @@
 
+## Agent Skills
+
+Reusable agent skills for this repository live in `.agents/skills/`. Each skill is a `SKILL.md` with full context, steps, and success criteria. Invoke the relevant skill before acting on these tasks:
+
+| Task | Skill |
+|------|-------|
+| TypeScript errors | `.agents/skills/type-check/SKILL.md` |
+| Run / fix tests | `.agents/skills/test/SKILL.md` |
+| Production build | `.agents/skills/build/SKILL.md` |
+| Start dev server | `.agents/skills/dev/SKILL.md` |
+| Commit + push | `.agents/skills/deploy/SKILL.md` |
+| DB migrations | `.agents/skills/migrate/SKILL.md` |
+| New content type | `.agents/skills/add-collection/SKILL.md` |
+| New route/page | `.agents/skills/add-page/SKILL.md` |
+
+---
+
 Default to using Bun instead of Node.js.
 
 - Use `bun <file>` instead of `node <file>` or `ts-node <file>`

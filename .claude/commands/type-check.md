@@ -1,1 +1,0 @@
-Run `bun run type-check` and fix every TypeScript error reported. For each error: read the relevant file, understand the root cause, apply the minimal correct fix. Re-run until the output is clean with no errors.
