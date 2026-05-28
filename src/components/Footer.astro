@@ -86,9 +86,14 @@ const getSocialIcon = (platform: string) => {
       </div>
     )}
 
-    <!-- Status -->
-    <div class="footer-section status">
-      <p class="status-text">🟢 Available for work</p>
+    <!-- Theme Info -->
+    <div class="footer-section theme-info">
+      <p class="theme-info-title">Current theme:</p>
+      <ul class="theme-info-list">
+        <li id="footer-weather"></li>
+        <li id="footer-daytime"></li>
+        <li id="footer-season"></li>
+      </ul>
     </div>
   </div>
 
@@ -205,10 +210,21 @@ const getSocialIcon = (platform: string) => {
     border-color: var(--accent, #0066ff);
   }
 
-  .status-text {
+  .theme-info-title {
     font-size: 0.875rem;
     color: var(--text-secondary, rgba(0, 0, 0, 0.6));
     margin: 0;
+  }
+
+  .theme-info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
   }
 
   .footer-divider {

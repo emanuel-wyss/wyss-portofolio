@@ -36,7 +36,7 @@ const themeCSS = Object.entries(theme)
   }
 </style>
 
-<!-- Theme script for runtime updates and weather selection -->
+<!-- Theme script for runtime weather detection -->
 <script>
   import {
     getThemeVariables,
@@ -46,28 +46,141 @@ const themeCSS = Object.entries(theme)
     getCurrentSpecialEvent,
     isDaytime,
     type WeatherType,
+    type SpecialEventType,
   } from '@/lib/theme';
 
-  // Theme control interface
+  /**
+   * Map WMO weather codes (used by Open-Meteo) to theme WeatherType.
+   * https://open-meteo.com/en/docs#weathervariables
+   */
+  function wmoCodeToWeather(code: number, windSpeed: number): WeatherType {
+    if (code <= 1) return 'sunny';
+    if (code <= 3) return 'cloudy';
+    if (code >= 95) return 'stormy'; // thunderstorm
+    if (code >= 71 && code <= 77) return 'snowy';
+    if (code >= 85 && code <= 86) return 'snowy'; // snow showers
+    if (code >= 51 && code <= 67) return 'rainy'; // drizzle & freezing rain
+    if (code >= 80 && code <= 82) return 'rainy'; // rain showers
+    if (code === 45 || code === 48) return 'foggy';
+    if (windSpeed > 40) return 'windy'; // > 40 km/h
+    return 'cloudy';
+  }
+
+  const CACHE_KEY = 'weather-cache';
+  const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+  interface WeatherCache {
+    weather: WeatherType;
+    timestamp: number;
+  }
+
+  function getCachedWeather(): WeatherType | null {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const cache: WeatherCache = JSON.parse(raw);
+      if (Date.now() - cache.timestamp < CACHE_TTL) return cache.weather;
+    } catch { /* ignore corrupt cache */ }
+    return null;
+  }
+
+  function setCachedWeather(weather: WeatherType): void {
+    const cache: WeatherCache = { weather, timestamp: Date.now() };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  }
+
+  async function fetchWeatherFromIP(): Promise<WeatherType> {
+    const cached = getCachedWeather();
+    if (cached) return cached;
+
+    try {
+      // 1. Get approximate location from IP (city-level, no precise coords)
+      const geoRes = await fetch('https://ipapi.co/json/');
+      if (!geoRes.ok) throw new Error('Geo lookup failed');
+      const geo = await geoRes.json();
+      const { latitude, longitude } = geo;
+
+      if (!latitude || !longitude) throw new Error('No coordinates');
+
+      // 2. Get current weather from Open-Meteo (free, no key)
+      const weatherRes = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=weather_code,wind_speed_10m`
+      );
+      if (!weatherRes.ok) throw new Error('Weather API failed');
+      const weather = await weatherRes.json();
+
+      const code: number = weather.current.weather_code;
+      const wind: number = weather.current.wind_speed_10m;
+
+      const result = wmoCodeToWeather(code, wind);
+      setCachedWeather(result);
+      return result;
+    } catch {
+      return 'sunny';
+    }
+  }
+
+  const WEATHER_LABELS: Record<WeatherType, string> = {
+    sunny: '☀️ Sunny',
+    cloudy: '☁️ Cloudy',
+    rainy: '🌧️ Rainy',
+    foggy: '🌫️ Foggy',
+    stormy: '⛈️ Stormy',
+    windy: '💨 Windy',
+    snowy: '❄️ Snowy',
+  };
+
+  // Subtle animated GIFs for special events (small, looping, transparent-friendly)
+  const EVENT_GIFS: Record<SpecialEventType, { src: string; alt: string }> = {
+    christmas: {
+      src: 'https://media.giphy.com/media/3ohfFopqHDT7vcMM2A/giphy.gif',
+      alt: 'Christmas tree',
+    },
+    easter: {
+      src: 'https://media.giphy.com/media/l378p60yRSCeVQyaI/giphy.gif',
+      alt: 'Easter bunny',
+    },
+    halloween: {
+      src: 'https://media.giphy.com/media/xUNd9LDJpnqWVjmNvW/giphy.gif',
+      alt: 'Halloween pumpkin',
+    },
+    newyear: {
+      src: 'https://media.giphy.com/media/l0MYyv6UK0Bd4DE76/giphy.gif',
+      alt: 'New Year fireworks',
+    },
+    valentines: {
+      src: 'https://media.giphy.com/media/26BRv0ThflsHCqDrG/giphy.gif',
+      alt: 'Valentine hearts',
+    },
+  };
+
   class ThemeManager {
     private currentWeather: WeatherType | null = null;
-    private autoUpdate = true;
 
     constructor() {
-      this.initializeTheme();
-      this.setupWeatherSelector();
-      this.setupAutoUpdate();
+      this.init();
     }
 
-    private initializeTheme(): void {
-      const config = getThemeConfig();
+    private async init(): Promise<void> {
+      // Apply default theme immediately, then update with real weather
+      this.applyWeather('sunny');
+
+      const weather = await fetchWeatherFromIP();
+      this.applyWeather(weather);
+
+      // Re-check weather every hour (cache handles dedup)
+      setInterval(async () => {
+        const w = await fetchWeatherFromIP();
+        this.applyWeather(w);
+      }, CACHE_TTL);
+    }
+
+    private applyWeather(weather: WeatherType): void {
+      const config = getThemeConfig(weather);
       const variables = getThemeVariables(config);
       applyTheme(variables);
-      this.updateWeatherClass(config.weather);
-    }
 
-    private updateWeatherClass(weather: WeatherType): void {
-      // Remove existing weather classes
+      // Update weather class on <html>
       document.documentElement.classList.remove(
         'weather-sunny',
         'weather-cloudy',
@@ -77,154 +190,99 @@ const themeCSS = Object.entries(theme)
         'weather-windy',
         'weather-snowy'
       );
-
-      // Add new weather class
-      const className = `weather-${weather}`;
-      document.documentElement.classList.add(className);
+      document.documentElement.classList.add(`weather-${weather}`);
       this.currentWeather = weather;
 
-      // Store preference
-      localStorage.setItem('preferred-weather', weather);
-    }
+      // Update footer theme info
+      const weatherEl = document.getElementById('footer-weather');
+      if (weatherEl) weatherEl.textContent = `weather: ${WEATHER_LABELS[weather]}`;
 
-    public setWeather(weather: WeatherType): void {
-      this.autoUpdate = false;
-      const config = getThemeConfig(weather);
-      const variables = getThemeVariables(config);
-      applyTheme(variables);
-      this.updateWeatherClass(weather);
-    }
+      const daytimeEl = document.getElementById('footer-daytime');
+      if (daytimeEl) daytimeEl.textContent = `daytime: ${isDaytime() ? '☀️ day' : '🌙 night'}`;
 
-    private setupWeatherSelector(): void {
-      // Create weather selector widget
-      const selector = document.createElement('div');
-      selector.id = 'weather-selector';
-      selector.className = 'weather-selector';
-      selector.innerHTML = `
-        <div class="weather-selector-content">
-          <label for="weather-toggle">Weather:</label>
-          <select id="weather-toggle" aria-label="Select weather theme">
-            <option value="">Auto (System)</option>
-            <option value="sunny">☀️ Sunny</option>
-            <option value="cloudy">☁️ Cloudy</option>
-            <option value="rainy">🌧️ Rainy</option>
-            <option value="foggy">🌫️ Foggy</option>
-            <option value="stormy">⛈️ Stormy</option>
-            <option value="windy">💨 Windy</option>
-            <option value="snowy">❄️ Snowy</option>
-          </select>
-        </div>
-      `;
-
-      // Add styles
-      const style = document.createElement('style');
-      style.textContent = `
-        #weather-selector {
-          position: fixed;
-          top: 1rem;
-          right: 1rem;
-          z-index: 1000;
-          background: var(--bg-secondary);
-          border: 1px solid var(--border-color);
-          border-radius: 8px;
-          padding: 1rem;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-          opacity: 0.9;
-          transition: opacity 0.3s ease;
-        }
-
-        #weather-selector:hover {
-          opacity: 1;
-        }
-
-        .weather-selector-content {
-          display: flex;
-          gap: 0.5rem;
-          align-items: center;
-          font-size: 0.875rem;
-        }
-
-        #weather-toggle {
-          background: var(--bg-primary);
-          color: var(--text-primary);
-          border: 1px solid var(--border-color);
-          padding: 0.5rem;
-          border-radius: 4px;
-          cursor: pointer;
-          font-family: inherit;
-          font-size: 0.875rem;
-        }
-
-        #weather-toggle:hover {
-          border-color: var(--accent);
-        }
-
-        @media (max-width: 768px) {
-          #weather-selector {
-            top: auto;
-            bottom: 1rem;
-            right: 1rem;
-            padding: 0.75rem;
-          }
-
-          .weather-selector-content {
-            flex-direction: column;
-          }
-        }
-      `;
-      document.head.appendChild(style);
-      document.body.appendChild(selector);
-
-      // Setup event listener
-      const select = document.getElementById('weather-toggle') as HTMLSelectElement;
-      if (select) {
-        select.addEventListener('change', (e) => {
-          const weather = (e.target as HTMLSelectElement).value as WeatherType;
-          if (weather) {
-            this.setWeather(weather);
-          } else {
-            this.autoUpdate = true;
-            this.initializeTheme();
-            localStorage.removeItem('preferred-weather');
-          }
-        });
-
-        // Restore preference
-        const preferred = localStorage.getItem('preferred-weather');
-        if (preferred) {
-          select.value = preferred;
-          this.setWeather(preferred as WeatherType);
-        }
+      const seasonEl = document.getElementById('footer-season');
+      if (seasonEl) {
+        const season = getCurrentSeason();
+        const special = getCurrentSpecialEvent();
+        const SEASON_LABELS: Record<string, string> = {
+          spring: '🌱 Spring',
+          summer: '🌻 Summer',
+          autumn: '🍂 Autumn',
+          winter: '❄️ Winter',
+        };
+        const SPECIAL_LABELS: Record<string, string> = {
+          christmas: '🎄 Christmas',
+          easter: '🐣 Easter',
+          halloween: '🎃 Halloween',
+          newyear: '🎆 New Year',
+          valentines: '💝 Valentine\'s',
+        };
+        seasonEl.textContent = `season: ${special ? SPECIAL_LABELS[special] : SEASON_LABELS[season]}`;
       }
+
+      // Special event GIF overlay
+      this.updateEventOverlay();
     }
 
-    private setupAutoUpdate(): void {
-      // Update theme every minute to catch season/special event changes
-      setInterval(() => {
-        if (!this.autoUpdate) return;
+    private updateEventOverlay(): void {
+      const special = getCurrentSpecialEvent();
+      let overlay = document.getElementById('event-overlay');
 
-        const config = getThemeConfig();
-        const variables = getThemeVariables(config);
-        applyTheme(variables);
-        this.updateWeatherClass(config.weather);
-      }, 60000);
+      if (!special) {
+        overlay?.remove();
+        return;
+      }
+
+      const gif = EVENT_GIFS[special];
+      if (!gif) return;
+
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'event-overlay';
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(overlay);
+
+        const style = document.createElement('style');
+        style.textContent = `
+          #event-overlay {
+            position: fixed;
+            top: 0.75rem;
+            left: 0.75rem;
+            width: 64px;
+            height: 64px;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0.7;
+            border-radius: 8px;
+            overflow: hidden;
+            mix-blend-mode: screen;
+          }
+          #event-overlay img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            #event-overlay { display: none; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      overlay.innerHTML = `<img src="${gif.src}" alt="${gif.alt}" loading="lazy" />`;
     }
   }
 
-  // Initialize on page load
+  // Initialize once
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      new ThemeManager();
-    });
+    document.addEventListener('DOMContentLoaded', () => new ThemeManager());
   } else {
     new ThemeManager();
   }
 
-  // Also update on visibility change (when user returns to tab)
+  // Re-apply when user returns to tab
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-      new ThemeManager();
-    }
+    if (!document.hidden) new ThemeManager();
   });
 </script>
 

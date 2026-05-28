@@ -208,12 +208,12 @@ body::after {
 /* ==================== WEATHER-SPECIFIC EFFECTS ==================== */
 
 /* Rain */
-.weather-rain {
+.weather-rainy {
   position: relative;
   overflow: hidden;
 }
 
-.weather-rain::before {
+.weather-rainy::before {
   content: '';
   position: fixed;
   top: -10px;
@@ -242,7 +242,7 @@ body::after {
 }
 
 /* Snow */
-.weather-snow::before {
+.weather-snowy::before {
   content: '';
   position: fixed;
   top: 0;
@@ -259,11 +259,11 @@ body::after {
 }
 
 /* Fog */
-.weather-fog {
+.weather-foggy {
   filter: blur(var(--blur-amount));
 }
 
-.weather-fog::before {
+.weather-foggy::before {
   content: '';
   position: fixed;
   top: 0;
@@ -465,9 +465,9 @@ body,
 @media print {
   body::before,
   body::after,
-  .weather-rain::before,
-  .weather-snow::before,
-  .weather-fog::before,
+  .weather-rainy::before,
+  .weather-snowy::before,
+  .weather-foggy::before,
   .weather-stormy::before,
   .weather-sunny::before,
   .weather-cloudy::before {
