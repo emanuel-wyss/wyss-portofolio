@@ -1,9 +1,8 @@
 ---
 // src/pages/index.astro
 import Layout from '@/layouts/Layout.astro';
-import { getFeed, getSiteConfig } from '@/lib/api';
+import { getSiteConfig } from '@/lib/api';
 
-const feed = await getFeed(1, 5, 'all');
 const siteConfig = await getSiteConfig();
 ---
 
@@ -30,40 +29,60 @@ const siteConfig = await getSiteConfig();
     </div>
   </section>
 
-  <!-- Latest Content -->
-  {feed.items.length > 0 && (
-    <section class="section">
-      <div class="container">
-        <h2>Latest</h2>
-        <div class="grid grid-3">
-          {feed.items.map((item, index) => (
-            <article class="card" style={`animation-delay: ${index * 100}ms`}>
-              <span class={`type-badge type-${item.type}`}>
-                {item.type === 'post' ? '📝 Post' : item.type === 'snippet' ? '💻 Snippet' : '📸 Gallery'}
-              </span>
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-              <div class="meta">
-                {item.category && <span class="category">{item.category}</span>}
-                {item.language && <span class="category">{item.language}</span>}
-                <span class="date">
-                  {new Date(item.publishedAt).toLocaleDateString()}
-                </span>
-              </div>
-              <a
-                href={item.type === 'post' ? `/posts/${item.slug}` : item.type === 'snippet' ? `/snippets/${item.slug}` : `/gallery/${item.slug}`}
-                class="read-more"
-              >
-                {item.type === 'post' ? 'Read More' : item.type === 'snippet' ? 'View Snippet' : 'View Album'} →
-              </a>
-            </article>
-          ))}
-        </div>
-        <a href="/work" class="view-all">View All →</a>
+  <!-- Latest Content (loaded client-side so it's always fresh) -->
+  <section class="section">
+    <div class="container">
+      <h2>Latest</h2>
+      <div class="grid grid-3" id="feed-grid">
+        <p class="loading">Loading...</p>
       </div>
-    </section>
-  )}
+      <a href="/work" class="view-all">View All →</a>
+    </div>
+  </section>
 </Layout>
+
+<script>
+  async function loadFeed() {
+    const grid = document.getElementById('feed-grid');
+    if (!grid) return;
+
+    try {
+      const res = await fetch('/api/feed?page=1&limit=5&type=all');
+      if (!res.ok) throw new Error('fetch failed');
+      const data = await res.json();
+
+      if (!data.items || data.items.length === 0) {
+        grid.innerHTML = '<p class="empty">No content yet.</p>';
+        return;
+      }
+
+      grid.innerHTML = data.items.map((item: any, i: number) => {
+        const typeLabel = item.type === 'post' ? '📝 Post' : item.type === 'snippet' ? '💻 Snippet' : '📸 Gallery';
+        const href = item.type === 'post' ? `/posts/${item.slug}` : item.type === 'snippet' ? `/snippets/${item.slug}` : `/gallery/${item.slug}`;
+        const linkText = item.type === 'post' ? 'Read More' : item.type === 'snippet' ? 'View Snippet' : 'View Album';
+        let metaHtml = '';
+        if (item.category) metaHtml += `<span class="category">${item.category}</span>`;
+        if (item.language) metaHtml += `<span class="category">${item.language}</span>`;
+        metaHtml += `<span class="date">${new Date(item.publishedAt).toLocaleDateString()}</span>`;
+
+        return `
+          <article class="card" style="animation-delay: ${i * 100}ms">
+            <span class="type-badge type-${item.type}">${typeLabel}</span>
+            <h3>${item.title}</h3>
+            <p>${item.description}</p>
+            <div class="meta">${metaHtml}</div>
+            <a href="${href}" class="read-more">${linkText} →</a>
+          </article>
+        `;
+      }).join('');
+    } catch {
+      const grid = document.getElementById('feed-grid');
+      if (grid) grid.innerHTML = '<p class="empty">Could not load content.</p>';
+    }
+  }
+
+  loadFeed();
+</script>
 
 <style>
   .hero {

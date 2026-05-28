@@ -2,6 +2,7 @@
 // src/layouts/Layout.astro
 import { ClientRouter } from 'astro:transitions';
 import SEO from '@/components/SEO.astro';
+import Nav from '@/components/Nav.astro';
 import Footer from '@/components/Footer.astro';
 import ThemeProvider from '@/components/ThemeProvider.astro';
 
@@ -52,6 +53,7 @@ const {
     <ClientRouter />
   </head>
   <body>
+    <Nav />
     <main>
       <slot />
     </main>

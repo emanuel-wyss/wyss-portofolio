@@ -1,6 +1,11 @@
 // src/lib/api.ts
 
-const API_BASE = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+// In the browser, use relative URLs so the request hits the same origin (Hono server).
+// During SSG build, fall back to the env var or localhost.
+const API_BASE =
+  typeof window !== 'undefined'
+    ? ''
+    : (import.meta.env.PUBLIC_API_URL || 'http://localhost:3000');
 
 export function getApiUrl(): string {
   return API_BASE;

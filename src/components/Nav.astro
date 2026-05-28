@@ -1,0 +1,79 @@
+---
+// src/components/Nav.astro
+const currentPath = Astro.url.pathname;
+---
+
+<header class="nav">
+  <div class="nav-inner">
+    <a href="/" class="logo" aria-label="Home">WYSS</a>
+    <nav aria-label="Main navigation">
+      <a href="/about" class:list={['nav-link', { active: currentPath === '/about' }]}>About</a>
+      <a href="/work" class:list={['nav-link', { active: currentPath === '/work' }]}>Work</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .nav-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.125rem;
+    letter-spacing: 0.12em;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .logo:hover {
+    opacity: 0.65;
+    color: var(--text-primary);
+  }
+
+  nav {
+    display: flex;
+    gap: var(--spacing-lg);
+  }
+
+  .nav-link {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    color: var(--text-primary);
+  }
+
+  @media (max-width: 768px) {
+    .nav-inner {
+      padding: 0 var(--spacing-md);
+    }
+
+    nav {
+      gap: var(--spacing-md);
+    }
+  }
+</style>
