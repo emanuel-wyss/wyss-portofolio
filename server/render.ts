@@ -27,7 +27,7 @@ export function lexicalToHtml(content: any): string {
 }
 
 // ---------------------------------------------------------------------------
-// Page template — reads the built Astro index.html and swaps <main> content
+// Page template — reads the built frontend index.html and swaps app shell
 // ---------------------------------------------------------------------------
 
 let cachedTemplate: string | null = null;
@@ -75,8 +75,15 @@ export async function renderPage(
       /(<meta\s+property="og:description"\s+content=")[^"]*(")/,
       `$1${escapeHtml(description)}$2`,
     );
-    // Replace <main>…</main>
-    html = html.replace(/<main>[\s\S]*?<\/main>/, `<main>${mainHtml}</main>`);
+    // Replace root app container from Vite index.
+    if (html.includes('<div id="app"></div>')) {
+      html = html.replace('<div id="app"></div>', `<main>${mainHtml}</main>`);
+    } else {
+      html = html.replace(/<main>[\s\S]*?<\/main>/, `<main>${mainHtml}</main>`);
+    }
+
+    // Do not boot the SPA bundle when rendering server-owned detail pages.
+    html = html.replace(/<script[^>]*src="\/src\/main\.tsx"[^>]*><\/script>/, '');
     return html;
   }
 

@@ -9,8 +9,8 @@ const hono = spawn(['bun', 'run', 'server/index.ts'], {
   env: { ...process.env, NODE_ENV: 'development' },
 });
 
-// Start Astro dev server
-const astro = spawn(['bun', 'run', 'astro', 'dev'], {
+// Start Vite + TanStack Router dev server
+const frontend = spawn(['bun', 'run', 'vite', 'dev'], {
   stdio: ['inherit', 'inherit', 'inherit'],
   env: { ...process.env, NODE_ENV: 'development' },
 });
@@ -18,7 +18,7 @@ const astro = spawn(['bun', 'run', 'astro', 'dev'], {
 process.on('SIGINT', () => {
   console.log('\n\n📪 Shutting down servers...');
   hono.kill();
-  astro.kill();
+  frontend.kill();
   process.exit(0);
 });
 

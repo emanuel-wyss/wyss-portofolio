@@ -670,8 +670,18 @@ app.get('/gallery/:slug', async (c) => {
   }
 });
 
-// Serve Astro static build for all other routes
+// Serve static frontend assets for all other routes.
 app.use('*', serveStatic({ root: './dist/public' }));
+
+// SPA fallback: let TanStack Router handle unmatched frontend routes.
+app.get('*', async (c) => {
+  const indexFile = Bun.file('./dist/public/index.html');
+  if (await indexFile.exists()) {
+    return c.html(await indexFile.text());
+  }
+
+  return c.notFound();
+});
 
 // Error handling
 app.onError((err, c) => {

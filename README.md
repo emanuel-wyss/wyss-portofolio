@@ -1,12 +1,12 @@
 # wyss.rocks - Personal Portfolio
 
-A modern personal portfolio built with Astro, Hono, Payload CMS, and Cloudflare R2, now using reusable Web Components for core UI modules.
+A modern personal portfolio built with TanStack Router, Hono, Payload CMS, and Cloudflare R2.
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Astro 5 (static output) |
+| Frontend | TanStack Router + React + Vite |
 | API server | Hono + Bun |
 | CMS admin | Payload CMS 3 + Next.js 15 |
 | Database | PostgreSQL (Railway managed) |
@@ -16,8 +16,8 @@ A modern personal portfolio built with Astro, Hono, Payload CMS, and Cloudflare 
 
 ## Services
 
-### `web` — Hono + Astro + Web Components (wyss.rocks)
-Serves the static Astro frontend, reusable Web Components (menu/footer/feed), and the custom read-only REST API.
+### `web` — Hono + TanStack Router frontend (wyss.rocks)
+Serves the built React frontend (`dist/public`) and the custom read-only REST API.
 
 ### `admin` — Next.js + Payload (admin.wyss.rocks)
 Serves the Payload CMS admin panel. Connect from any device to manage content.
@@ -27,7 +27,7 @@ Serves the Payload CMS admin panel. Connect from any device to manage content.
 ```bash
 bun install
 
-# Start Hono API server (port 3000) + Astro dev server (port 4321) in parallel
+# Start Hono API server (port 3000) + Vite/TanStack dev server (port 4321) in parallel
 bun run dev
 
 # Start Payload admin (port 3001) — in a separate terminal
@@ -51,11 +51,9 @@ R2_BASE_URL=https://r2.wyss.rocks
 
 ```
 wyss-portfolio/
-├── src/                      # Astro frontend
-│   ├── pages/                # Routes
+├── src/                      # React + TanStack Router frontend + shared libs
+│   ├── routes/               # Frontend routes
 │   ├── components/
-│   │   └── web/              # Custom elements (site-menu, site-footer, content-feed)
-│   ├── layouts/
 │   ├── lib/api.ts            # Fetch helpers for Hono API
 │   └── styles/
 ├── server/
@@ -72,8 +70,8 @@ wyss-portfolio/
 │   └── railway.json
 ├── dist/
 │   ├── index.js              # Compiled Hono server
-│   └── public/               # Astro static build output
-├── astro.config.mjs
+│   └── public/               # Vite/TanStack static build output
+├── vite.config.ts
 ├── railway.json              # Railway config for web service
 └── package.json
 ```
@@ -126,8 +124,8 @@ R2_BASE_URL         = https://r2.wyss.rocks
 ## Scripts
 
 ```bash
-bun run dev              # Astro + Hono in parallel
-bun run build            # astro build → dist/public/ + bun build → dist/index.js
+bun run dev              # Vite/TanStack + Hono in parallel
+bun run build            # vite build → dist/public/ + bun build → dist/index.js
 bun run start            # bun dist/index.js (production)
 bun run deploy           # railway up both services
 bun run migrate          # payload migrate
