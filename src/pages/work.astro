@@ -1,0 +1,318 @@
+---
+// src/pages/work.astro
+import Layout from '@/layouts/Layout.astro';
+import { getFeed } from '@/lib/api';
+import { getApiUrl } from '@/lib/api';
+
+// Pre-render initial page for SSG
+const initialFeed = await getFeed(1, 12, 'all');
+const apiUrl = getApiUrl();
+---
+
+<Layout
+  title="Work"
+  description="Browse all posts, code snippets, and photo galleries"
+>
+  <section class="work-page">
+    <div class="container">
+      <h1 transition:animate="fade">Work</h1>
+      <p class="subtitle">Posts, snippets, and galleries</p>
+
+      <!-- Filter Tabs -->
+      <nav class="filter-tabs" aria-label="Content type filter">
+        <button class="tab active" data-type="all">All</button>
+        <button class="tab" data-type="post">Posts</button>
+        <button class="tab" data-type="snippet">Snippets</button>
+        <button class="tab" data-type="gallery">Galleries</button>
+      </nav>
+
+      <!-- Content Grid -->
+      <div class="grid grid-3" id="feed-grid">
+        {initialFeed.items.map((item, index) => (
+          <article class="card" style={`animation-delay: ${index * 60}ms`}>
+            <span class={`type-badge type-${item.type}`}>
+              {item.type === 'post' ? '📝 Post' : item.type === 'snippet' ? '💻 Snippet' : '📸 Gallery'}
+            </span>
+            <h3>{item.title}</h3>
+            <p>{item.description}</p>
+            <div class="meta">
+              {item.category && <span class="category">{item.category}</span>}
+              {item.language && <span class="category">{item.language}</span>}
+              <span class="date">
+                {new Date(item.publishedAt).toLocaleDateString()}
+              </span>
+            </div>
+            <a
+              href={item.type === 'post' ? `/posts/${item.slug}` : item.type === 'snippet' ? `/snippets/${item.slug}` : `/gallery/${item.slug}`}
+              class="read-more"
+            >
+              {item.type === 'post' ? 'Read More' : item.type === 'snippet' ? 'View Snippet' : 'View Album'} →
+            </a>
+          </article>
+        ))}
+      </div>
+
+      <!-- Load More -->
+      {initialFeed.hasNextPage && (
+        <button class="btn btn-load-more" id="load-more">Load More</button>
+      )}
+
+      <!-- Empty state -->
+      <div class="empty-state" id="empty-state" style="display: none;">
+        <p>No content found.</p>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script define:vars={{ apiUrl, initialPage: initialFeed.page, initialHasNext: initialFeed.hasNextPage }}>
+  const grid = document.getElementById('feed-grid');
+  const loadMoreBtn = document.getElementById('load-more');
+  const emptyState = document.getElementById('empty-state');
+  const tabs = document.querySelectorAll('.tab');
+
+  let currentPage = initialPage;
+  let currentType = 'all';
+  let hasNextPage = initialHasNext;
+
+  function createCard(item) {
+    const typeLabel = item.type === 'post' ? '📝 Post' : item.type === 'snippet' ? '💻 Snippet' : '📸 Gallery';
+    const href = item.type === 'post' ? `/posts/${item.slug}` : item.type === 'snippet' ? `/snippets/${item.slug}` : `/gallery/${item.slug}`;
+    const linkText = item.type === 'post' ? 'Read More' : item.type === 'snippet' ? 'View Snippet' : 'View Album';
+
+    const card = document.createElement('article');
+    card.className = 'card';
+
+    let metaHtml = '';
+    if (item.category) metaHtml += `<span class="category">${item.category}</span>`;
+    if (item.language) metaHtml += `<span class="category">${item.language}</span>`;
+    metaHtml += `<span class="date">${new Date(item.publishedAt).toLocaleDateString()}</span>`;
+
+    card.innerHTML = `
+      <span class="type-badge type-${item.type}">${typeLabel}</span>
+      <h3>${item.title}</h3>
+      <p>${item.description}</p>
+      <div class="meta">${metaHtml}</div>
+      <a href="${href}" class="read-more">${linkText} →</a>
+    `;
+    return card;
+  }
+
+  async function fetchFeed(page, type) {
+    const params = new URLSearchParams({ page: String(page), limit: '12', type });
+    const res = await fetch(`${apiUrl}/api/feed?${params}`);
+    if (!res.ok) throw new Error('Failed to fetch');
+    return res.json();
+  }
+
+  async function loadPage(page, type, append = false) {
+    try {
+      const data = await fetchFeed(page, type);
+
+      if (!append) {
+        grid.innerHTML = '';
+      }
+
+      if (data.items.length === 0 && !append) {
+        emptyState.style.display = 'block';
+      } else {
+        emptyState.style.display = 'none';
+      }
+
+      data.items.forEach((item) => {
+        grid.appendChild(createCard(item));
+      });
+
+      currentPage = data.page;
+      hasNextPage = data.hasNextPage;
+
+      if (loadMoreBtn) {
+        loadMoreBtn.style.display = hasNextPage ? 'block' : 'none';
+      }
+    } catch (err) {
+      console.error('Error loading feed:', err);
+    }
+  }
+
+  // Tab click handlers
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentType = tab.dataset.type;
+      currentPage = 1;
+      loadPage(1, currentType, false);
+    });
+  });
+
+  // Load More
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', () => {
+      loadPage(currentPage + 1, currentType, true);
+    });
+  }
+</script>
+
+<style>
+  .work-page {
+    padding: var(--spacing-2xl) 0;
+    min-height: 80vh;
+  }
+
+  .work-page h1 {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .subtitle {
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .filter-tabs {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    padding: 0.5rem 1.25rem;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .tab:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .card {
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    animation: slideInRight 0.6s ease-out backwards;
+  }
+
+  .card:hover {
+    transform: translateY(-8px);
+    border-color: var(--accent);
+    box-shadow: 0 20px 40px rgba(0, 102, 255, 0.1);
+  }
+
+  .card h3 {
+    margin-bottom: var(--spacing-sm);
+    font-size: 1.25rem;
+  }
+
+  .card p {
+    margin-bottom: var(--spacing-md);
+    color: var(--text-secondary);
+  }
+
+  .type-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .type-post {
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+
+  .type-snippet {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+  }
+
+  .type-gallery {
+    background: rgba(255, 152, 0, 0.15);
+    color: #FF9800;
+  }
+
+  .meta {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    font-size: 0.875rem;
+    flex-wrap: wrap;
+  }
+
+  .category {
+    background: var(--accent-light);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .date {
+    color: var(--text-secondary);
+  }
+
+  .read-more {
+    color: var(--accent);
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .btn-load-more {
+    display: block;
+    margin: var(--spacing-xl) auto 0;
+    padding: var(--spacing-md) var(--spacing-xl);
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-load-more:hover {
+    background: var(--accent);
+    color: white;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 768px) {
+    .work-page h1 {
+      font-size: 2rem;
+    }
+
+    .filter-tabs {
+      gap: var(--spacing-xs);
+    }
+
+    .tab {
+      padding: 0.4rem 1rem;
+      font-size: 0.8rem;
+    }
+  }
+</style>

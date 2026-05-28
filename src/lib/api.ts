@@ -167,3 +167,55 @@ export async function getSiteConfig(): Promise<SiteConfig | null> {
     return null;
   }
 }
+
+// Feed (unified content)
+export type FeedItemType = 'post' | 'snippet' | 'gallery';
+
+export interface FeedItem {
+  type: FeedItemType;
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  publishedAt: string;
+  category?: string;
+  language?: string;
+  tags?: string[];
+  imageCount?: number;
+  featured_image?: string;
+}
+
+export interface FeedResponse {
+  items: FeedItem[];
+  totalDocs: number;
+  totalPages: number;
+  page: number;
+  hasNextPage: boolean;
+}
+
+export async function getFeed(
+  page = 1,
+  limit = 12,
+  type: FeedItemType | 'all' = 'all'
+): Promise<FeedResponse> {
+  try {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+      type,
+    });
+    const response = await fetch(`${API_BASE}/api/feed?${params}`);
+    if (!response.ok) throw new Error('Failed to fetch feed');
+    const data = await response.json();
+    return {
+      items: data.items || [],
+      totalDocs: data.totalDocs || 0,
+      totalPages: data.totalPages || 0,
+      page: data.page || 1,
+      hasNextPage: data.hasNextPage || false,
+    };
+  } catch (error) {
+    console.error('Error fetching feed:', error);
+    return { items: [], totalDocs: 0, totalPages: 0, page: 1, hasNextPage: false };
+  }
+}

@@ -1,16 +1,10 @@
 ---
 // src/pages/index.astro
 import Layout from '@/layouts/Layout.astro';
-import { getPosts, getAlbums, getSnippets, getSiteConfig } from '@/lib/api';
+import { getFeed, getSiteConfig } from '@/lib/api';
 
-const posts = await getPosts();
-const albums = await getAlbums();
-const snippets = await getSnippets();
+const feed = await getFeed(1, 5, 'all');
 const siteConfig = await getSiteConfig();
-
-const featuredPosts = posts.slice(0, 3);
-const featuredAlbums = albums.slice(0, 3);
-const featuredSnippets = snippets.slice(0, 3);
 ---
 
 <Layout
@@ -36,72 +30,36 @@ const featuredSnippets = snippets.slice(0, 3);
     </div>
   </section>
 
-  <!-- Recent Posts -->
-  {featuredPosts.length > 0 && (
+  <!-- Latest Content -->
+  {feed.items.length > 0 && (
     <section class="section">
       <div class="container">
-        <h2>Latest Articles</h2>
+        <h2>Latest</h2>
         <div class="grid grid-3">
-          {featuredPosts.map((post, index) => (
+          {feed.items.map((item, index) => (
             <article class="card" style={`animation-delay: ${index * 100}ms`}>
-              <h3>{post.title}</h3>
-              <p>{post.excerpt}</p>
+              <span class={`type-badge type-${item.type}`}>
+                {item.type === 'post' ? '📝 Post' : item.type === 'snippet' ? '💻 Snippet' : '📸 Gallery'}
+              </span>
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
               <div class="meta">
-                <span class="category">{post.category}</span>
+                {item.category && <span class="category">{item.category}</span>}
+                {item.language && <span class="category">{item.language}</span>}
                 <span class="date">
-                  {new Date(post.publishedAt).toLocaleDateString()}
+                  {new Date(item.publishedAt).toLocaleDateString()}
                 </span>
               </div>
-              <a href={`/posts/${post.slug}`} class="read-more">
-                Read More →
+              <a
+                href={item.type === 'post' ? `/posts/${item.slug}` : item.type === 'snippet' ? `/snippets/${item.slug}` : `/gallery/${item.slug}`}
+                class="read-more"
+              >
+                {item.type === 'post' ? 'Read More' : item.type === 'snippet' ? 'View Snippet' : 'View Album'} →
               </a>
             </article>
           ))}
         </div>
-        <a href="/posts" class="view-all">View All Articles →</a>
-      </div>
-    </section>
-  )}
-
-  <!-- Gallery Preview -->
-  {featuredAlbums.length > 0 && (
-    <section class="section alternate">
-      <div class="container">
-        <h2>Photo Collections</h2>
-        <div class="grid grid-3">
-          {featuredAlbums.map((album, index) => (
-            <div class="album-card" style={`animation-delay: ${index * 100}ms`}>
-              <div class="album-image">📸</div>
-              <h3>{album.title}</h3>
-              <p>{album.album}</p>
-              <span class="count">{album.imageCount} photos</span>
-              <a href={`/gallery/${album.slug}`} class="view-link">
-                View Album →
-              </a>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )}
-
-  <!-- Code Snippets -->
-  {featuredSnippets.length > 0 && (
-    <section class="section">
-      <div class="container">
-        <h2>Code Snippets</h2>
-        <div class="grid grid-3">
-          {featuredSnippets.map((snippet, index) => (
-            <div class="snippet-card" style={`animation-delay: ${index * 100}ms`}>
-              <div class="language-badge">{snippet.language}</div>
-              <h3>{snippet.title}</h3>
-              <p>{snippet.description}</p>
-              <a href={`/snippets/${snippet.slug}`} class="view-link">
-                View Snippet →
-              </a>
-            </div>
-          ))}
-        </div>
+        <a href="/work" class="view-all">View All →</a>
       </div>
     </section>
   )}
@@ -249,49 +207,28 @@ const featuredSnippets = snippets.slice(0, 3);
     gap: var(--spacing-sm);
   }
 
-  .album-card,
-  .snippet-card {
-    padding: var(--spacing-lg);
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    animation: slideInRight 0.6s ease-out backwards;
-  }
-
-  .album-card:hover,
-  .snippet-card:hover {
-    transform: translateY(-8px);
-    border-color: var(--accent);
-  }
-
-  .album-image {
-    font-size: 3rem;
-    margin-bottom: var(--spacing-md);
-  }
-
-  .language-badge {
+  .type-badge {
     display: inline-block;
-    background: var(--accent-light);
-    color: var(--accent);
     padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    font-family: var(--font-mono);
+    border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
   }
 
-  .count {
-    display: block;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-bottom: var(--spacing-md);
-  }
-
-  .view-link {
+  .type-post {
+    background: var(--accent-light);
     color: var(--accent);
-    font-weight: 500;
+  }
+
+  .type-snippet {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+  }
+
+  .type-gallery {
+    background: rgba(255, 152, 0, 0.15);
+    color: #FF9800;
   }
 
   .view-all {

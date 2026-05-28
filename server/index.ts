@@ -45,17 +45,24 @@ app.get('/health', (c) => {
 // Posts API
 app.get('/api/posts', async (c) => {
   const payload = await initPayload();
+  const page = parseInt(c.req.query('page') || '1', 10);
+  const limit = parseInt(c.req.query('limit') || '100', 10);
   
   try {
     const posts = await payload.find({
       collection: 'posts',
-      limit: 100,
+      page,
+      limit,
       sort: '-publishedAt',
     });
 
     return c.json({
       success: true,
       count: posts.docs.length,
+      totalDocs: posts.totalDocs,
+      totalPages: posts.totalPages,
+      page: posts.page,
+      hasNextPage: posts.hasNextPage,
       posts: posts.docs.map((post: any) => ({
         id: post.id,
         title: post.title,
@@ -116,17 +123,24 @@ app.get('/api/posts/:slug', async (c) => {
 // Gallery API
 app.get('/api/gallery', async (c) => {
   const payload = await initPayload();
+  const page = parseInt(c.req.query('page') || '1', 10);
+  const limit = parseInt(c.req.query('limit') || '50', 10);
 
   try {
     const albums = await payload.find({
       collection: 'gallery',
-      limit: 50,
+      page,
+      limit,
       sort: '-publishedAt',
     });
 
     return c.json({
       success: true,
       count: albums.docs.length,
+      totalDocs: albums.totalDocs,
+      totalPages: albums.totalPages,
+      page: albums.page,
+      hasNextPage: albums.hasNextPage,
       albums: albums.docs.map((album: any) => ({
         id: album.id,
         title: album.title,
@@ -186,17 +200,24 @@ app.get('/api/gallery/:slug', async (c) => {
 // Snippets API
 app.get('/api/snippets', async (c) => {
   const payload = await initPayload();
+  const page = parseInt(c.req.query('page') || '1', 10);
+  const limit = parseInt(c.req.query('limit') || '100', 10);
 
   try {
     const snippets = await payload.find({
       collection: 'snippets',
-      limit: 100,
+      page,
+      limit,
       sort: '-publishedAt',
     });
 
     return c.json({
       success: true,
       count: snippets.docs.length,
+      totalDocs: snippets.totalDocs,
+      totalPages: snippets.totalPages,
+      page: snippets.page,
+      hasNextPage: snippets.hasNextPage,
       snippets: snippets.docs.map((snippet: any) => ({
         id: snippet.id,
         title: snippet.title,
@@ -248,6 +269,115 @@ app.get('/api/snippets/:slug', async (c) => {
   } catch (error) {
     console.error('Error fetching snippet:', error);
     return c.json({ success: false, error: 'Failed to fetch snippet' }, 500);
+  }
+});
+
+// Unified Feed API (merged content types with filtering + pagination)
+app.get('/api/feed', async (c) => {
+  const payload = await initPayload();
+  const page = parseInt(c.req.query('page') || '1', 10);
+  const limit = parseInt(c.req.query('limit') || '12', 10);
+  const type = c.req.query('type') || 'all';
+
+  try {
+    type FeedItem = {
+      type: 'post' | 'snippet' | 'gallery';
+      id: string;
+      title: string;
+      slug: string;
+      description: string;
+      publishedAt: string;
+      category?: string;
+      language?: string;
+      tags?: string[];
+      imageCount?: number;
+      featured_image?: string;
+    };
+
+    const items: FeedItem[] = [];
+
+    // Fetch from relevant collections
+    if (type === 'all' || type === 'post') {
+      const posts = await payload.find({
+        collection: 'posts',
+        limit: 100,
+        sort: '-publishedAt',
+      });
+      items.push(
+        ...posts.docs.map((p: any) => ({
+          type: 'post' as const,
+          id: p.id,
+          title: p.title,
+          slug: p.slug,
+          description: p.excerpt || '',
+          publishedAt: p.publishedAt,
+          category: p.category,
+          tags: p.tags || [],
+          featured_image: p.featured_image?.url,
+        }))
+      );
+    }
+
+    if (type === 'all' || type === 'snippet') {
+      const snippets = await payload.find({
+        collection: 'snippets',
+        limit: 100,
+        sort: '-publishedAt',
+      });
+      items.push(
+        ...snippets.docs.map((s: any) => ({
+          type: 'snippet' as const,
+          id: s.id,
+          title: s.title,
+          slug: s.slug,
+          description: s.description || '',
+          publishedAt: s.publishedAt,
+          category: s.category,
+          language: s.language,
+          tags: s.tags || [],
+        }))
+      );
+    }
+
+    if (type === 'all' || type === 'gallery') {
+      const albums = await payload.find({
+        collection: 'gallery',
+        limit: 100,
+        sort: '-publishedAt',
+      });
+      items.push(
+        ...albums.docs.map((a: any) => ({
+          type: 'gallery' as const,
+          id: a.id,
+          title: a.title,
+          slug: a.slug,
+          description: a.description || '',
+          publishedAt: a.publishedAt,
+          imageCount: a.images?.length || 0,
+        }))
+      );
+    }
+
+    // Sort merged results by publishedAt descending
+    items.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+
+    // Paginate
+    const totalDocs = items.length;
+    const totalPages = Math.ceil(totalDocs / limit);
+    const start = (page - 1) * limit;
+    const paged = items.slice(start, start + limit);
+
+    return c.json({
+      success: true,
+      items: paged,
+      totalDocs,
+      totalPages,
+      page,
+      hasNextPage: page < totalPages,
+    });
+  } catch (error) {
+    console.error('Error fetching feed:', error);
+    return c.json({ success: false, error: 'Failed to fetch feed' }, 500);
   }
 });
 
