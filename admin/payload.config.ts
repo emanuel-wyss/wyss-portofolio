@@ -10,7 +10,14 @@ import { Media } from './src/collections/Media.ts'
 import { SiteConfig } from './src/collections/SiteConfig.ts'
 import { Users } from './src/collections/Users.ts'
 
-const r2Enabled = Boolean(process.env.R2_ACCOUNT_ID)
+const r2AccountId = process.env.R2_ACCOUNT_ID?.trim() || ''
+const r2AccessKeyId = process.env.R2_ACCESS_KEY_ID?.trim() || ''
+const r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY?.trim() || ''
+const r2Bucket = process.env.R2_BUCKET?.trim() || 'wyss-portfolio'
+const r2BaseUrl = process.env.R2_BASE_URL?.trim() || 'https://media.wyss.rocks'
+
+// Only enable R2 storage when the full credential set is present.
+const r2Enabled = Boolean(r2AccountId && r2AccessKeyId && r2SecretAccessKey)
 
 export default buildConfig({
   secret: process.env.PAYLOAD_SECRET || 'dev-secret-change-me',
@@ -33,19 +40,19 @@ export default buildConfig({
     ...(r2Enabled
       ? [
           s3Storage({
-            bucket: process.env.R2_BUCKET || 'portfolio-media',
+            bucket: r2Bucket,
             collections: {
               media: {
                 generateFileURL: ({ filename }) =>
-                  `${process.env.R2_BASE_URL || 'https://r2.wyss.rocks'}/${filename}`,
+                  `${r2BaseUrl}/${filename}`,
               },
             },
             config: {
-              endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+              endpoint: `https://${r2AccountId}.r2.cloudflarestorage.com`,
               region: 'auto',
               credentials: {
-                accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
-                secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+                accessKeyId: r2AccessKeyId,
+                secretAccessKey: r2SecretAccessKey,
               },
             },
           }),
