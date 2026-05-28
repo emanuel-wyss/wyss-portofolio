@@ -1,6 +1,6 @@
 # wyss.rocks - Personal Portfolio
 
-A modern personal portfolio built with Astro, Hono, Payload CMS, and Cloudflare R2.
+A modern personal portfolio built with Astro, Hono, Payload CMS, and Cloudflare R2, now using reusable Web Components for core UI modules.
 
 ## Tech Stack
 
@@ -16,8 +16,8 @@ A modern personal portfolio built with Astro, Hono, Payload CMS, and Cloudflare 
 
 ## Services
 
-### `web` — Hono + Astro (wyss.rocks)
-Serves the static Astro frontend and the custom read-only REST API.
+### `web` — Hono + Astro + Web Components (wyss.rocks)
+Serves the static Astro frontend, reusable Web Components (menu/footer/feed), and the custom read-only REST API.
 
 ### `admin` — Next.js + Payload (admin.wyss.rocks)
 Serves the Payload CMS admin panel. Connect from any device to manage content.
@@ -54,6 +54,7 @@ wyss-portfolio/
 ├── src/                      # Astro frontend
 │   ├── pages/                # Routes
 │   ├── components/
+│   │   └── web/              # Custom elements (site-menu, site-footer, content-feed)
 │   ├── layouts/
 │   ├── lib/api.ts            # Fetch helpers for Hono API
 │   └── styles/
