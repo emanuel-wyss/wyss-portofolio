@@ -11,13 +11,12 @@ import { SiteConfig } from './collections/SiteConfig';
 import { Users } from './collections/Users';
 
 const r2AccountId = process.env.R2_ACCOUNT_ID?.trim() || '';
-const r2AccessKeyId = process.env.R2_ACCESS_KEY_ID?.trim() || '';
-const r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY?.trim() || '';
-const r2Bucket = process.env.R2_BUCKET?.trim() || 'portfolio-media';
-const r2BaseUrl = process.env.R2_BASE_URL?.trim() || 'https://r2.wyss.rocks';
+const r2SecretAccessToken = process.env.R2_SECRET_ACCESS_TOKEN?.trim() || '';
+const r2Bucket = process.env.R2_BUCKET?.trim() || 'wyss-portfolio';
+const r2BaseUrl = process.env.R2_BASE_URL?.trim() || 'https://media.wyss.rocks'
 
 // Only enable R2 storage when the full credential set is present.
-const r2Enabled = Boolean(r2AccountId && r2AccessKeyId && r2SecretAccessKey);
+const r2Enabled = Boolean(r2AccountId && r2SecretAccessToken);
 
 export default buildConfig({
   secret: process.env.PAYLOAD_SECRET || 'dev-secret-change-me',
@@ -51,8 +50,8 @@ export default buildConfig({
               endpoint: `https://${r2AccountId}.r2.cloudflarestorage.com`,
               region: 'auto',
               credentials: {
-                accessKeyId: r2AccessKeyId,
-                secretAccessKey: r2SecretAccessKey,
+                accessKeyId: r2AccountId,
+                secretAccessKey: r2SecretAccessToken,
               },
             },
           }),
