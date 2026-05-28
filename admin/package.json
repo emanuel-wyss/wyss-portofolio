@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev --port 3001",
     "build": "next build",
-    "start": "next start --port 3001",
+    "start": "next start --port ${PORT:-3001}",
     "generate:importmap": "PAYLOAD_CONFIG_PATH=payload.config.ts payload generate:importmap",
     "generate:types": "PAYLOAD_CONFIG_PATH=payload.config.ts payload generate:types",
     "migrate": "PAYLOAD_CONFIG_PATH=payload.config.ts payload migrate",
