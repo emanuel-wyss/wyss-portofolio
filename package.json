@@ -23,9 +23,9 @@
     "build:storybook": "storybook build",
     "lint": "eslint . --ext .ts,.tsx,.astro",
     "type-check": "tsc --noEmit",
-    "deploy": "railway up --service web --detach && railway up ./admin --path-as-root --service admin --detach",
-    "deploy:fe": "railway up --service web --detach",
-    "deploy:admin": "railway up ./admin --path-as-root --service admin --detach"
+    "deploy": "bunx @railway/cli up --service web --detach && bunx @railway/cli up ./admin --path-as-root --service admin --detach",
+    "deploy:fe": "bunx @railway/cli up --service web --detach",
+    "deploy:admin": "bunx @railway/cli up ./admin --path-as-root --service admin --detach"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "^3.85.0",
