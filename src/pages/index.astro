@@ -33,68 +33,11 @@ const siteConfig = await getSiteConfig();
   <section class="section">
     <div class="container">
       <h2>Latest</h2>
-      <div class="grid grid-3" id="feed-grid">
-        <p class="loading">Loading...</p>
-      </div>
+      <content-feed mode="latest" limit="5" type="all" cache-key="feed:home:v1"></content-feed>
       <a href="/work" class="view-all">View All →</a>
     </div>
   </section>
 </Layout>
-
-<script>
-  import { fetchJsonSWR } from '@lib/clientFetchCache';
-
-  function renderFeed(items) {
-    const grid = document.getElementById('feed-grid');
-    if (!grid) return;
-
-    if (!items || items.length === 0) {
-      grid.innerHTML = '<p class="empty">No content yet.</p>';
-      return;
-    }
-
-    grid.innerHTML = items.map((item: any, i: number) => {
-      const typeLabel = item.type === 'post' ? '📝 Post' : item.type === 'snippet' ? '💻 Snippet' : '📸 Gallery';
-      const href = item.type === 'post' ? `/posts/${item.slug}` : item.type === 'snippet' ? `/snippets/${item.slug}` : `/gallery/${item.slug}`;
-      const linkText = item.type === 'post' ? 'Read More' : item.type === 'snippet' ? 'View Snippet' : 'View Album';
-      let metaHtml = '';
-      if (item.category) metaHtml += `<span class="category">${item.category}</span>`;
-      if (item.language) metaHtml += `<span class="category">${item.language}</span>`;
-      metaHtml += `<span class="date">${new Date(item.publishedAt).toLocaleDateString()}</span>`;
-
-      return `
-        <article class="card" style="animation-delay: ${i * 100}ms">
-          <span class="type-badge type-${item.type}">${typeLabel}</span>
-          <h3>${item.title}</h3>
-          <p>${item.description}</p>
-          <div class="meta">${metaHtml}</div>
-          <a href="${href}" class="read-more">${linkText} →</a>
-        </article>
-      `;
-    }).join('');
-  }
-
-  async function loadFeed() {
-    const grid = document.getElementById('feed-grid');
-    if (!grid) return;
-
-    try {
-      const data = await fetchJsonSWR<any>('/api/feed?page=1&limit=5&type=all', {
-        cacheKey: 'feed:home:v1',
-        maxAgeMs: 60_000,
-        staleMs: 10 * 60_000,
-        timeoutMs: 7_000,
-        onUpdate: (fresh) => renderFeed(fresh?.items || []),
-      });
-
-      renderFeed(data?.items || []);
-    } catch {
-      grid.innerHTML = '<p class="empty">Could not load content.</p>';
-    }
-  }
-
-  loadFeed();
-</script>
 
 <style>
   .hero {
@@ -183,83 +126,6 @@ const siteConfig = await getSiteConfig();
 
   .section h2 {
     margin-bottom: var(--spacing-xl);
-  }
-
-  .card {
-    padding: var(--spacing-lg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    animation: slideInRight 0.6s ease-out backwards;
-  }
-
-  .card:hover {
-    transform: translateY(-8px);
-    border-color: var(--accent);
-    box-shadow: 0 20px 40px rgba(0, 102, 255, 0.1);
-  }
-
-  .card h3 {
-    margin-bottom: var(--spacing-sm);
-    font-size: 1.25rem;
-  }
-
-  .card p {
-    margin-bottom: var(--spacing-md);
-    color: var(--text-secondary);
-  }
-
-  .meta {
-    display: flex;
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-md);
-    font-size: 0.875rem;
-  }
-
-  .category {
-    background: var(--accent-light);
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    color: var(--accent);
-    font-weight: 500;
-  }
-
-  .date {
-    color: var(--text-secondary);
-  }
-
-  .read-more {
-    color: var(--accent);
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-
-  .read-more:hover {
-    gap: var(--spacing-sm);
-  }
-
-  .type-badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-bottom: var(--spacing-sm);
-  }
-
-  .type-post {
-    background: var(--accent-light);
-    color: var(--accent);
-  }
-
-  .type-snippet {
-    background: rgba(76, 175, 80, 0.15);
-    color: #4CAF50;
-  }
-
-  .type-gallery {
-    background: rgba(255, 152, 0, 0.15);
-    color: #FF9800;
   }
 
   .view-all {

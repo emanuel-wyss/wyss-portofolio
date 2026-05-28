@@ -2,8 +2,6 @@
 // src/layouts/Layout.astro
 import { ClientRouter } from 'astro:transitions';
 import SEO from '@/components/SEO.astro';
-import Nav from '@/components/Nav.astro';
-import Footer from '@/components/Footer.astro';
 import ThemeProvider from '@/components/ThemeProvider.astro';
 
 interface Props {
@@ -50,14 +48,17 @@ const {
       href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <script>
+      import '@/components/web/register';
+    </script>
     <ClientRouter />
   </head>
   <body>
-    <Nav />
+    <site-menu></site-menu>
     <main>
       <slot />
     </main>
-    <Footer />
+    <site-footer></site-footer>
   </body>
 </html>
 
