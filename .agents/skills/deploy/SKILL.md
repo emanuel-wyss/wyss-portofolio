@@ -54,14 +54,25 @@ If no changes are detected or classification is ambiguous, always ask the user.
 
 ## Steps
 
+### Pre-deploy gate — root (web)
+
 1. Run `bun run type-check` — fix all errors before continuing.
 2. Run `bun test` — fix all failures before continuing.
 3. Run `bun run build` — confirm the build passes locally.
-4. Show `git status` — confirm no secrets or build artifacts are untracked.
-5. Determine which services have changes (see above).
-6. Ask the user which service(s) to deploy.
-7. Push to Codeberg: `git push origin develop`.
-8. Deploy the selected service(s):
+
+### Pre-deploy gate — admin
+
+4. Run `cd admin && npx tsc --noEmit` — fix all TypeScript errors.
+5. Run `cd admin && npm run generate:importmap` — confirm Payload can resolve all imports.
+6. Run `cd admin && npm run build` — confirm the Next.js build passes locally.
+
+### Deploy
+
+7. Show `git status` — confirm no secrets or build artifacts are untracked.
+8. Determine which services have changes (see above).
+9. Ask the user which service(s) to deploy.
+10. Push to Codeberg: `git push origin develop`.
+11. Deploy the selected service(s):
    ```bash
    # Frontend only
    bun run deploy:fe
@@ -70,7 +81,7 @@ If no changes are detected or classification is ambiguous, always ask the user.
    # Both
    bun run deploy
    ```
-9. Confirm with: `bunx @railway/cli status`.
+12. Confirm with: `bunx @railway/cli status`.
 
 ## Success Criteria
 - `git push` exits 0.

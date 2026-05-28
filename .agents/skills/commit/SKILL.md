@@ -59,9 +59,15 @@ refactor(theme): change particle-count type to string in ThemeVariables
 
 Run these in order and fix any failures before proceeding:
 
+### Root (web)
 1. `bun run type-check` — see `.agents/skills/type-check/SKILL.md`
 2. `bun test` — see `.agents/skills/test/SKILL.md`
 3. `bun run build` — see `.agents/skills/build/SKILL.md`
+
+### Admin (if files under `admin/` changed)
+4. `cd admin && npx tsc --noEmit` — type-check the admin project
+5. `cd admin && npm run generate:importmap` — confirm Payload import resolution
+6. `cd admin && npm run build` — confirm Next.js build passes
 
 Do not commit if any step fails.
 
