@@ -7,6 +7,7 @@ dist
 *.tgz
 .next
 next-env.d.ts
+payload-types.ts
 
 # code coverage
 coverage
