@@ -28,6 +28,30 @@ app.use(
   })
 );
 
+// API cache policy to complement client-side SWR.
+app.use('/api/*', async (c, next) => {
+  await next();
+
+  // Cache only successful responses and keep explicit per-route overrides intact.
+  if (c.res.status < 200 || c.res.status >= 300 || c.res.headers.has('Cache-Control')) {
+    return;
+  }
+
+  const path = c.req.path;
+  let cacheControl = 'public, max-age=120, stale-while-revalidate=600';
+
+  if (path === '/api/feed') {
+    cacheControl = 'public, max-age=60, stale-while-revalidate=300';
+  } else if (path === '/api/site-config') {
+    cacheControl = 'public, max-age=300, stale-while-revalidate=3600';
+  } else if (path.startsWith('/api/posts/') || path.startsWith('/api/snippets/') || path.startsWith('/api/gallery/')) {
+    cacheControl = 'public, max-age=180, stale-while-revalidate=900';
+  }
+
+  c.res.headers.set('Cache-Control', cacheControl);
+  c.res.headers.set('Vary', 'Accept-Encoding');
+});
+
 // Initialize Payload
 let payloadInstance: Payload | null = null;
 
