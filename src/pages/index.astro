@@ -42,42 +42,54 @@ const siteConfig = await getSiteConfig();
 </Layout>
 
 <script>
+  import { fetchJsonSWR } from '@lib/clientFetchCache';
+
+  function renderFeed(items) {
+    const grid = document.getElementById('feed-grid');
+    if (!grid) return;
+
+    if (!items || items.length === 0) {
+      grid.innerHTML = '<p class="empty">No content yet.</p>';
+      return;
+    }
+
+    grid.innerHTML = items.map((item: any, i: number) => {
+      const typeLabel = item.type === 'post' ? '📝 Post' : item.type === 'snippet' ? '💻 Snippet' : '📸 Gallery';
+      const href = item.type === 'post' ? `/posts/${item.slug}` : item.type === 'snippet' ? `/snippets/${item.slug}` : `/gallery/${item.slug}`;
+      const linkText = item.type === 'post' ? 'Read More' : item.type === 'snippet' ? 'View Snippet' : 'View Album';
+      let metaHtml = '';
+      if (item.category) metaHtml += `<span class="category">${item.category}</span>`;
+      if (item.language) metaHtml += `<span class="category">${item.language}</span>`;
+      metaHtml += `<span class="date">${new Date(item.publishedAt).toLocaleDateString()}</span>`;
+
+      return `
+        <article class="card" style="animation-delay: ${i * 100}ms">
+          <span class="type-badge type-${item.type}">${typeLabel}</span>
+          <h3>${item.title}</h3>
+          <p>${item.description}</p>
+          <div class="meta">${metaHtml}</div>
+          <a href="${href}" class="read-more">${linkText} →</a>
+        </article>
+      `;
+    }).join('');
+  }
+
   async function loadFeed() {
     const grid = document.getElementById('feed-grid');
     if (!grid) return;
 
     try {
-      const res = await fetch('/api/feed?page=1&limit=5&type=all');
-      if (!res.ok) throw new Error('fetch failed');
-      const data = await res.json();
+      const data = await fetchJsonSWR<any>('/api/feed?page=1&limit=5&type=all', {
+        cacheKey: 'feed:home:v1',
+        maxAgeMs: 60_000,
+        staleMs: 10 * 60_000,
+        timeoutMs: 7_000,
+        onUpdate: (fresh) => renderFeed(fresh?.items || []),
+      });
 
-      if (!data.items || data.items.length === 0) {
-        grid.innerHTML = '<p class="empty">No content yet.</p>';
-        return;
-      }
-
-      grid.innerHTML = data.items.map((item: any, i: number) => {
-        const typeLabel = item.type === 'post' ? '📝 Post' : item.type === 'snippet' ? '💻 Snippet' : '📸 Gallery';
-        const href = item.type === 'post' ? `/posts/${item.slug}` : item.type === 'snippet' ? `/snippets/${item.slug}` : `/gallery/${item.slug}`;
-        const linkText = item.type === 'post' ? 'Read More' : item.type === 'snippet' ? 'View Snippet' : 'View Album';
-        let metaHtml = '';
-        if (item.category) metaHtml += `<span class="category">${item.category}</span>`;
-        if (item.language) metaHtml += `<span class="category">${item.language}</span>`;
-        metaHtml += `<span class="date">${new Date(item.publishedAt).toLocaleDateString()}</span>`;
-
-        return `
-          <article class="card" style="animation-delay: ${i * 100}ms">
-            <span class="type-badge type-${item.type}">${typeLabel}</span>
-            <h3>${item.title}</h3>
-            <p>${item.description}</p>
-            <div class="meta">${metaHtml}</div>
-            <a href="${href}" class="read-more">${linkText} →</a>
-          </article>
-        `;
-      }).join('');
+      renderFeed(data?.items || []);
     } catch {
-      const grid = document.getElementById('feed-grid');
-      if (grid) grid.innerHTML = '<p class="empty">Could not load content.</p>';
+      grid.innerHTML = '<p class="empty">Could not load content.</p>';
     }
   }
 

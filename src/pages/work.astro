@@ -37,6 +37,8 @@ import Layout from '@/layouts/Layout.astro';
 </Layout>
 
 <script>
+  import { fetchJsonSWR } from '@lib/clientFetchCache';
+
   const grid = document.getElementById('feed-grid');
   const loadMoreBtn = document.getElementById('load-more');
   const emptyState = document.getElementById('empty-state');
@@ -69,39 +71,57 @@ import Layout from '@/layouts/Layout.astro';
     return card;
   }
 
-  async function fetchFeed(page, type) {
+  async function fetchFeed(page, type, onUpdate) {
     const params = new URLSearchParams({ page: String(page), limit: '12', type });
-    const res = await fetch(`/api/feed?${params}`);
-    if (!res.ok) throw new Error('Failed to fetch');
-    return res.json();
+    return fetchJsonSWR<any>(`/api/feed?${params}`, {
+      cacheKey: `feed:work:v1:${type}:${page}`,
+      maxAgeMs: 60_000,
+      staleMs: 10 * 60_000,
+      timeoutMs: 7_000,
+      onUpdate,
+    });
+  }
+
+  function renderFeedResult(data, append = false) {
+    if (!append) {
+      grid.innerHTML = '';
+    }
+
+    if (data.items.length === 0 && !append) {
+      emptyState.style.display = 'block';
+    } else {
+      emptyState.style.display = 'none';
+    }
+
+    data.items.forEach((item) => {
+      grid.appendChild(createCard(item));
+    });
+
+    currentPage = data.page;
+    hasNextPage = data.hasNextPage;
+
+    if (loadMoreBtn) {
+      loadMoreBtn.style.display = hasNextPage ? 'block' : 'none';
+    }
   }
 
   async function loadPage(page, type, append = false) {
     try {
-      const data = await fetchFeed(page, type);
+      const shouldLiveUpdate = !append && page === 1;
+      const data = await fetchFeed(page, type, shouldLiveUpdate
+        ? (fresh) => {
+            if (type === currentType && currentPage <= 1) {
+              renderFeedResult(fresh, false);
+            }
+          }
+        : undefined);
 
-      if (!append) {
-        grid.innerHTML = '';
-      }
-
-      if (data.items.length === 0 && !append) {
-        emptyState.style.display = 'block';
-      } else {
-        emptyState.style.display = 'none';
-      }
-
-      data.items.forEach((item) => {
-        grid.appendChild(createCard(item));
-      });
-
-      currentPage = data.page;
-      hasNextPage = data.hasNextPage;
-
-      if (loadMoreBtn) {
-        loadMoreBtn.style.display = hasNextPage ? 'block' : 'none';
-      }
+      renderFeedResult(data, append);
     } catch (err) {
       console.error('Error loading feed:', err);
+      if (!append) {
+        grid.innerHTML = '<p class="empty">Could not load content.</p>';
+      }
     }
   }
 
