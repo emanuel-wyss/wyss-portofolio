@@ -761,7 +761,7 @@ export function getImmersiveState(mode: ColorMode): ImmersiveState {
   const resolved = resolveMode(mode);
   const reducedMotion = prefersReducedMotion();
   const season = getCurrentSeason();
-  const event = getPreferredEvent() ?? getCurrentSpecialEvent();
+  const event = getCurrentSpecialEvent();
   const isDaytime = isDaytime_();
   let fxIntensity = isDaytime ? 0.5 : 0.85;
   if (event) fxIntensity = Math.min(1, fxIntensity + 0.25);

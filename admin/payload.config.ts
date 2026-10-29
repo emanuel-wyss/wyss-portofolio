@@ -37,6 +37,12 @@ export default buildConfig({
 
   admin: {
     user: 'users',
+    components: {
+      afterDashboard: [
+        '@/components/DeploymentDashboardField#DeploymentDashboardField',
+        '@/components/EventPreviewField#EventPreviewField',
+      ],
+    },
   },
 
   collections: [Users, Posts, Gallery, Snippets, Media, SiteConfig],

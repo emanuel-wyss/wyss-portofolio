@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getSiteConfig, type SiteConfig } from '../../lib/api';
-import { ALL_EVENTS, type ColorMode, type EffectsIntensity, type SpecialEventType } from '../../lib/theme';
+import type { ColorMode, EffectsIntensity } from '../../lib/theme';
 import { useTheme } from './ThemeProvider';
 
 const WEATHER_LABELS: Record<string, string> = {
@@ -74,8 +74,6 @@ export function SiteFooter() {
     effectsIntensity,
     setIntensity,
     weatherNow,
-    preferredEvent,
-    setPreferredEventChoice,
     soundEnabled,
     setSoundEnabled,
   } = useTheme();
@@ -106,13 +104,6 @@ export function SiteFooter() {
   const cycleIntensity = () => {
     const next = INTENSITY_ORDER[(INTENSITY_ORDER.indexOf(effectsIntensity) + 1) % INTENSITY_ORDER.length];
     setIntensity(next);
-  };
-
-  const cycleEvent = () => {
-    const options: Array<SpecialEventType | undefined> = [undefined, ...ALL_EVENTS];
-    const currentIdx = options.indexOf(preferredEvent);
-    const next = options[(currentIdx + 1) % options.length];
-    setPreferredEventChoice(next);
   };
 
   const wxSummary = `${themeInfo.weather}${weatherNow?.temperatureC != null ? ` ${weatherNow.temperatureC}°C` : ''}${weatherNow?.location ? ` @ ${weatherNow.location}` : ''}`;
@@ -205,14 +196,6 @@ export function SiteFooter() {
             title="Click to cycle particle intensity (quiet / standard / party)"
           >
             int:{effectsIntensity}
-          </button>
-          <button
-            type="button"
-            className="term-chip"
-            onClick={cycleEvent}
-            title="Click to cycle event override (auto or specific event)"
-          >
-            event:{preferredEvent || 'auto'}
           </button>
           <button
             type="button"
