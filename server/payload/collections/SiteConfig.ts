@@ -1,16 +1,14 @@
-import { CollectionConfig } from 'payload';
+import type { GlobalConfig } from 'payload';
 
-export const SiteConfig: CollectionConfig = {
+export const SiteConfig: GlobalConfig = {
   slug: 'site-config',
+  label: 'Site Config',
   admin: {
-    useAsTitle: 'siteName',
     hideAPIURL: true,
   },
   access: {
     read: () => true,
-    create: () => false,
     update: () => true,
-    delete: () => false,
   },
   fields: [
     {
@@ -19,10 +17,28 @@ export const SiteConfig: CollectionConfig = {
       admin: { description: 'Optional seasonal event schedule and visual overrides.' },
       fields: [
         { name: 'enabled', type: 'checkbox', defaultValue: true },
-        { name: 'event', type: 'select', options: ['christmas', 'newyear', 'easter', 'halloween', 'valentines', 'pride', 'swiss', 'aprilfools'] },
+        {
+          name: 'event',
+          type: 'select',
+          options: [
+            'christmas',
+            'newyear',
+            'easter',
+            'halloween',
+            'valentines',
+            'pride',
+            'swiss',
+            'aprilfools',
+          ],
+        },
         { name: 'startDate', type: 'date' },
         { name: 'endDate', type: 'date' },
-        { name: 'intensity', type: 'select', defaultValue: 'standard', options: ['quiet', 'standard', 'party'] },
+        {
+          name: 'intensity',
+          type: 'select',
+          defaultValue: 'standard',
+          options: ['quiet', 'standard', 'party'],
+        },
         { name: 'announcement', type: 'text' },
         { name: 'primaryColor', type: 'text' },
         { name: 'accentColor', type: 'text' },

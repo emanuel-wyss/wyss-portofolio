@@ -45,7 +45,9 @@ export default buildConfig({
     },
   },
 
-  collections: [Users, Posts, Gallery, Snippets, Media, SiteConfig],
+  collections: [Users, Posts, Gallery, Snippets, Media],
+
+  globals: [SiteConfig],
 
   db: postgresAdapter({
     pool: {

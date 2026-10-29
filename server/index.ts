@@ -420,16 +420,14 @@ app.get('/api/site-config', async (c) => {
   const payload = await initPayload();
 
   try {
-    const config = await payload.find({
-      collection: 'site-config',
-      limit: 1,
+    const siteConfig: any = await payload.findGlobal({
+      slug: 'site-config',
     });
 
-    if (config.docs.length === 0) {
+    if (!siteConfig || !siteConfig.siteName) {
       return c.json({ success: false, error: 'Site config not found' }, 404);
     }
 
-    const siteConfig = config.docs[0];
     return c.json({
       success: true,
       config: {
