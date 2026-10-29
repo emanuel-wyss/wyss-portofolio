@@ -1,3 +1,8 @@
+---
+name: add-page
+description: "Add a new Astro page (static or dynamic) with proper layout, SEO, and data fetching."
+---
+
 # Skill: add-page
 
 ## Description

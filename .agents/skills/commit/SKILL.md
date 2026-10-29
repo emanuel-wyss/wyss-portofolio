@@ -1,3 +1,8 @@
+---
+name: commit
+description: "Validate the codebase, commit using conventional commit format, and push to the remote."
+---
+
 # Skill: commit
 
 ## Description

@@ -1,3 +1,8 @@
+---
+name: deploy
+description: "Push to Codeberg and deploy one or both Railway services (frontend + admin) based on what changed since the last deploy."
+---
+
 # Skill: deploy
 
 ## Description

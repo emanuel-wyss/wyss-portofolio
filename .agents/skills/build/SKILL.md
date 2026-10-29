@@ -1,3 +1,8 @@
+---
+name: build
+description: "Run the full production build pipeline and fix any errors."
+---
+
 # Skill: build
 
 ## Description

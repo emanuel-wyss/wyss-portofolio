@@ -1,3 +1,8 @@
+---
+name: changelog
+description: "Check recent git commits and staged/unstaged changes against `src/routes/changelog.tsx` to ensure user-facing features, visual overhauls, and major infrastructure updates are recorded on the public `/changelog` page."
+---
+
 # Skill: changelog
 
 ## Description

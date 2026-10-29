@@ -1,3 +1,8 @@
+---
+name: migrate
+description: "Generate and apply Payload CMS database migrations after schema changes."
+---
+
 # Skill: migrate
 
 ## Description

@@ -1,3 +1,8 @@
+---
+name: test
+description: "Run the test suite and fix every failing test."
+---
+
 # Skill: test
 
 ## Description

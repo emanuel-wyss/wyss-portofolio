@@ -1,3 +1,8 @@
+---
+name: type-check
+description: "Run TypeScript type-checking across the entire repository and resolve every error."
+---
+
 # Skill: type-check
 
 ## Description

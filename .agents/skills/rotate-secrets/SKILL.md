@@ -1,3 +1,8 @@
+---
+name: rotate-secrets
+description: "Rotate ALL application secrets **programmatically** (PAYLOAD_SECRET, DATABASE_URL, R2 keys, Cloudflare token) and update both `.env.local` and the Railway `web` + `admin` services — **without any secret value ever passing through the agent's context, and without manual dashboard steps**. The script talks to each provider's API to mint new credentials itself: - `PAYLOAD_SECRET` — generated locally (Web Crypto). - `DATABASE_URL` — `ALTER USER … PASSWORD` on Postgres (via `Bun.sql`), URL rebuilt. - `R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY` — Cloudflare API creates a new R2   token and deletes the old one. - `CLOUDFLARE_ACCESS_TOKEN` — rolled in place via the Cloudflare roll-token API   (requires the token to be self-rollable; otherwise it reports and you rotate   that one in the dashboard)."
+---
+
 # Skill: rotate-secrets
 
 ## Description

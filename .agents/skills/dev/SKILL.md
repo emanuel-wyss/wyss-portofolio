@@ -1,3 +1,8 @@
+---
+name: dev
+description: "Start the local development environment and verify it is working correctly."
+---
+
 # Skill: dev
 
 ## Description

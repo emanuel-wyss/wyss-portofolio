@@ -1,3 +1,8 @@
+---
+name: add-collection
+description: "Add a new Payload CMS content collection with matching API routes and frontend types."
+---
+
 # Skill: add-collection
 
 ## Description
