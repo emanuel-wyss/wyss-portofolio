@@ -74,6 +74,7 @@ export default buildConfig({
   ],
 
   csrf: [
+    'https://admin.wyss.rocks',
     'https://wyss.rocks',
     'https://www.wyss.rocks',
     'https://web-production-3e6e0.up.railway.app',
@@ -83,6 +84,7 @@ export default buildConfig({
   ],
 
   cors: [
+    'https://admin.wyss.rocks',
     'https://wyss.rocks',
     'https://www.wyss.rocks',
     'https://web-production-3e6e0.up.railway.app',
