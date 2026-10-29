@@ -2,8 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wyss.rocks</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>wyss: home</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%230a0a08%22/><text x=%2250%22 y=%2270%22 font-size=%2265%22 font-family=%22monospace%22 font-weight=%22bold%22 fill=%22%23ffd700%22 text-anchor=%22middle%22>[W]</text></svg>" />
+    <script>
+      (function () {
+        try {
+          var m = localStorage.getItem('wyss-color-mode') || 'auto';
+          var dark = m === 'dark' || (m !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+          var h = document.documentElement;
+          h.setAttribute('data-mode', dark ? 'dark' : 'light');
+          var hr = new Date().getHours();
+          h.setAttribute('data-daytime', hr >= 7 && hr < 22 ? 'day' : 'night');
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

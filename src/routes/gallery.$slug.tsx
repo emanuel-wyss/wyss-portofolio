@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { getAlbumBySlug } from '../lib/api';
 
 export const Route = createFileRoute('/gallery/$slug')({
@@ -43,30 +44,16 @@ function GalleryDetailPage() {
     .filter((img) => img.url);
 
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const [naturalDim, setNaturalDim] = useState<{ w: number; h: number } | null>(null);
-  const [fittedWidth, setFittedWidth] = useState<number>(800);
   const [showMeta, setShowMeta] = useState<boolean>(true);
-
-  // Zoom & Pan state (1 = fit to stage, maxZoom = 1:1 original pixel resolution)
-  const [zoom, setZoom] = useState<number>(1);
-  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState<boolean>(false);
-  const gestureRef = useRef<{
-    x: number;
-    y: number;
-    panX: number;
-    panY: number;
-    moved: boolean;
-    swiped: boolean;
-  }>({
-    x: 0,
-    y: 0,
-    panX: 0,
-    panY: 0,
-    moved: false,
-    swiped: false,
-  });
-  const imgRef = useRef<HTMLImageElement>(null);
+  const [naturalDim, setNaturalDim] = useState<{ w: number; h: number } | null>(null);
+  const touchX = useRef<number | null>(null);
+  // SVG refraction in backdrop-filter only renders in Chromium.
+  const [liquid] = useState(() => typeof navigator !== 'undefined' && 'userAgentData' in navigator);
+  const [reduceMotion] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  // Rect of the clicked thumbnail, used to zoom it into the lightbox (FLIP)
+  const originRect = useRef<DOMRect | null>(null);
 
   const activeImg = activeIndex !== null ? images[activeIndex] : null;
   const w = activeImg?.width || naturalDim?.w || null;
@@ -74,113 +61,159 @@ function GalleryDetailPage() {
   const ratio = w && h ? (w / h).toFixed(2) : null;
   const sizeLabel = formatBytes(activeImg?.filesize);
 
-  // Maximum zoom reaches exact 1:1 original resolution (at least 2.5x)
-  const maxZoom = w && fittedWidth > 0 ? Math.max(2.5, Number((w / fittedWidth).toFixed(2))) : 4;
-
-  const resetView = () => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
-    setNaturalDim(null);
-  };
-
   const goPrev = () => {
-    resetView();
+    setNaturalDim(null);
     setActiveIndex((idx) => (idx === null ? 0 : (idx - 1 + images.length) % images.length));
   };
-
   const goNext = () => {
-    resetView();
+    setNaturalDim(null);
     setActiveIndex((idx) => (idx === null ? 0 : (idx + 1) % images.length));
   };
-
-  const applyZoom = (nextZoom: number) => {
-    const clamped = Math.min(maxZoom, Math.max(1, Number(nextZoom.toFixed(2))));
-    setZoom(clamped);
-    if (clamped <= 1.01) {
-      setPan({ x: 0, y: 0 });
-    }
+  const openAt = (idx: number, el?: HTMLElement | null) => {
+    originRect.current = el?.querySelector('img')?.getBoundingClientRect() ?? null;
+    setNaturalDim(null);
+    setActiveIndex(idx);
   };
 
-  const cycleZoom = () => {
-    if (zoom < 1.8) {
-      applyZoom(Math.min(2, maxZoom));
-    } else if (zoom < maxZoom - 0.15) {
-      applyZoom(maxZoom); // 1:1 Original size
-    } else {
-      applyZoom(1); // Back down to fit
-    }
-  };
+  const lightboxRef = useRef<HTMLDivElement>(null);
+  const thumbAt = (idx: number) =>
+    document.querySelectorAll<HTMLElement>('.gallery-item--interactive')[idx] ?? null;
 
-  // Lock background page scrolling while the lightbox is open
+  // Keep the underlying thumbnail in sync with the image shown in the lightbox:
+  // scroll it into view (so closing zooms back to a visible thumbnail) and mark it.
   useEffect(() => {
-    if (activeIndex === null || typeof document === 'undefined') return;
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    const prevBodyOverflow = document.body.style.overflow;
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-    document.documentElement.setAttribute('data-lightbox-open', '');
+    if (activeIndex === null) return;
+    const thumb = thumbAt(activeIndex);
+    if (!thumb) return;
+    thumb.classList.add('is-current');
+    thumb.scrollIntoView({ block: 'nearest', behavior: 'instant' as ScrollBehavior });
+    return () => thumb.classList.remove('is-current');
+  }, [activeIndex]);
+
+  // Close and hand focus back to the thumbnail of the last viewed image.
+  const finishClose = (idx: number) => {
+    setActiveIndex(null);
+    requestAnimationFrame(() => {
+      const thumb = thumbAt(idx);
+      if (!thumb) return;
+      // Browsers hide :focus-visible after mouse clicks, so mark it explicitly
+      // until focus leaves; works the same for Esc, close button and backdrop.
+      thumb.classList.add('is-focus-return');
+      thumb.addEventListener('blur', () => thumb.classList.remove('is-focus-return'), { once: true });
+      thumb.focus({ preventScroll: true });
+    });
+  };
+  const closing = useRef(false);
+
+  // Zoom the image back into its thumbnail, fade the backdrop, then unmount.
+  const closeLightbox = () => {
+    if (closing.current || activeIndex === null) return;
+    const lightbox = lightboxRef.current;
+    const img = lightbox?.querySelector<HTMLImageElement>('.nerdy-lightbox-img');
+    const idx = activeIndex;
+    const thumb = thumbAt(idx)?.querySelector('img');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!lightbox || !img || !thumb || reduce) {
+      finishClose(idx);
+      return;
+    }
+    closing.current = true;
+    const from = img.getBoundingClientRect();
+    const to = thumb.getBoundingClientRect();
+    const dx = to.left + to.width / 2 - (from.left + from.width / 2);
+    const dy = to.top + to.height / 2 - (from.top + from.height / 2);
+    const scale = to.width / from.width;
+    const opts = { duration: 320, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' as const };
+    lightbox.classList.add('is-closing');
+    const anim = img.animate(
+      [
+        { transform: 'none', borderRadius: '6px' },
+        { transform: `translate(${dx}px, ${dy}px) scale(${scale})`, borderRadius: '10px' },
+      ],
+      opts,
+    );
+    anim.finished.finally(() => {
+      closing.current = false;
+      finishClose(idx);
+    });
+  };
+
+  // Zoom from the thumbnail position into the final lightbox position.
+  const zoomFromThumb = (img: HTMLImageElement) => {
+    const from = originRect.current;
+    originRect.current = null;
+    img.style.visibility = 'visible';
+    if (!from || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const to = img.getBoundingClientRect();
+    if (!to.width || !to.height) return;
+    const dx = from.left + from.width / 2 - (to.left + to.width / 2);
+    const dy = from.top + from.height / 2 - (to.top + to.height / 2);
+    const scale = from.width / to.width;
+    img.animate(
+      [
+        { transform: `translate(${dx}px, ${dy}px) scale(${scale})`, borderRadius: '10px' },
+        { transform: 'none', borderRadius: '6px' },
+      ],
+      { duration: 380, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+    );
+  };
+
+  // Lock background scroll while open
+  useEffect(() => {
+    if (activeIndex === null) return;
+    const root = document.documentElement;
+    const prev = root.style.overflow;
+    root.style.overflow = 'hidden';
+    root.setAttribute('data-lightbox-open', '');
     return () => {
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      document.body.style.overflow = prevBodyOverflow;
-      document.documentElement.removeAttribute('data-lightbox-open');
+      root.style.overflow = prev;
+      root.removeAttribute('data-lightbox-open');
     };
   }, [activeIndex]);
 
   useEffect(() => {
     if (activeIndex === null) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setActiveIndex(null);
-      } else if (e.key === 'ArrowRight') {
-        goNext();
-      } else if (e.key === 'ArrowLeft') {
-        goPrev();
-      } else if (e.key.toLowerCase() === 'i') {
-        setShowMeta((v) => !v);
-      } else if (e.key === '+' || e.key === '=') {
-        applyZoom(zoom + 0.5);
-      } else if (e.key === '-') {
-        applyZoom(zoom - 0.5);
-      } else if (e.key === '0') {
-        applyZoom(1);
-      }
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowRight') goNext();
+      else if (e.key === 'ArrowLeft') goPrev();
+      else if (e.key.toLowerCase() === 'i') setShowMeta((v) => !v);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndex, images.length, zoom, maxZoom]);
-
-  const openAt = (idx: number) => {
-    resetView();
-    setActiveIndex(idx);
-  };
+  }, [activeIndex, images.length]);
 
   const exif = activeImg?.exif;
-  const settingsSummary = [
-    exif?.focalLength,
-    exif?.aperture,
-    exif?.exposure,
-    exif?.iso ? `ISO ${exif.iso}` : undefined,
-  ]
+  const settingsSummary = [exif?.focalLength, exif?.aperture, exif?.exposure, exif?.iso ? `ISO ${exif.iso}` : undefined]
     .filter(Boolean)
     .join(' · ');
 
-  const isOneToOne = Math.abs(zoom - maxZoom) < 0.08;
-  const zoomLabel =
-    zoom <= 1.01 ? 'fit' : isOneToOne ? `1:1 (${Math.round(zoom * 100)}%)` : `${Math.round(zoom * 100)}%`;
-
   const lightboxNode =
     activeImg && activeIndex !== null && typeof document !== 'undefined'
-      ? (
+      ? createPortal(
           <div
-            className="nerdy-lightbox"
+            className={`nerdy-lightbox${liquid ? ' has-liquid' : ''}`}
             role="dialog"
             aria-modal="true"
             aria-label={activeImg.alt || album.title}
-            onClick={() => setActiveIndex(null)}
+            ref={lightboxRef}
+            onClick={closeLightbox}
           >
+            {liquid ? (
+              <svg className="lb-liquid-defs" aria-hidden="true" focusable="false">
+                <filter id="lb-liquid" x="0" y="0" width="100%" height="100%">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.006 0.009" numOctaves="2" seed="7" result="noise">
+                    {reduceMotion ? null : (
+                      <animate attributeName="baseFrequency" dur="14s" repeatCount="indefinite"
+                        values="0.006 0.009;0.009 0.006;0.006 0.009" />
+                    )}
+                  </feTurbulence>
+                  <feDisplacementMap in="SourceGraphic" in2="noise" scale="42" xChannelSelector="R" yChannelSelector="G" />
+                </filter>
+              </svg>
+            ) : null}
             <div className="nerdy-lightbox-window" onClick={(e) => e.stopPropagation()}>
-              {/* Terminal Chrome Header */}
               <header className="nerdy-lightbox-bar">
                 <div className="nerdy-lightbox-title">
                   <span className="tag-badge">IMG_VIEWER</span>
@@ -189,35 +222,7 @@ function GalleryDetailPage() {
                   </span>
                   <span className="filename">{fileFromUrl(activeImg.url, activeImg.filename)}</span>
                 </div>
-
                 <div className="nerdy-lightbox-controls">
-                  <button
-                    type="button"
-                    className="term-chip"
-                    onClick={() => applyZoom(zoom - 0.6)}
-                    disabled={zoom <= 1}
-                    title="Zoom out (-)"
-                  >
-                    -
-                  </button>
-                  <button
-                    type="button"
-                    className="term-chip"
-                    onClick={cycleZoom}
-                    title="Click to cycle Fit → 2× → 1:1 Original Resolution → Fit"
-                  >
-                    zoom:{zoomLabel}
-                  </button>
-                  <button
-                    type="button"
-                    className="term-chip"
-                    onClick={() => applyZoom(zoom + 0.6)}
-                    disabled={zoom >= maxZoom}
-                    title="Zoom in up to 1:1 original size (+)"
-                  >
-                    +
-                  </button>
-
                   {images.length > 1 ? (
                     <>
                       <button type="button" className="term-chip" onClick={goPrev} aria-label="Previous image">
@@ -228,116 +233,49 @@ function GalleryDetailPage() {
                       </button>
                     </>
                   ) : null}
-                  <button
-                    type="button"
+                  <a
                     className="term-chip"
-                    onClick={() => {
-                      const a = document.createElement('a');
-                      a.href = activeImg.url;
-                      a.download = fileFromUrl(activeImg.url, activeImg.filename);
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a);
-                    }}
-                    title="Download full resolution image"
+                    href={activeImg.url}
+                    download={fileFromUrl(activeImg.url, activeImg.filename)}
+                    title="Download full resolution"
                   >
-                    download ↗
-                  </button>
-                  <button
-                    type="button"
-                    className="term-chip"
-                    onClick={() => setShowMeta((v) => !v)}
-                    aria-pressed={showMeta}
-                  >
+                    download ↓
+                  </a>
+                  <button type="button" className="term-chip" onClick={() => setShowMeta((v) => !v)} aria-pressed={showMeta}>
                     exif:{showMeta ? 'on' : 'off'}
                   </button>
-                  <button type="button" className="term-chip" onClick={() => setActiveIndex(null)}>
+                  <button type="button" className="term-chip" onClick={closeLightbox}>
                     esc:close
                   </button>
                 </div>
               </header>
 
-              {/* Stage + EXIF Infobox */}
               <div className={`nerdy-lightbox-stage ${showMeta ? '' : 'nerdy-lightbox-stage--full'}`}>
                 <div
                   className="nerdy-lightbox-viewport"
-                  onWheel={(e) => {
-                    e.preventDefault();
-                    const delta = e.deltaY < 0 ? 0.35 : -0.35;
-                    applyZoom(zoom + delta);
+                  onTouchStart={(e) => {
+                    touchX.current = e.touches[0].clientX;
                   }}
-                  onPointerDown={(e) => {
-                    e.currentTarget.setPointerCapture(e.pointerId);
-                    setDragging(true);
-                    gestureRef.current = {
-                      x: e.clientX,
-                      y: e.clientY,
-                      panX: pan.x,
-                      panY: pan.y,
-                      moved: false,
-                      swiped: false,
-                    };
-                  }}
-                  onPointerMove={(e) => {
-                    if (!dragging) return;
-                    const dx = e.clientX - gestureRef.current.x;
-                    const dy = e.clientY - gestureRef.current.y;
-                    if (Math.hypot(dx, dy) > 6) gestureRef.current.moved = true;
-
-                    if (zoom > 1.01) {
-                      setPan({
-                        x: gestureRef.current.panX + dx,
-                        y: gestureRef.current.panY + dy,
-                      });
-                    }
-                  }}
-                  onPointerUp={(e) => {
-                    if (!dragging) return;
-                    setDragging(false);
-                    const dx = e.clientX - gestureRef.current.x;
-                    const dy = e.clientY - gestureRef.current.y;
-                    // When at fit zoom (1x), horizontal swipe switches images
-                    if (zoom <= 1.01 && images.length > 1 && Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-                      gestureRef.current.swiped = true;
-                      if (dx < 0) goNext();
-                      else goPrev();
-                    }
-                  }}
-                  onClick={() => {
-                    if (gestureRef.current.moved || gestureRef.current.swiped) {
-                      gestureRef.current.moved = false;
-                      gestureRef.current.swiped = false;
-                      return;
-                    }
-                    cycleZoom();
-                  }}
-                  style={{
-                    cursor: zoom > 1 ? (dragging ? 'grabbing' : 'grab') : 'zoom-in',
+                  onTouchEnd={(e) => {
+                    if (touchX.current === null || images.length < 2) return;
+                    const dx = e.changedTouches[0].clientX - touchX.current;
+                    touchX.current = null;
+                    if (Math.abs(dx) > 50) (dx < 0 ? goNext : goPrev)();
                   }}
                 >
-                  <picture className="nerdy-lightbox-picture">
-                    <source media="(max-width: 640px)" srcSet={activeImg.thumbUrl || activeImg.displayUrl || activeImg.url} />
-                    <source media="(max-width: 1200px)" srcSet={activeImg.displayUrl || activeImg.url} />
+                  <picture key={activeImg.url}>
+                    {activeImg.thumbUrl ? <source media="(max-width: 640px)" srcSet={activeImg.thumbUrl} /> : null}
                     <img
-                      ref={imgRef}
-                      key={activeImg.displayUrl || activeImg.url}
                       src={activeImg.displayUrl || activeImg.url}
                       decoding="async"
                       alt={activeImg.alt || album.title}
                       draggable={false}
                       className="nerdy-lightbox-img"
-                      style={{
-                        transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
-                        transition: dragging ? 'none' : 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
-                      }}
+                      style={{ visibility: 'hidden' }}
                       onLoad={(e) => {
                         const el = e.currentTarget;
-                        if (el.naturalWidth && el.naturalHeight) {
-                          setNaturalDim({ w: el.naturalWidth, h: el.naturalHeight });
-                        }
-                        if (el.clientWidth > 0) {
-                          setFittedWidth(el.clientWidth);
-                        }
+                        if (el.naturalWidth) setNaturalDim({ w: el.naturalWidth, h: el.naturalHeight });
+                        zoomFromThumb(el);
                       }}
                     />
                   </picture>
@@ -414,7 +352,8 @@ function GalleryDetailPage() {
                 ) : null}
               </div>
             </div>
-          </div>
+          </div>,
+          document.body,
         )
       : null;
 
@@ -435,14 +374,14 @@ function GalleryDetailPage() {
             <figure
               className="gallery-item gallery-item--interactive"
               key={img.id || idx}
-              onClick={() => openAt(idx)}
+              onClick={(e) => openAt(idx, e.currentTarget)}
               role="button"
               tabIndex={0}
               aria-label={`Inspect image ${idx + 1}: ${img.alt || album.title}`}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  openAt(idx);
+                  openAt(idx, e.currentTarget);
                 }
               }}
             >
@@ -457,7 +396,6 @@ function GalleryDetailPage() {
                 </span>
                 <span className="gallery-item-hint">INSPECT ↗</span>
               </div>
-              {img.caption ? <figcaption>{img.caption}</figcaption> : null}
             </figure>
           ))}
         </div>

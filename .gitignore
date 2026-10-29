@@ -41,3 +41,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # stray Payload-generated types at root (use admin/src/payload-types.ts)
 /payload-types.ts
+
+# Local visual test artifacts
+test-results/
+lightbox-proof.png
+pi-session-*.html

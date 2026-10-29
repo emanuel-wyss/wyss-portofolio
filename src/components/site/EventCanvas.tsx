@@ -586,6 +586,12 @@ export function EventCanvas({
 
     const draw = (time: number) => {
       if (!visible) return;
+      // Pause while the gallery lightbox is open (canvas is hidden behind it anyway)
+      if (document.documentElement.hasAttribute('data-lightbox-open')) {
+        last = time;
+        raf = requestAnimationFrame(draw);
+        return;
+      }
       const dt = Math.min(2, (time - last) / 16.67 || 1);
       last = time;
       ctx.clearRect(0, 0, width, height);

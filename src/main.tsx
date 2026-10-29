@@ -6,6 +6,8 @@ const router = createRouter({
   routeTree,
   defaultPreload: 'intent',
   scrollRestoration: true,
+  // Native View Transitions only on route navigation (CSS in styles/transitions.css)
+  defaultViewTransition: true,
 });
 
 declare module '@tanstack/react-router' {

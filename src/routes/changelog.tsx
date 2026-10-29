@@ -9,6 +9,16 @@ export const Route = createFileRoute('/changelog')({
 
 const CHANGES = [
   {
+    date: '2026-10-29',
+    title: 'Gallery Masonry & Liquid Glass Lightbox',
+    items: [
+      'Gallery thumbnails now use a column-based masonry layout with responsive <picture> sources.',
+      'Lightbox zooms the clicked thumbnail into view and back again on close, over a transparent liquid-glass backdrop.',
+      'Lightbox images are clamped to the viewport, with a full-resolution download button and keyboard/swipe navigation.',
+      'Fixed site-wide click freeze caused by the app rendering its own <html>/<body> inside #app.',
+    ],
+  },
+  {
     date: '2026-03-31',
     title: 'Thematic Weather View Transitions & Modular Styles',
     items: [
