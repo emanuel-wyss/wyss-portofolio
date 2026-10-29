@@ -231,6 +231,21 @@ function GalleryDetailPage() {
                   <button
                     type="button"
                     className="term-chip"
+                    onClick={() => {
+                      const a = document.createElement('a');
+                      a.href = activeImg.url;
+                      a.download = fileFromUrl(activeImg.url, activeImg.filename);
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                    }}
+                    title="Download full resolution image"
+                  >
+                    download ↗
+                  </button>
+                  <button
+                    type="button"
+                    className="term-chip"
                     onClick={() => setShowMeta((v) => !v)}
                     aria-pressed={showMeta}
                   >
@@ -300,28 +315,32 @@ function GalleryDetailPage() {
                     cursor: zoom > 1 ? (dragging ? 'grabbing' : 'grab') : 'zoom-in',
                   }}
                 >
-                  <img
-                    ref={imgRef}
-                    key={activeImg.displayUrl || activeImg.url}
-                    src={activeImg.displayUrl || activeImg.url}
-                    decoding="async"
-                    alt={activeImg.alt || album.title}
-                    draggable={false}
-                    className="nerdy-lightbox-img"
-                    style={{
-                      transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
-                      transition: dragging ? 'none' : 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
-                    }}
-                    onLoad={(e) => {
-                      const el = e.currentTarget;
-                      if (el.naturalWidth && el.naturalHeight) {
-                        setNaturalDim({ w: el.naturalWidth, h: el.naturalHeight });
-                      }
-                      if (el.clientWidth > 0) {
-                        setFittedWidth(el.clientWidth);
-                      }
-                    }}
-                  />
+                  <picture className="nerdy-lightbox-picture">
+                    <source media="(max-width: 640px)" srcSet={activeImg.thumbUrl || activeImg.displayUrl || activeImg.url} />
+                    <source media="(max-width: 1200px)" srcSet={activeImg.displayUrl || activeImg.url} />
+                    <img
+                      ref={imgRef}
+                      key={activeImg.displayUrl || activeImg.url}
+                      src={activeImg.displayUrl || activeImg.url}
+                      decoding="async"
+                      alt={activeImg.alt || album.title}
+                      draggable={false}
+                      className="nerdy-lightbox-img"
+                      style={{
+                        transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
+                        transition: dragging ? 'none' : 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
+                      }}
+                      onLoad={(e) => {
+                        const el = e.currentTarget;
+                        if (el.naturalWidth && el.naturalHeight) {
+                          setNaturalDim({ w: el.naturalWidth, h: el.naturalHeight });
+                        }
+                        if (el.clientWidth > 0) {
+                          setFittedWidth(el.clientWidth);
+                        }
+                      }}
+                    />
+                  </picture>
                 </div>
 
                 {showMeta ? (
@@ -427,7 +446,11 @@ function GalleryDetailPage() {
                 }
               }}
             >
-              <img src={img.thumbUrl || img.url} alt={img.alt || album.title} loading="lazy" />
+              <picture>
+                <source media="(max-width: 640px)" srcSet={img.thumbUrl || img.url} />
+                <source media="(max-width: 1200px)" srcSet={img.displayUrl || img.url} />
+                <img src={img.displayUrl || img.url} alt={img.alt || album.title} loading="lazy" />
+              </picture>
               <div className="gallery-item-overlay">
                 <span className="gallery-item-idx">
                   [{String(idx + 1).padStart(2, '0')}/{String(images.length).padStart(2, '0')}]
