@@ -283,11 +283,16 @@ code {
 }
 
 .site-socials a,
-.site-cv-link {
+.site-cv-link,
+.footer-changelog-link {
   text-transform: capitalize;
   display: inline-block;
   width: fit-content;
   align-self: flex-start;
+}
+
+.footer-changelog-link.active {
+  color: var(--accent);
 }
 
 .site-theme-bar {

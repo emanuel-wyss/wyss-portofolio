@@ -25,10 +25,6 @@ export function SiteMenu() {
           <Link to="/work" className={pathname === '/work' ? 'active' : ''}>
             Work
           </Link>
-          <span className="nav-index">03—</span>
-          <Link to="/changelog" className={pathname === '/changelog' ? 'active' : ''}>
-            Changelog
-          </Link>
         </nav>
       </div>
     </header>
