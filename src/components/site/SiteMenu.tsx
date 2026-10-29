@@ -10,7 +10,7 @@ export function SiteMenu() {
       <div className="site-nav-terminal" aria-hidden="true">
         <span className="terminal-prompt">root@wyss</span>
         <span className="terminal-path">~/rocks</span>
-        <span className="terminal-status"><i /> ONLINE / 8080</span>
+        <span className="terminal-status"><i /> ONLINE / :80</span>
       </div>
       <div className="site-nav-inner">
         <Link to="/" className="site-logo glitch" aria-label="Home" data-text="WYSS">

@@ -513,117 +513,6 @@
 .prose img { max-width: 100%; border-radius: 10px; margin: var(--spacing-lg) 0; }
 .prose hr { border: none; border-top: 1px solid var(--border-color); margin: var(--spacing-xl) 0; }
 
-/* Lightbox (portaled to <body>, so fixed = viewport) */
-.nerdy-lightbox {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  display: grid;
-  place-items: center;
-  padding: clamp(0.5rem, 2vw, 2rem);
-  /* liquid glass backdrop: nearly clear, light frost, faint sheen */
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 45%, rgba(255, 255, 255, 0.05)),
-    rgba(10, 10, 8, 0.06);
-  backdrop-filter: blur(2px) saturate(150%);
-  -webkit-backdrop-filter: blur(2px) saturate(150%);
-}
-/* Chromium only: add a refractive "liquid" displacement (SVG filter in the lightbox).
-   Safari/Firefox ignore url() in backdrop-filter, so they keep the plain frost above. */
-.nerdy-lightbox.has-liquid {
-  backdrop-filter: url(#lb-liquid) saturate(150%);
-}
-:root[data-mode='light'] .nerdy-lightbox {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0.14)),
-    rgba(250, 248, 240, 0.06);
-}
-.lb-liquid-defs { position: absolute; width: 0; height: 0; }
-@keyframes lightboxFadeIn { from { opacity: 0; } to { opacity: 1; } }
-.nerdy-lightbox { animation: lightboxFadeIn 0.25s ease-out both; }
-.nerdy-lightbox-bar, .nerdy-lightbox-meta { animation: lightboxFadeIn 0.35s 0.1s ease-out both; }
-@media (prefers-reduced-motion: reduce) {
-  .nerdy-lightbox, .nerdy-lightbox-bar, .nerdy-lightbox-meta { animation: none; }
-}
-/* Closing: backdrop + chrome fade out while the image zooms back into its thumbnail */
-.nerdy-lightbox {
-  transition: background-color 0.32s ease, backdrop-filter 0.32s ease, -webkit-backdrop-filter 0.32s ease;
-}
-.nerdy-lightbox.is-closing {
-  animation: none;
-  background: transparent;
-  backdrop-filter: blur(0) saturate(100%);
-  -webkit-backdrop-filter: blur(0) saturate(100%);
-}
-.nerdy-lightbox.is-closing .nerdy-lightbox-window {
-  background-color: transparent;
-  border-color: transparent;
-  box-shadow: none;
-}
-.nerdy-lightbox.is-closing .nerdy-lightbox-bar,
-.nerdy-lightbox.is-closing .nerdy-lightbox-meta { animation: lightboxFadeOut 0.15s ease-in both; }
-@keyframes lightboxFadeOut { from { opacity: 1; } to { opacity: 0; } }
-
-/* Fade the event canvas out while the lightbox is open (and back in after) */
-.event-canvas { transition: opacity 0.35s ease; }
-html[data-lightbox-open] .event-canvas { opacity: 0 !important; }
-.nerdy-lightbox-window {
-  width: min(1440px, 100%);
-  max-height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--bg-primary) 18%, transparent);
-  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 30px 90px rgba(0, 0, 0, 0.6);
-}
-.nerdy-lightbox-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  padding: 0.55rem 0.85rem;
-  border-bottom: 1px solid var(--border-color);
-  background: color-mix(in srgb, var(--bg-secondary) 62%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  font: 11px var(--font-mono);
-}
-.nerdy-lightbox-controls a.term-chip { text-decoration: none; }
-.nerdy-lightbox-stage {
-  display: grid;
-  grid-template-columns: 1fr 280px;
-  min-height: 0;
-}
-.nerdy-lightbox-stage--full { grid-template-columns: 1fr; }
-.nerdy-lightbox-viewport {
-  display: grid;
-  place-items: center;
-  padding: 0.75rem;
-  min-width: 0;
-}
-/* Never larger than the viewport: leave room for chrome bar + padding */
-.nerdy-lightbox-img {
-  display: block;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: calc(100dvh - 8rem);
-  object-fit: contain;
-  border-radius: 6px;
-}
-.nerdy-lightbox-meta { max-height: calc(100dvh - 8rem); overflow-y: auto; align-self: stretch; }
-@media (max-width: 820px) {
-  .nerdy-lightbox-stage { grid-template-columns: 1fr; }
-  .nerdy-lightbox-img { max-height: calc(100dvh - 14rem); }
-  .nerdy-lightbox-meta { max-height: 30dvh; border-left: 0; border-top: 1px solid var(--border-color); }
-}
 .privacy-page { padding: var(--spacing-xl) 0 var(--spacing-2xl); }
 
 /* Snippet Code Block Enhancements */
@@ -698,24 +587,6 @@ html[data-lightbox-open] .event-canvas { opacity: 0 !important; }
   display: block;
 }
 
-.nerdy-lightbox-title { display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); }
-.nerdy-lightbox-title .tag-badge { background: var(--accent); color: var(--bg-primary); font: 700 9px var(--font-pixel); padding: 0.18rem 0.4rem; }
-.nerdy-lightbox-title .filename { color: var(--text-primary); }
-.nerdy-lightbox-controls { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-.nerdy-lightbox-meta {
-  border-left: 1px solid var(--border-color);
-  padding: 0.9rem;
-  font: 11px var(--font-mono);
-  /* readable panel on top of the clear glass */
-  background: color-mix(in srgb, var(--bg-secondary) 62%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-.nerdy-lightbox-meta .meta-head { color: var(--accent); font: 700 9px var(--font-pixel); padding-bottom: 0.5rem; margin-bottom: 0.65rem; border-bottom: 1px dashed var(--border-color); }
-.nerdy-lightbox-meta .meta-grid { display: flex; flex-direction: column; gap: 0.55rem; margin: 0; }
-.nerdy-lightbox-meta dt { font: 8px var(--font-pixel); color: var(--text-secondary); }
-.nerdy-lightbox-meta dd { margin: 0.1rem 0 0; color: var(--text-primary); word-break: break-word; }
-.nerdy-lightbox-meta .meta-accent { color: var(--accent); }
 
 /* Thumbnail overlay: on the image, only visible on hover/focus (no text below images) */
 .gallery-item--interactive {
@@ -755,3 +626,213 @@ html[data-lightbox-open] .event-canvas { opacity: 0 !important; }
 .gallery-item--interactive.is-current,
 .gallery-item--interactive.is-focus-return { outline: 2px solid var(--accent); outline-offset: 2px; }
 .gallery-item--interactive.is-focus-return .gallery-item-overlay { opacity: 1; transform: none; }
+
+/* ===========================================================================
+   Lightbox slider (portaled to <body>): controls in header, metadata in footer
+   =========================================================================== */
+.nerdy-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  /* Liquid glass over the page: refracting edge highlights, accent-tinted
+     sheen, light frost, darkened so the image stays the focus. */
+  background:
+    radial-gradient(140% 90% at 50% -10%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 55%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, 0.06) 100%),
+    rgba(6, 6, 5, 0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 0 120px rgba(255, 255, 255, 0.04),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(5px) saturate(160%) brightness(0.95);
+  -webkit-backdrop-filter: blur(5px) saturate(160%) brightness(0.95);
+  animation: lightboxFadeIn 0.25s ease-out both;
+  transition: background-color 0.32s ease, backdrop-filter 0.32s ease;
+}
+/* Chromium: the page behind the glass ripples like water (driven from JS) */
+.nerdy-lightbox.has-liquid { backdrop-filter: url(#lb-liquid) blur(5px) saturate(160%) brightness(0.95); }
+:root[data-mode='light'] .nerdy-lightbox {
+  background:
+    radial-gradient(140% 90% at 50% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 55%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.04) 30%, rgba(255, 255, 255, 0.04) 70%, rgba(255, 255, 255, 0.2) 100%),
+    rgba(20, 18, 12, 0.28);
+}
+.lb-liquid-defs { position: absolute; width: 0; height: 0; }
+
+.nerdy-lightbox-bar,
+.nerdy-lightbox-meta {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  flex-wrap: wrap;
+  padding: 0.6rem clamp(0.75rem, 2vw, 1.5rem);
+  font: 11px var(--font-mono);
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--bg-primary) 55%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  animation: lightboxFadeIn 0.35s 0.1s ease-out both;
+}
+.nerdy-lightbox-bar { justify-content: space-between; border-bottom: 1px solid var(--border-color); }
+.nerdy-lightbox-meta { border-top: 1px solid var(--border-color); }
+.nerdy-lightbox-title { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+.nerdy-lightbox-title .tag-badge { background: var(--accent); color: var(--bg-primary); font: 700 9px var(--font-pixel); padding: 0.18rem 0.4rem; }
+.nerdy-lightbox-title .filename { color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nerdy-lightbox-controls { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.nerdy-lightbox-controls a.term-chip { text-decoration: none; }
+
+.nerdy-lightbox-meta .meta-head { color: var(--accent); font: 700 9px var(--font-pixel); }
+.nerdy-lightbox-meta .meta-grid { display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; margin: 0; }
+.nerdy-lightbox-meta .meta-grid > div { display: flex; gap: 0.4rem; align-items: baseline; }
+.nerdy-lightbox-meta dt { font: 8px var(--font-pixel); color: var(--text-secondary); }
+.nerdy-lightbox-meta dd { margin: 0; color: var(--text-primary); }
+.nerdy-lightbox-meta .meta-accent { color: var(--accent); }
+.nerdy-lightbox-meta .meta-caption { margin: 0; flex-basis: 100%; color: var(--text-secondary); }
+
+/* Stage: images stacked in one centred cell; switching melts one into the other */
+.nerdy-lightbox-slider {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  min-height: 0;
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  --melt-out: 1;
+  --melt-in: 0;
+  --melt-shift: 0%;
+  --melt-shift-out: 0%;
+  --melt-tone: 0;
+  --melt-blur: 0px;
+  --lb-pad: clamp(0.5rem, 2vw, 1.5rem);
+  place-items: center;
+}
+/* Frame that morphs between aspect ratios during a switch (sized from JS) */
+.lb-frame {
+  position: relative;
+  display: grid;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 6px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+}
+.nerdy-lightbox-slider:active { cursor: grabbing; }
+.lb-layer {
+  grid-area: 1 / 1;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+}
+.lb-layer picture { display: contents; }
+/* images fill the morphing frame; cover keeps them edge-to-edge while the box reshapes */
+.lb-frame .nerdy-lightbox-img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  box-shadow: none;
+}
+/* outgoing image: softens and wobbles away */
+.lb-layer--from.is-melting {
+  filter: url(#lb-melt-out) blur(var(--melt-blur));
+  opacity: var(--melt-out);
+}
+/* incoming image: comes into focus on top (filters only while actually melting) */
+.lb-layer--to.is-melting {
+  filter: url(#lb-melt-in) blur(var(--melt-blur));
+  opacity: var(--melt-in);
+}
+/* hand-off frame at the end of a melt: nothing may fade or refilter */
+.nerdy-lightbox-slider.is-settling .lb-layer { filter: none; opacity: 1; transition: none; }
+.nerdy-lightbox-slider.is-settling .lb-melt-tone { display: none; }
+.lb-layer--to { z-index: 2; }
+.lb-layer--from { z-index: 0; }
+
+/* Water tone between images (theme accent), peaks at the midpoint */
+.lb-melt-tone {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 6px;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: calc(var(--melt-tone) * 0.9);
+}
+/* splash: concentric ripple rings expanding from the click / arrow edge */
+.lb-melt-tone--splash {
+  background:
+    repeating-radial-gradient(
+      circle at var(--ox, 50%) var(--oy, 50%),
+      transparent 0 calc(var(--ring, 0%) - 9%),
+      color-mix(in srgb, var(--accent) 55%, transparent) calc(var(--ring, 0%) - 6%),
+      transparent calc(var(--ring, 0%) - 3%),
+      transparent calc(var(--ring, 0%))
+    ),
+    radial-gradient(circle at var(--ox, 50%) var(--oy, 50%), color-mix(in srgb, var(--accent) 35%, transparent), transparent 60%);
+  filter: blur(6px);
+}
+/* swipe: a linear wave band travelling with the drag */
+.lb-melt-tone--swipe {
+  background: linear-gradient(
+    90deg,
+    transparent calc(var(--front, 50%) - 22%),
+    color-mix(in srgb, var(--accent) 22%, transparent) calc(var(--front, 50%) - 10%),
+    color-mix(in srgb, var(--accent) 55%, transparent) var(--front, 50%),
+    color-mix(in srgb, var(--accent) 22%, transparent) calc(var(--front, 50%) + 10%),
+    transparent calc(var(--front, 50%) + 22%)
+  );
+  filter: blur(14px);
+}
+:root[data-mode='light'] .lb-melt-tone { mix-blend-mode: multiply; opacity: calc(var(--melt-tone) * 0.55); }
+.lb-frame .nerdy-lightbox-img { cursor: pointer; }
+/* Browsers without SVG filters on HTML still get a soft cross-blur */
+@supports not (-webkit-touch-callout: none) {
+  .lb-layer.is-melting { will-change: opacity, transform, filter; }
+}
+.nerdy-lightbox-img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100dvh - 9rem);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+  cursor: default;
+}
+
+@keyframes lightboxFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lightboxFadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+/* Closing: chrome + glass fade while the image zooms back to its thumbnail */
+.nerdy-lightbox.is-closing {
+  animation: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* no frame shadow/radius/tone may linger while the image flies back */
+.nerdy-lightbox.is-closing .lb-frame { box-shadow: none; background: none; }
+.nerdy-lightbox.is-closing .lb-melt-tone { display: none; }
+.nerdy-lightbox.is-closing .nerdy-lightbox-bar,
+.nerdy-lightbox.is-closing .nerdy-lightbox-meta { animation: lightboxFadeOut 0.15s ease-in both; }
+.nerdy-lightbox.is-closing .nerdy-lightbox-img { box-shadow: none; }
+.nerdy-lightbox.is-closing .lb-layer--to { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nerdy-lightbox, .nerdy-lightbox-bar, .nerdy-lightbox-meta { animation: none; }
+}
+@media (max-width: 640px) {
+  .nerdy-lightbox-controls { width: 100%; }
+  .nerdy-lightbox-img { max-height: calc(100dvh - 12rem); }
+}
+
+/* Fade the event canvas out while the lightbox is open (and back in after) */
+.event-canvas { transition: opacity 0.35s ease; }
+html[data-lightbox-open] .event-canvas { opacity: 0 !important; }

@@ -29,54 +29,124 @@ function unlock(event: SpecialEventType, achievement: string) {
   }
 }
 
-function playEventSound(enabled: boolean, event: SpecialEventType, variant = 0) {
-  if (!enabled || typeof window === 'undefined') return;
+// ---------------------------------------------------------------------------
+// Event sound: a tiny synth. One shared AudioContext; every note is snapped to
+// an event-specific scale so random interactions still sound musical.
+// ---------------------------------------------------------------------------
+type Voice = { type: OscillatorType; scale: number[]; root: number };
+const SCALES = {
+  minorPent: [0, 3, 5, 7, 10],
+  majorPent: [0, 2, 4, 7, 9],
+  lydian: [0, 2, 4, 6, 7, 9, 11],
+  dorian: [0, 2, 3, 5, 7, 9, 10],
+};
+const VOICES: Record<SpecialEventType | 'default', Voice> = {
+  halloween: { type: 'triangle', scale: SCALES.minorPent, root: 146.83 }, // D3 minor pentatonic, spooky
+  christmas: { type: 'sine', scale: SCALES.majorPent, root: 523.25 }, // bells
+  newyear: { type: 'triangle', scale: SCALES.lydian, root: 261.63 },
+  swiss: { type: 'triangle', scale: SCALES.majorPent, root: 392.0 }, // alphorn-ish
+  valentines: { type: 'sine', scale: SCALES.majorPent, root: 329.63 },
+  easter: { type: 'sine', scale: SCALES.majorPent, root: 440.0 },
+  pride: { type: 'sine', scale: SCALES.lydian, root: 349.23 },
+  aprilfools: { type: 'square', scale: SCALES.dorian, root: 196.0 },
+  default: { type: 'sine', scale: SCALES.majorPent, root: 261.63 },
+};
+
+let sharedAudio: AudioContext | null = null;
+function audioCtx(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  const AC = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AC) return null;
+  if (!sharedAudio) sharedAudio = new AC();
+  if (sharedAudio.state === 'suspended') void sharedAudio.resume();
+  return sharedAudio;
+}
+/** Frequency of scale degree `step` (can exceed one octave) for an event voice. */
+function noteFreq(v: Voice, step: number): number {
+  const n = v.scale.length;
+  const oct = Math.floor(step / n);
+  const semis = v.scale[((step % n) + n) % n] + oct * 12;
+  return v.root * Math.pow(2, semis / 12);
+}
+/** Map a 0..1 position (e.g. pointer y, inverted) onto 2 octaves of the scale. */
+function stepFromPosition(v: Voice, pos: number): number {
+  return Math.round(Math.max(0, Math.min(1, pos)) * v.scale.length * 2);
+}
+function pluck(event: SpecialEventType, step: number, when = 0, length = 0.22, gainLevel = 0.03) {
+  const ac = audioCtx();
+  if (!ac) return;
+  const v = VOICES[event] ?? VOICES.default;
+  const t = ac.currentTime + when;
+  const osc = ac.createOscillator();
+  const g = ac.createGain();
+  osc.type = v.type;
+  osc.frequency.setValueAtTime(noteFreq(v, step), t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(gainLevel, t + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + length);
+  osc.connect(g).connect(ac.destination);
+  osc.start(t);
+  osc.stop(t + length + 0.02);
+}
+
+function playEventSound(enabled: boolean, event: SpecialEventType, variant = 0, pos?: number) {
+  if (!enabled) return;
   try {
-    const AudioContextClass =
-      window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const audio = new AudioContextClass();
-    const osc = audio.createOscillator();
-    const gain = audio.createGain();
-    const now = audio.currentTime;
-
-    if (event === 'halloween') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(240 - variant * 40, now);
-      osc.frequency.exponentialRampToValueAtTime(110, now + 0.18);
-    } else if (event === 'christmas') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880 + variant * 220, now);
-      osc.frequency.exponentialRampToValueAtTime(1320, now + 0.14);
-    } else if (event === 'newyear' || event === 'swiss') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(180, now);
-      osc.frequency.exponentialRampToValueAtTime(520, now + 0.16);
-    } else if (event === 'valentines') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(523.25, now);
-      osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.2);
-    } else if (event === 'easter') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(440, now);
-      osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
-    } else if (event === 'pride') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(440 + (variant % 6) * 80, now);
-    } else {
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(160 + (variant % 4) * 190, now);
-    }
-
-    gain.gain.setValueAtTime(0.025, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-    osc.connect(gain).connect(audio.destination);
-    osc.start();
-    osc.stop(now + 0.18);
-    osc.addEventListener('ended', () => void audio.close());
+    const v = VOICES[event] ?? VOICES.default;
+    const step = pos !== undefined ? stepFromPosition(v, pos) : variant % (v.scale.length * 2);
+    pluck(event, step);
   } catch {
     /* optional */
   }
+}
+
+/** A short rising arpeggio for "perfect" moments (achievements, all eggs found…). */
+function playMelody(enabled: boolean, event: SpecialEventType) {
+  if (!enabled) return;
+  try {
+    const v = VOICES[event] ?? VOICES.default;
+    const n = v.scale.length;
+    [0, 2, 4, n, n + 2, n + 4].forEach((step, i) => pluck(event, step, i * 0.09, 0.35, 0.035));
+  } catch {
+    /* optional */
+  }
+}
+
+/** A held tone that glides with the pointer while it is pressed. */
+function createDrone(event: SpecialEventType) {
+  const ac = audioCtx();
+  if (!ac) return null;
+  const v = VOICES[event] ?? VOICES.default;
+  const osc = ac.createOscillator();
+  const g = ac.createGain();
+  const lp = ac.createBiquadFilter();
+  osc.type = v.type === 'square' ? 'triangle' : v.type;
+  lp.type = 'lowpass';
+  lp.frequency.value = 1800;
+  g.gain.setValueAtTime(0.0001, ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.018, ac.currentTime + 0.08);
+  osc.connect(lp).connect(g).connect(ac.destination);
+  osc.start();
+  let lastStep = -1;
+  return {
+    // x picks the scale note (stepped, so it stays in key); y adds vibrato depth
+    move(x: number, y: number) {
+      const step = stepFromPosition(v, x);
+      const t = ac.currentTime;
+      if (step !== lastStep) {
+        osc.frequency.setTargetAtTime(noteFreq(v, step), t, 0.03);
+        lastStep = step;
+      }
+      lp.frequency.setTargetAtTime(600 + (1 - y) * 2400, t, 0.05);
+    },
+    stop() {
+      const t = ac.currentTime;
+      g.gain.cancelScheduledValues(t);
+      g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+      osc.stop(t + 0.2);
+    },
+  };
 }
 
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
@@ -96,7 +166,8 @@ function drawGhost(
   phase: number,
   vx: number,
   mode: 'follow' | 'flee' | 'breakdance',
-  lookAngle: number
+  lookAngle: number,
+  phantom = 0
 ) {
   ctx.save();
   ctx.translate(x, y);
@@ -110,12 +181,44 @@ function drawGhost(
         ? '#ff7518'
         : '#39ff14';
 
-  // Smooth breakdance groove or gentle directional tilt when gliding
+  // Breakdance: cycles through moves every ~4s of dance time
+  //  0 toprock      1 windmill     2 headspin     3 freeze      4 moonwalk
+  //  5 kangaroo     6 floor roll   7 the crawl (Raygun specials)
+  const move = mode === 'breakdance' ? Math.floor(phase / 6) % 8 : -1;
   if (mode === 'breakdance') {
-    const bounceY = Math.sin(phase * 2.4) * 4;
-    ctx.translate(0, bounceY);
-    const spinAngle = Math.sin(phase * 1.1) * Math.PI * 0.85;
-    ctx.rotate(spinAngle);
+    const t = phase % 6;
+    if (move === 0) {
+      ctx.translate(Math.sin(phase * 1.2) * 6, Math.abs(Math.sin(phase * 2.4)) * -6);
+      ctx.rotate(Math.sin(phase * 2.4) * 0.25);
+    } else if (move === 1) {
+      ctx.translate(0, Math.sin(phase * 2) * 3);
+      ctx.rotate(phase * 2.2);
+    } else if (move === 2) {
+      ctx.translate(0, -4);
+      ctx.rotate(Math.PI);
+      ctx.scale(Math.cos(phase * 6), 1);
+    } else if (move === 3) {
+      ctx.rotate(-0.9 + (t > 5.6 ? Math.sin(phase * 30) * 0.05 : 0));
+      ctx.translate(-6, 4);
+    } else if (move === 4) {
+      ctx.translate(Math.sin(phase * 0.9) * 18, 0);
+      ctx.scale(Math.cos(phase * 0.9) > 0 ? 1 : -1, 1);
+      ctx.rotate(-0.12);
+    } else if (move === 5) {
+      // kangaroo: crouched hops forward and back, squash on landing
+      const hop = Math.abs(Math.sin(phase * 3));
+      ctx.translate(Math.sin(phase * 1.5) * 16, -hop * 14);
+      ctx.scale(1 + (1 - hop) * 0.12, 1 - (1 - hop) * 0.14);
+    } else if (move === 6) {
+      // floor roll: lying sideways, rolling across the floor
+      ctx.translate(Math.sin(phase * 1.1) * 20, 10);
+      ctx.rotate(Math.PI / 2 + Math.sin(phase * 1.1) * 0.4);
+    } else {
+      // the crawl: low to the ground, shuffling side to side
+      ctx.translate(Math.sin(phase * 2.2) * 10, 10);
+      ctx.scale(1.15, 0.72);
+      ctx.rotate(Math.sin(phase * 4.4) * 0.12);
+    }
   } else {
     const tilt = Math.max(-0.22, Math.min(0.22, vx * 0.07));
     ctx.rotate(tilt);
@@ -123,9 +226,15 @@ function drawGhost(
 
   ctx.shadowColor = glowColor;
   ctx.shadowBlur = mode === 'breakdance' ? 20 : 12;
-  ctx.fillStyle = mode === 'flee' ? 'rgba(255, 240, 230, 0.94)' : 'rgba(245, 248, 255, 0.92)';
+  // phantom 0..1: the white sheet goes fully transparent and the outline turns dashed
+  const bodyAlpha = (mode === 'flee' ? 0.94 : 0.92) * (1 - phantom);
+  ctx.fillStyle = mode === 'flee' ? `rgba(255, 240, 230, ${bodyAlpha})` : `rgba(245, 248, 255, ${bodyAlpha})`;
   ctx.strokeStyle = glowColor;
   ctx.lineWidth = 1.5;
+  if (phantom > 0.5) {
+    ctx.setLineDash([5, 4]);
+    ctx.lineDashOffset = -phase * 12;
+  }
 
   // Sheet body with wavy skirt folds
   ctx.beginPath();
@@ -144,12 +253,51 @@ function drawGhost(
   ctx.fill();
   ctx.stroke();
 
+  // Breakdance outfit: green tracksuit over the sheet's lower half with yellow stripes
+  if (mode === 'breakdance') {
+    ctx.save();
+    ctx.clip(); // stay inside the body path we just drew
+    ctx.fillStyle = `rgba(0, 135, 62, ${0.95 - phantom * 0.6})`;
+    ctx.fillRect(-r - 2, 2, r * 2 + 4, 28);
+    ctx.fillStyle = `rgba(255, 214, 10, ${1 - phantom * 0.6})`;
+    ctx.fillRect(-r - 2, 6, r * 2 + 4, 2.5); // chest stripe
+    ctx.fillRect(-r + 4, 2, 2.5, 28); // side stripes
+    ctx.fillRect(r - 6.5, 2, 2.5, 28);
+    ctx.restore();
+  }
+
   // Stubby ghost arms
-  const armWave = mode === 'breakdance' ? Math.sin(phase * 5) * 9 : mode === 'flee' ? -8 : Math.sin(phase * 1.8) * 3;
+  const armWave =
+    move === 5 ? -10 // kangaroo: paws held up
+      : move === 7 ? Math.sin(phase * 4.4) * 6 // crawl: paddling
+        : mode === 'breakdance' ? Math.sin(phase * 5) * 9
+          : mode === 'flee' ? -8 : Math.sin(phase * 1.8) * 3;
   ctx.beginPath();
   ctx.ellipse(-r - 3, 2 + armWave, 6, 3.5, -0.35, 0, Math.PI * 2);
   ctx.ellipse(r + 3, 2 - armWave, 6, 3.5, 0.35, 0, Math.PI * 2);
   ctx.fill();
+  if (phantom > 0.5) ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Green cap with a yellow brim and button while dancing
+  if (mode === 'breakdance') {
+    ctx.save();
+    ctx.shadowBlur = 0;
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#00873e';
+    ctx.beginPath();
+    ctx.arc(0, -18, r * 0.78, Math.PI, 0, false);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#ffd60a';
+    ctx.beginPath();
+    ctx.ellipse(r * 0.55, -18, r * 0.62, 3.2, -0.08, 0, Math.PI * 2); // brim, worn forward
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, -18 - r * 0.78, 2.2, 0, Math.PI * 2); // button
+    ctx.fill();
+    ctx.restore();
+  }
 
   // Face details
   ctx.shadowBlur = 0;
@@ -323,6 +471,9 @@ export function EventCanvas({
       idleFrames: 0,
       fleeFrames: 0,
       inited: false,
+      phantom: 0, // 0 solid → 1 see-through with dashed outline
+      phantomTarget: 0,
+      phantomTimer: 400,
     };
 
     // =========================================================================
@@ -877,7 +1028,16 @@ export function EventCanvas({
           if (w.life >= 32) ghostWisps.splice(i, 1);
         }
 
-        drawGhost(ctx, ghost.x, ghost.y, ghost.phase, ghost.vx, mode, lookAngle);
+        // Every so often the ghost fades into a see-through phantom for a few seconds
+        ghost.phantomTimer -= dt;
+        if (ghost.phantomTimer <= 0) {
+          ghost.phantomTarget = ghost.phantomTarget ? 0 : Math.random() < 0.35 ? 1 : 0;
+          ghost.phantomTimer = ghost.phantomTarget ? rand(50, 95) : rand(300, 700);
+        }
+        // fade out gently, fade back in quickly
+        const k = ghost.phantomTarget > ghost.phantom ? 0.07 : 0.16;
+        ghost.phantom += (ghost.phantomTarget - ghost.phantom) * k * dt;
+        drawGhost(ctx, ghost.x, ghost.y, ghost.phase, ghost.vx, mode, lookAngle, ghost.phantom);
       }
 
       // =======================================================================
@@ -1307,11 +1467,17 @@ export function EventCanvas({
       }
     };
 
+    let drone: ReturnType<typeof createDrone> = null;
     const onPointerDown = (e: PointerEvent) => {
       if (!event) return;
       const x = e.clientX;
       const y = e.clientY;
-      playEventSound(soundEnabled, event, Math.floor(Math.random() * 6));
+      // note follows where you click (left = low, right = high), always in key
+      playEventSound(soundEnabled, event, 0, x / width);
+      if (soundEnabled && !drone) {
+        drone = createDrone(event);
+        drone?.move(x / width, y / height);
+      }
       unlock(event, 'first-interaction');
 
       if (event === 'halloween') {
@@ -1435,8 +1601,23 @@ export function EventCanvas({
 
     resize();
     window.addEventListener('resize', resize, { passive: true });
+    // Held tone that follows the pointer while pressed (mouse or touch)
+    const onDronePointerMove = (e: PointerEvent) => drone?.move(e.clientX / width, e.clientY / height);
+    const stopDrone = () => {
+      drone?.stop();
+      drone = null;
+    };
+    const onAchievement = (e: Event) => {
+      const ev = (e as CustomEvent<{ event: SpecialEventType }>).detail?.event;
+      if (ev) playMelody(soundEnabled, ev);
+    };
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
+    window.addEventListener('pointermove', onDronePointerMove, { passive: true });
+    window.addEventListener('pointerup', stopDrone, { passive: true });
+    window.addEventListener('pointercancel', stopDrone, { passive: true });
+    window.addEventListener('blur', stopDrone);
+    window.addEventListener('wyss-achievement', onAchievement);
     window.addEventListener('scroll', onScroll, { passive: true });
     document.addEventListener('visibilitychange', onVisibility);
     raf = requestAnimationFrame(draw);
@@ -1446,6 +1627,12 @@ export function EventCanvas({
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointermove', onDronePointerMove);
+      window.removeEventListener('pointerup', stopDrone);
+      window.removeEventListener('pointercancel', stopDrone);
+      window.removeEventListener('blur', stopDrone);
+      window.removeEventListener('wyss-achievement', onAchievement);
+      stopDrone();
       window.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', onVisibility);
     };
