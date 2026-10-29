@@ -39,9 +39,13 @@ Default to using Bun instead of Node.js.
 - Prefer `Bun.file` over `node:fs`'s readFile/writeFile
 - Bun.$`ls` instead of execa.
 
-## Testing
+## Pre-commit Gate
 
-Use `bun test` to run tests.
+Always test locally before pushing or committing:
+
+1. `bun test` — run test suite
+2. `bun run build` — run production build
+3. `bun run dev` (or `bun --hot ./server/index.ts`) — verify local dev server works
 
 ```ts#index.test.ts
 import { test, expect } from "bun:test";
