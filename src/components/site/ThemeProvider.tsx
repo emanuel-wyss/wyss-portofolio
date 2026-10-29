@@ -168,9 +168,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     <ThemeContext.Provider value={{ mode, setMode, state, effectsPaused, toggleEffectsPaused, effectsIntensity, setIntensity, preferredEvent, setPreferredEventChoice, soundEnabled, setSoundEnabled, weatherNow }}>
       {children}
       {/* Immersive FX layers — purely decorative, hidden from a11y tree. */}
-      <div className="fx-layer fx-grid" aria-hidden="true" />
       <div className="fx-layer fx-glitch" aria-hidden="true" />
-      <div className="fx-layer fx-scanlines" aria-hidden="true" />
       <div className="fx-layer fx-event" aria-hidden="true" />
       <EventCanvas
         event={state?.event}

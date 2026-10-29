@@ -45,11 +45,6 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.6;
-  background-image:
-    linear-gradient(rgba(255, 215, 0, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 215, 0, 0.025) 1px, transparent 1px);
-  background-size: 32px 32px;
-  background-position: center top;
 }
 
 body::before {
@@ -263,12 +258,16 @@ code {
 .site-socials {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 0.5rem;
 }
 
 .site-socials a,
 .site-cv-link {
   text-transform: capitalize;
+  display: inline-block;
+  width: fit-content;
+  align-self: flex-start;
 }
 
 .site-theme-bar {
@@ -445,8 +444,8 @@ code {
 
 .view-all {
   display: block;
-  text-align: center;
-  margin-top: var(--spacing-xl);
+  width: fit-content;
+  margin: var(--spacing-xl) auto 0;
 }
 
 .work-page,
@@ -892,24 +891,6 @@ nav.site-menu,
   z-index: 1;
 }
 
-/* ---- Neon grid (cyberpunk) ---- */
-.fx-grid {
-  background-image:
-    linear-gradient(var(--accent) 1px, transparent 1px),
-    linear-gradient(90deg, var(--accent) 1px, transparent 1px);
-  background-size: 48px 48px;
-  opacity: calc(0.04 * var(--fx-intensity));
-  mask-image: radial-gradient(ellipse at 50% 0%, black 0%, transparent 75%);
-  -webkit-mask-image: radial-gradient(ellipse at 50% 0%, black 0%, transparent 75%);
-}
-/* Brighter grid at night, softer in light mode. */
-[data-daytime='night'] .fx-grid {
-  opacity: calc(0.08 * var(--fx-intensity));
-}
-[data-mode='light'] .fx-grid {
-  opacity: calc(0.03 * var(--fx-intensity));
-}
-
 /* ---- Background glitch (RGB-split color bands + digital noise) ---- */
 .fx-glitch {
   opacity: calc(0.6 * var(--fx-intensity));
@@ -931,28 +912,11 @@ nav.site-menu,
   content: '';
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(var(--accent) 1px, transparent 1px),
-    linear-gradient(90deg, var(--primary) 1px, transparent 1px);
-  background-size: 48px 48px;
+  background-image: linear-gradient(90deg, transparent 15%, var(--accent) 50%, var(--primary) 85%, transparent 100%);
+  background-size: 100% 3px;
+  background-repeat: no-repeat;
   opacity: 0;
   mix-blend-mode: screen;
-}
-
-/* ---- Scanlines (CRT) ---- */
-.fx-scanlines {
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.12) 0px,
-    rgba(0, 0, 0, 0.12) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  opacity: calc(0.35 * var(--fx-intensity));
-  mix-blend-mode: multiply;
-}
-[data-mode='light'] .fx-scanlines {
-  opacity: calc(0.08 * var(--fx-intensity));
 }
 
 /* ---- Scroll scenes ---- */
@@ -1090,23 +1054,6 @@ html[data-effects-paused] .event-canvas {
    Motion-on: animate FX only when the user allows motion
    =========================================================================== */
 @media (prefers-reduced-motion: no-preference) {
-  @keyframes fxScanMove {
-    from { background-position-y: 0; }
-    to { background-position-y: 3px; }
-  }
-  .fx-scanlines {
-    animation: fxScanMove 0.25s steps(2) infinite;
-  }
-
-  @keyframes fxFlicker {
-    0%, 100% { opacity: calc(0.35 * var(--fx-intensity)); }
-    50% { opacity: calc(0.28 * var(--fx-intensity)); }
-    52% { opacity: calc(0.42 * var(--fx-intensity)); }
-  }
-  [data-daytime='night'] .fx-scanlines {
-    animation: fxScanMove 0.25s steps(2) infinite, fxFlicker 4s ease-in-out infinite;
-  }
-
   /* ---- Background glitch: roaming RGB color bands across the viewport ---- */
   @keyframes fxGlitchBands {
     0%   { background-position: 0 -10%, 0 -10%; }
@@ -1186,8 +1133,6 @@ html[data-effects-paused] .event-canvas {
    Motion-off: everything static, FX dimmed, no animation.
    =========================================================================== */
 @media (prefers-reduced-motion: reduce) {
-  .fx-scanlines { animation: none; opacity: 0.08; }
-  .fx-grid { opacity: 0.03; }
   .fx-glitch { animation: none; opacity: 0; }
   .fx-glitch::before { animation: none; opacity: 0; }
   .fx-event { transition: none; }

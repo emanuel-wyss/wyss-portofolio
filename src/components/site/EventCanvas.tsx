@@ -168,8 +168,24 @@ export function EventCanvas({
     let prevPointerY = -1000;
     let pointerSpeed = 0;
     let scrollY = window.scrollY;
+    let scrollVelocity = 0;
 
     const density = intensity === 'quiet' ? 0.55 : intensity === 'party' ? 1.35 : 1;
+
+    // =========================================================================
+    // 0A. SCROLL-SENSITIVE FLOATING MOTES — Depth-layered parallax particles
+    // =========================================================================
+    type ScrollMote = {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      z: number;
+      size: number;
+      alpha: number;
+      phase: number;
+    };
+    const scrollMotes: ScrollMote[] = [];
 
     // =========================================================================
     // 0. WEATHER PARTICLE STATE — Always active based on live weather
@@ -252,6 +268,23 @@ export function EventCanvas({
     let tearFrames = 0;
 
     const initScene = () => {
+      if (scrollMotes.length === 0) {
+        const moteCount = Math.round(52 * density);
+        for (let i = 0; i < moteCount; i++) {
+          const z = rand(0.35, 1.45);
+          scrollMotes.push({
+            x: rand(0, width),
+            y: rand(0, height),
+            vx: rand(-0.18, 0.18) * z,
+            vy: rand(-0.22, 0.22) * z,
+            z,
+            size: rand(1.1, 2.5) * z,
+            alpha: rand(0.2, 0.55),
+            phase: rand(0, Math.PI * 2),
+          });
+        }
+      }
+
       if (weatherParticles.length === 0) {
         const baseCount =
           weather === 'rainy' || weather === 'stormy'
@@ -452,6 +485,54 @@ export function EventCanvas({
       const dt = Math.min(2, (time - last) / 16.67 || 1);
       last = time;
       ctx.clearRect(0, 0, width, height);
+
+      // =======================================================================
+      // 0A. SCROLL-SENSITIVE FLOATING MOTES RENDER
+      // =======================================================================
+      scrollVelocity *= Math.pow(0.88, dt);
+      if (Math.abs(scrollVelocity) < 0.01) scrollVelocity = 0;
+      const speedMag = Math.min(18, Math.abs(scrollVelocity));
+
+      for (const m of scrollMotes) {
+        m.phase += 0.025 * dt;
+        // Gentle autonomous float + strong depth-scaled scroll parallax
+        m.x += (m.vx + Math.sin(m.phase) * 0.12 * m.z) * dt;
+        m.y += (m.vy + Math.cos(m.phase * 0.8) * 0.1 * m.z - scrollVelocity * m.z * 0.55) * dt;
+
+        // Subtle cursor repulsion
+        const cdx = m.x - pointerX;
+        const cdy = m.y - pointerY;
+        const cdist = Math.hypot(cdx, cdy);
+        if (cdist < 90 && cdist > 1) {
+          m.x += (cdx / cdist) * 0.45 * m.z * dt;
+          m.y += (cdy / cdist) * 0.45 * m.z * dt;
+        }
+
+        if (m.x < -10) m.x += width + 20;
+        if (m.x > width + 10) m.x -= width + 20;
+        if (m.y < -20) m.y += height + 40;
+        if (m.y > height + 20) m.y -= height + 40;
+
+        const pulse = 0.65 + 0.35 * Math.sin(m.phase * 1.6);
+        const boost = Math.min(0.35, speedMag * 0.025);
+        const a = Math.min(0.9, m.alpha * pulse + boost);
+        ctx.strokeStyle = `rgba(255, 215, 0, ${a})`;
+        ctx.fillStyle = `rgba(255, 215, 0, ${a})`;
+
+        if (speedMag > 1.2) {
+          // Stretch into a scroll-sensitive motion streak when scrolling
+          const streak = scrollVelocity * m.z * 1.15;
+          ctx.lineWidth = m.size;
+          ctx.beginPath();
+          ctx.moveTo(m.x, m.y);
+          ctx.lineTo(m.x, m.y + streak);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.arc(m.x, m.y, m.size * 0.55, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
 
       // =======================================================================
       // 0. WEATHER PARTICLE RENDER (always active unless Christmas already snows)
@@ -1160,7 +1241,10 @@ export function EventCanvas({
     };
 
     const onScroll = () => {
-      scrollY = window.scrollY;
+      const nextY = window.scrollY;
+      const delta = nextY - scrollY;
+      scrollY = nextY;
+      scrollVelocity = Math.max(-28, Math.min(28, scrollVelocity + delta * 0.24));
     };
     const onVisibility = () => {
       visible = !document.hidden;
