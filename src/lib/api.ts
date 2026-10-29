@@ -4,7 +4,7 @@
 // During SSG build, fall back to the env var or localhost.
 const API_BASE =
   typeof window !== 'undefined'
-    ? ''
+    ? 'https://wyss.rocks'
     : (import.meta.env.PUBLIC_API_URL || 'http://localhost:3000');
 
 export function getApiUrl(): string {
