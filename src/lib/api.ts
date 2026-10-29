@@ -46,6 +46,7 @@ export interface AlbumDetail extends Album {
   images: Array<{
     id: string;
     url: string;
+    thumbUrl?: string;
     alt: string;
     caption?: string;
     order?: number;
@@ -56,6 +57,15 @@ export interface AlbumDetail extends Album {
     height?: number;
     createdAt?: string;
     tags?: string[];
+    exif?: {
+      camera?: string;
+      lens?: string;
+      focalLength?: string;
+      aperture?: string;
+      exposure?: string;
+      iso?: number;
+      capturedAt?: string;
+    };
   }>;
 }
 

@@ -8,6 +8,7 @@ import payloadConfig from './payload/config';
 import { lexicalToHtml } from './render';
 import { getGitHubProfileCached } from './github';
 import { getWeatherCached } from './weather';
+import { getExifAndThumb, isAllowedMediaUrl } from './media-tools';
 
 const PUBLIC_ROOT = path.resolve('./dist/public');
 
@@ -193,6 +194,31 @@ app.get('/api/gallery', async (c) => {
   }
 });
 
+// Sharp WebP thumbnail endpoint for gallery images
+app.get('/api/media/thumb', async (c) => {
+  const url = c.req.query('url') || '';
+  const widthRaw = parseInt(c.req.query('w') || '640', 10);
+  const width = Math.min(1280, Math.max(160, Number.isFinite(widthRaw) ? widthRaw : 640));
+
+  if (!url || !isAllowedMediaUrl(url)) {
+    return c.json({ success: false, error: 'Invalid media URL' }, 400);
+  }
+
+  try {
+    const { thumb } = await getExifAndThumb(url, width);
+    if (!thumb) return c.notFound();
+    return new Response(thumb as unknown as BodyInit, {
+      headers: {
+        'Content-Type': 'image/webp',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
+    });
+  } catch (error) {
+    console.error('Error generating thumbnail:', error);
+    return c.json({ success: false, error: 'Failed to generate thumbnail' }, 500);
+  }
+});
+
 app.get('/api/gallery/:slug', async (c) => {
   const payload = await initPayload();
   const { slug } = c.req.param();
@@ -210,6 +236,42 @@ app.get('/api/gallery/:slug', async (c) => {
     }
 
     const album = albums.docs[0];
+    const rawImages: any[] = album.images || [];
+    const images = await Promise.all(
+      rawImages.map(async (img: any) => {
+        const url: string | undefined = img.image?.url;
+        const { exif } = url ? await getExifAndThumb(url, 640) : { exif: {} };
+        const prebuiltThumb = img.image?.sizes?.card?.url || img.image?.sizes?.thumbnail?.url;
+        const thumbUrl =
+          prebuiltThumb || (url ? `/api/media/thumb?url=${encodeURIComponent(url)}&w=640` : undefined);
+
+        return {
+          id: img.image?.id || img.id,
+          url,
+          thumbUrl,
+          alt: img.image?.alt,
+          caption: img.image?.caption || img.caption,
+          order: img.order,
+          filename: img.image?.filename,
+          mimeType: img.image?.mimeType,
+          filesize: img.image?.filesize || exif.filesize,
+          width: img.image?.width || exif.width,
+          height: img.image?.height || exif.height,
+          createdAt: img.image?.createdAt,
+          tags: (img.image?.tags || []).map((t: any) => t.tag || t).filter(Boolean),
+          exif: {
+            camera: exif.camera,
+            lens: exif.lens,
+            focalLength: exif.focalLength,
+            aperture: exif.aperture,
+            exposure: exif.exposure,
+            iso: exif.iso,
+            capturedAt: exif.capturedAt,
+          },
+        };
+      }),
+    );
+
     return c.json({
       success: true,
       album: {
@@ -217,20 +279,7 @@ app.get('/api/gallery/:slug', async (c) => {
         title: album.title,
         slug: album.slug,
         description: album.description,
-        images: album.images?.map((img: any) => ({
-          id: img.image?.id || img.id,
-          url: img.image?.url,
-          alt: img.image?.alt,
-          caption: img.image?.caption || img.caption,
-          order: img.order,
-          filename: img.image?.filename,
-          mimeType: img.image?.mimeType,
-          filesize: img.image?.filesize,
-          width: img.image?.width,
-          height: img.image?.height,
-          createdAt: img.image?.createdAt,
-          tags: (img.image?.tags || []).map((t: any) => t.tag || t).filter(Boolean),
-        })) || [],
+        images,
         publishedAt: album.publishedAt,
       },
     });
