@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { getAlbumBySlug } from '../lib/api';
 
 export const Route = createFileRoute('/gallery/$slug')({
@@ -51,12 +52,20 @@ function GalleryDetailPage() {
   const [zoom, setZoom] = useState<number>(1);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [dragging, setDragging] = useState<boolean>(false);
-  const dragStartRef = useRef<{ x: number; y: number; panX: number; panY: number; moved: boolean }>({
+  const gestureRef = useRef<{
+    x: number;
+    y: number;
+    panX: number;
+    panY: number;
+    moved: boolean;
+    swiped: boolean;
+  }>({
     x: 0,
     y: 0,
     panX: 0,
     panY: 0,
     moved: false,
+    swiped: false,
   });
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -66,13 +75,23 @@ function GalleryDetailPage() {
   const ratio = w && h ? (w / h).toFixed(2) : null;
   const sizeLabel = formatBytes(activeImg?.filesize);
 
-  // Maximum zoom reaches exact 1:1 original resolution (at least 3x if unknown)
+  // Maximum zoom reaches exact 1:1 original resolution (at least 2.5x)
   const maxZoom = w && fittedWidth > 0 ? Math.max(2.5, Number((w / fittedWidth).toFixed(2))) : 4;
 
   const resetView = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
     setNaturalDim(null);
+  };
+
+  const goPrev = () => {
+    resetView();
+    setActiveIndex((idx) => (idx === null ? 0 : (idx - 1 + images.length) % images.length));
+  };
+
+  const goNext = () => {
+    resetView();
+    setActiveIndex((idx) => (idx === null ? 0 : (idx + 1) % images.length));
   };
 
   const applyZoom = (nextZoom: number) => {
@@ -93,17 +112,28 @@ function GalleryDetailPage() {
     }
   };
 
+  // Lock background page scrolling while the lightbox is open
+  useEffect(() => {
+    if (activeIndex === null || typeof document === 'undefined') return;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+    };
+  }, [activeIndex]);
+
   useEffect(() => {
     if (activeIndex === null) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setActiveIndex(null);
       } else if (e.key === 'ArrowRight') {
-        resetView();
-        setActiveIndex((idx) => (idx === null ? 0 : (idx + 1) % images.length));
+        goNext();
       } else if (e.key === 'ArrowLeft') {
-        resetView();
-        setActiveIndex((idx) => (idx === null ? 0 : (idx - 1 + images.length) % images.length));
+        goPrev();
       } else if (e.key.toLowerCase() === 'i') {
         setShowMeta((v) => !v);
       } else if (e.key === '+' || e.key === '=') {
@@ -137,6 +167,232 @@ function GalleryDetailPage() {
   const isOneToOne = Math.abs(zoom - maxZoom) < 0.08;
   const zoomLabel =
     zoom <= 1.01 ? 'fit' : isOneToOne ? `1:1 (${Math.round(zoom * 100)}%)` : `${Math.round(zoom * 100)}%`;
+
+  const lightboxNode =
+    activeImg && activeIndex !== null && typeof document !== 'undefined'
+      ? createPortal(
+          <div
+            className="nerdy-lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-label={activeImg.alt || album.title}
+            onClick={() => setActiveIndex(null)}
+          >
+            <div className="nerdy-lightbox-window" onClick={(e) => e.stopPropagation()}>
+              {/* Terminal Chrome Header */}
+              <header className="nerdy-lightbox-bar">
+                <div className="nerdy-lightbox-title">
+                  <span className="tag-badge">IMG_VIEWER</span>
+                  <span>
+                    [{String(activeIndex + 1).padStart(2, '0')}/{String(images.length).padStart(2, '0')}]
+                  </span>
+                  <span className="filename">{fileFromUrl(activeImg.url, activeImg.filename)}</span>
+                </div>
+
+                <div className="nerdy-lightbox-controls">
+                  <button
+                    type="button"
+                    className="term-chip"
+                    onClick={() => applyZoom(zoom - 0.6)}
+                    disabled={zoom <= 1}
+                    title="Zoom out (-)"
+                  >
+                    -
+                  </button>
+                  <button
+                    type="button"
+                    className="term-chip"
+                    onClick={cycleZoom}
+                    title="Click to cycle Fit → 2× → 1:1 Original Resolution → Fit"
+                  >
+                    zoom:{zoomLabel}
+                  </button>
+                  <button
+                    type="button"
+                    className="term-chip"
+                    onClick={() => applyZoom(zoom + 0.6)}
+                    disabled={zoom >= maxZoom}
+                    title="Zoom in up to 1:1 original size (+)"
+                  >
+                    +
+                  </button>
+
+                  {images.length > 1 ? (
+                    <>
+                      <button type="button" className="term-chip" onClick={goPrev} aria-label="Previous image">
+                        ← prev
+                      </button>
+                      <button type="button" className="term-chip" onClick={goNext} aria-label="Next image">
+                        next →
+                      </button>
+                    </>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="term-chip"
+                    onClick={() => setShowMeta((v) => !v)}
+                    aria-pressed={showMeta}
+                  >
+                    exif:{showMeta ? 'on' : 'off'}
+                  </button>
+                  <button type="button" className="term-chip" onClick={() => setActiveIndex(null)}>
+                    esc:close
+                  </button>
+                </div>
+              </header>
+
+              {/* Stage + EXIF Infobox */}
+              <div className={`nerdy-lightbox-stage ${showMeta ? '' : 'nerdy-lightbox-stage--full'}`}>
+                <div
+                  className="nerdy-lightbox-viewport"
+                  onWheel={(e) => {
+                    e.preventDefault();
+                    const delta = e.deltaY < 0 ? 0.35 : -0.35;
+                    applyZoom(zoom + delta);
+                  }}
+                  onPointerDown={(e) => {
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                    setDragging(true);
+                    gestureRef.current = {
+                      x: e.clientX,
+                      y: e.clientY,
+                      panX: pan.x,
+                      panY: pan.y,
+                      moved: false,
+                      swiped: false,
+                    };
+                  }}
+                  onPointerMove={(e) => {
+                    if (!dragging) return;
+                    const dx = e.clientX - gestureRef.current.x;
+                    const dy = e.clientY - gestureRef.current.y;
+                    if (Math.hypot(dx, dy) > 6) gestureRef.current.moved = true;
+
+                    if (zoom > 1.01) {
+                      setPan({
+                        x: gestureRef.current.panX + dx,
+                        y: gestureRef.current.panY + dy,
+                      });
+                    }
+                  }}
+                  onPointerUp={(e) => {
+                    if (!dragging) return;
+                    setDragging(false);
+                    const dx = e.clientX - gestureRef.current.x;
+                    const dy = e.clientY - gestureRef.current.y;
+                    // When at fit zoom (1x), horizontal swipe switches images
+                    if (zoom <= 1.01 && images.length > 1 && Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+                      gestureRef.current.swiped = true;
+                      if (dx < 0) goNext();
+                      else goPrev();
+                    }
+                  }}
+                  onClick={() => {
+                    if (gestureRef.current.moved || gestureRef.current.swiped) {
+                      gestureRef.current.moved = false;
+                      gestureRef.current.swiped = false;
+                      return;
+                    }
+                    cycleZoom();
+                  }}
+                  style={{
+                    cursor: zoom > 1 ? (dragging ? 'grabbing' : 'grab') : 'zoom-in',
+                  }}
+                >
+                  <img
+                    ref={imgRef}
+                    key={activeImg.url}
+                    src={activeImg.url}
+                    alt={activeImg.alt || album.title}
+                    draggable={false}
+                    className="nerdy-lightbox-img"
+                    style={{
+                      transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
+                      transition: dragging ? 'none' : 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
+                    }}
+                    onLoad={(e) => {
+                      const el = e.currentTarget;
+                      if (el.naturalWidth && el.naturalHeight) {
+                        setNaturalDim({ w: el.naturalWidth, h: el.naturalHeight });
+                      }
+                      if (el.clientWidth > 0) {
+                        setFittedWidth(el.clientWidth);
+                      }
+                    }}
+                  />
+                </div>
+
+                {showMeta ? (
+                  <aside className="nerdy-lightbox-meta" aria-label="Image EXIF and metadata">
+                    <div className="meta-head">INSPECT // EXIF_TELEMETRY</div>
+                    <dl className="meta-grid">
+                      {exif?.camera ? (
+                        <div>
+                          <dt>CAMERA MODEL</dt>
+                          <dd>{exif.camera}</dd>
+                        </div>
+                      ) : null}
+                      {exif?.lens ? (
+                        <div>
+                          <dt>OBJECTIVE / LENS</dt>
+                          <dd>{exif.lens}</dd>
+                        </div>
+                      ) : null}
+                      {settingsSummary ? (
+                        <div>
+                          <dt>EXPOSURE SETTINGS</dt>
+                          <dd className="meta-accent">{settingsSummary}</dd>
+                        </div>
+                      ) : null}
+                      {exif?.capturedAt ? (
+                        <div>
+                          <dt>CAPTURED (EXIF)</dt>
+                          <dd>{exif.capturedAt}</dd>
+                        </div>
+                      ) : null}
+                      {w && h ? (
+                        <div>
+                          <dt>DIMENSIONS</dt>
+                          <dd>
+                            {w} × {h}px {ratio ? `(${ratio}:1)` : ''}
+                          </dd>
+                        </div>
+                      ) : null}
+                      {sizeLabel ? (
+                        <div>
+                          <dt>FILESIZE</dt>
+                          <dd>{sizeLabel}</dd>
+                        </div>
+                      ) : null}
+                      <div>
+                        <dt>FORMAT</dt>
+                        <dd>{inferMime(activeImg.url, activeImg.mimeType)}</dd>
+                      </div>
+                      <div>
+                        <dt>FILE</dt>
+                        <dd>{fileFromUrl(activeImg.url, activeImg.filename)}</dd>
+                      </div>
+                      {activeImg.alt ? (
+                        <div className="meta-full">
+                          <dt>ALT</dt>
+                          <dd>{activeImg.alt}</dd>
+                        </div>
+                      ) : null}
+                      {activeImg.caption ? (
+                        <div className="meta-full">
+                          <dt>CAPTION</dt>
+                          <dd>{activeImg.caption}</dd>
+                        </div>
+                      ) : null}
+                    </dl>
+                  </aside>
+                ) : null}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
 
   return (
     <article className="detail-page">
@@ -179,252 +435,7 @@ function GalleryDetailPage() {
         </div>
       </div>
 
-      {activeImg && activeIndex !== null ? (
-        <div
-          className="nerdy-lightbox"
-          role="dialog"
-          aria-modal="true"
-          aria-label={activeImg.alt || album.title}
-          onClick={() => setActiveIndex(null)}
-        >
-          <div className="nerdy-lightbox-window" onClick={(e) => e.stopPropagation()}>
-            {/* Terminal Chrome Header */}
-            <header className="nerdy-lightbox-bar">
-              <div className="nerdy-lightbox-title">
-                <span className="tag-badge">IMG_VIEWER</span>
-                <span>
-                  [{String(activeIndex + 1).padStart(2, '0')}/{String(images.length).padStart(2, '0')}]
-                </span>
-                <span className="filename">{fileFromUrl(activeImg.url, activeImg.filename)}</span>
-              </div>
-
-              <div className="nerdy-lightbox-controls">
-                <button
-                  type="button"
-                  className="term-chip"
-                  onClick={() => applyZoom(zoom - 0.6)}
-                  disabled={zoom <= 1}
-                  title="Zoom out (-)"
-                >
-                  -
-                </button>
-                <button
-                  type="button"
-                  className="term-chip"
-                  onClick={cycleZoom}
-                  title="Click to cycle Fit → 2× → 1:1 Original Resolution → Fit"
-                >
-                  zoom:{zoomLabel}
-                </button>
-                <button
-                  type="button"
-                  className="term-chip"
-                  onClick={() => applyZoom(zoom + 0.6)}
-                  disabled={zoom >= maxZoom}
-                  title="Zoom in up to 1:1 original size (+)"
-                >
-                  +
-                </button>
-
-                {images.length > 1 ? (
-                  <>
-                    <button
-                      type="button"
-                      className="term-chip"
-                      onClick={() => {
-                        resetView();
-                        setActiveIndex((activeIndex - 1 + images.length) % images.length);
-                      }}
-                      aria-label="Previous image"
-                    >
-                      ← prev
-                    </button>
-                    <button
-                      type="button"
-                      className="term-chip"
-                      onClick={() => {
-                        resetView();
-                        setActiveIndex((activeIndex + 1) % images.length);
-                      }}
-                      aria-label="Next image"
-                    >
-                      next →
-                    </button>
-                  </>
-                ) : null}
-                <button
-                  type="button"
-                  className="term-chip"
-                  onClick={() => setShowMeta((v) => !v)}
-                  aria-pressed={showMeta}
-                >
-                  exif:{showMeta ? 'on' : 'off'}
-                </button>
-                <button type="button" className="term-chip" onClick={() => setActiveIndex(null)}>
-                  esc:close
-                </button>
-              </div>
-            </header>
-
-            {/* Stage + Floating Nerdy EXIF Infobox */}
-            <div className={`nerdy-lightbox-stage ${showMeta ? '' : 'nerdy-lightbox-stage--full'}`}>
-              <div
-                className="nerdy-lightbox-viewport"
-                onWheel={(e) => {
-                  e.preventDefault();
-                  const delta = e.deltaY < 0 ? 0.35 : -0.35;
-                  applyZoom(zoom + delta);
-                }}
-                onPointerDown={(e) => {
-                  if (zoom <= 1) return;
-                  e.currentTarget.setPointerCapture(e.pointerId);
-                  setDragging(true);
-                  dragStartRef.current = {
-                    x: e.clientX,
-                    y: e.clientY,
-                    panX: pan.x,
-                    panY: pan.y,
-                    moved: false,
-                  };
-                }}
-                onPointerMove={(e) => {
-                  if (!dragging) return;
-                  const dx = e.clientX - dragStartRef.current.x;
-                  const dy = e.clientY - dragStartRef.current.y;
-                  if (Math.hypot(dx, dy) > 4) dragStartRef.current.moved = true;
-                  setPan({
-                    x: dragStartRef.current.panX + dx,
-                    y: dragStartRef.current.panY + dy,
-                  });
-                }}
-                onPointerUp={() => setDragging(false)}
-                onClick={() => {
-                  if (dragStartRef.current.moved) {
-                    dragStartRef.current.moved = false;
-                    return;
-                  }
-                  cycleZoom();
-                }}
-                style={{
-                  cursor: zoom > 1 ? (dragging ? 'grabbing' : 'grab') : 'zoom-in',
-                }}
-              >
-                <img
-                  ref={imgRef}
-                  key={activeImg.url}
-                  src={activeImg.url}
-                  alt={activeImg.alt || album.title}
-                  draggable={false}
-                  className="nerdy-lightbox-img"
-                  style={{
-                    transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
-                    transition: dragging ? 'none' : 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
-                  }}
-                  onLoad={(e) => {
-                    const el = e.currentTarget;
-                    if (el.naturalWidth && el.naturalHeight) {
-                      setNaturalDim({ w: el.naturalWidth, h: el.naturalHeight });
-                    }
-                    if (el.clientWidth > 0) {
-                      setFittedWidth(el.clientWidth);
-                    }
-                  }}
-                />
-              </div>
-
-              {showMeta ? (
-                <aside className="nerdy-lightbox-meta" aria-label="Image EXIF and metadata">
-                  <div className="meta-head">INSPECT // EXIF_TELEMETRY</div>
-                  <dl className="meta-grid">
-                    {exif?.camera ? (
-                      <div>
-                        <dt>CAMERA MODEL</dt>
-                        <dd>{exif.camera}</dd>
-                      </div>
-                    ) : null}
-                    {exif?.lens ? (
-                      <div>
-                        <dt>OBJECTIVE / LENS</dt>
-                        <dd>{exif.lens}</dd>
-                      </div>
-                    ) : null}
-                    {settingsSummary ? (
-                      <div>
-                        <dt>EXPOSURE SETTINGS</dt>
-                        <dd className="meta-accent">{settingsSummary}</dd>
-                      </div>
-                    ) : null}
-                    {exif?.aperture ? (
-                      <div>
-                        <dt>APERTURE</dt>
-                        <dd>{exif.aperture}</dd>
-                      </div>
-                    ) : null}
-                    {exif?.exposure ? (
-                      <div>
-                        <dt>SHUTTER SPEED</dt>
-                        <dd>{exif.exposure}</dd>
-                      </div>
-                    ) : null}
-                    {exif?.focalLength ? (
-                      <div>
-                        <dt>FOCAL LENGTH</dt>
-                        <dd>{exif.focalLength}</dd>
-                      </div>
-                    ) : null}
-                    {exif?.iso ? (
-                      <div>
-                        <dt>ISO</dt>
-                        <dd>{exif.iso}</dd>
-                      </div>
-                    ) : null}
-                    {exif?.capturedAt ? (
-                      <div>
-                        <dt>CAPTURED (EXIF)</dt>
-                        <dd>{exif.capturedAt}</dd>
-                      </div>
-                    ) : null}
-                    {w && h ? (
-                      <div>
-                        <dt>DIMENSIONS</dt>
-                        <dd>
-                          {w} × {h}px {ratio ? `(${ratio}:1)` : ''}
-                        </dd>
-                      </div>
-                    ) : null}
-                    {sizeLabel ? (
-                      <div>
-                        <dt>FILESIZE</dt>
-                        <dd>{sizeLabel}</dd>
-                      </div>
-                    ) : null}
-                    <div>
-                      <dt>FORMAT</dt>
-                      <dd>{inferMime(activeImg.url, activeImg.mimeType)}</dd>
-                    </div>
-                    <div>
-                      <dt>FILE</dt>
-                      <dd>{fileFromUrl(activeImg.url, activeImg.filename)}</dd>
-                    </div>
-                    {activeImg.alt ? (
-                      <div className="meta-full">
-                        <dt>ALT</dt>
-                        <dd>{activeImg.alt}</dd>
-                      </div>
-                    ) : null}
-                    {activeImg.caption ? (
-                      <div className="meta-full">
-                        <dt>CAPTION</dt>
-                        <dd>{activeImg.caption}</dd>
-                      </div>
-                    ) : null}
-                  </dl>
-                </aside>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {lightboxNode}
     </article>
   );
 }
