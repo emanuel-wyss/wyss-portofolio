@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link, useRouterState } from '@tanstack/react-router';
 import { getSiteConfig, type SiteConfig } from '../../lib/api';
 import type { ColorMode, EffectsIntensity } from '../../lib/theme';
 import { useTheme } from './ThemeProvider';
