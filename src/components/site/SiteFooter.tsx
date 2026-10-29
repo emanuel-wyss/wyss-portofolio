@@ -59,7 +59,7 @@ export function SiteFooter() {
     };
   }, []);
 
-  const { state, effectsPaused, toggleEffectsPaused, effectsIntensity, setIntensity, weatherNow, preferredEvent, setPreferredEventChoice } = useTheme();
+  const { state, effectsPaused, toggleEffectsPaused, effectsIntensity, setIntensity, weatherNow, preferredEvent, setPreferredEventChoice, soundEnabled, setSoundEnabled } = useTheme();
 
   useEffect(() => {
     const update = () => {
@@ -126,6 +126,10 @@ export function SiteFooter() {
           {state?.event && config.event_settings?.announcement ? <p className="event-announcement">{config.event_settings.announcement}</p> : null}
           <ThemeToggle />
           {achievementCount > 0 ? <p className="muted event-achievements">discoveries: {achievementCount}</p> : null}
+          <label className="effects-intensity">
+            <input type="checkbox" checked={soundEnabled} onChange={(event) => setSoundEnabled(event.target.checked)} />
+            event sounds
+          </label>
           <label className="effects-intensity">
             preferred event:{' '}
             <select value={preferredEvent || ''} onChange={(event) => setPreferredEventChoice((event.target.value || undefined) as SpecialEventType | undefined)}>

@@ -14,6 +14,8 @@ import {
   getPreferredEvent,
   setPreferredEvent,
   type SpecialEventType,
+  getEventSound,
+  setEventSound,
 } from '../../lib/theme';
 import { getSiteConfig, getWeather } from '../../lib/api';
 import { EventCanvas } from './EventCanvas';
@@ -28,6 +30,8 @@ interface ThemeContextValue {
   setIntensity: (value: EffectsIntensity) => void;
   preferredEvent?: SpecialEventType;
   setPreferredEventChoice: (event?: SpecialEventType) => void;
+  soundEnabled: boolean;
+  setSoundEnabled: (enabled: boolean) => void;
   weatherNow: Awaited<ReturnType<typeof getWeather>>;
 }
 
@@ -45,6 +49,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [effectsPaused, setEffectsPausedState] = useState(false);
   const [effectsIntensity, setEffectsIntensityState] = useState<EffectsIntensity>('standard');
   const [preferredEvent, setPreferredEventState] = useState<SpecialEventType | undefined>();
+  const [soundEnabled, setSoundEnabledState] = useState(false);
   const weatherRef = useRef<WeatherType | undefined>(undefined);
   const [weatherNow, setWeatherNow] = useState<Awaited<ReturnType<typeof getWeather>>>(null);
   const [eventSettings, setEventSettings] = useState<Awaited<ReturnType<typeof getSiteConfig>>>(null);
@@ -59,6 +64,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setEffectsIntensityState(intensity);
     setEffectsIntensity(intensity);
     setPreferredEventState(getPreferredEvent());
+    setSoundEnabledState(getEventSound());
   }, []);
 
   useEffect(() => {
@@ -126,6 +132,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setEffectsIntensity(value);
   };
 
+  const setSoundEnabled = (enabled: boolean) => {
+    setEventSound(enabled);
+    setSoundEnabledState(enabled);
+  };
+
   const setPreferredEventChoice = (event?: SpecialEventType) => {
     setPreferredEvent(event);
     setPreferredEventState(event);
@@ -139,14 +150,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ mode, setMode, state, effectsPaused, toggleEffectsPaused, effectsIntensity, setIntensity, preferredEvent, setPreferredEventChoice, weatherNow }}>
+    <ThemeContext.Provider value={{ mode, setMode, state, effectsPaused, toggleEffectsPaused, effectsIntensity, setIntensity, preferredEvent, setPreferredEventChoice, soundEnabled, setSoundEnabled, weatherNow }}>
       {children}
       {/* Immersive FX layers — purely decorative, hidden from a11y tree. */}
       <div className="fx-layer fx-grid" aria-hidden="true" />
       <div className="fx-layer fx-glitch" aria-hidden="true" />
       <div className="fx-layer fx-scanlines" aria-hidden="true" />
       <div className="fx-layer fx-event" aria-hidden="true" />
-      <EventCanvas event={state?.event} reducedMotion={state?.reducedMotion ?? true} intensity={eventSettings?.event_settings?.intensity || effectsIntensity} />
+      <EventCanvas event={state?.event} reducedMotion={state?.reducedMotion ?? true} intensity={eventSettings?.event_settings?.intensity || effectsIntensity} soundEnabled={soundEnabled} />
     </ThemeContext.Provider>
   );
 }

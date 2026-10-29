@@ -618,6 +618,13 @@ export type ColorMode = 'light' | 'dark' | 'auto';
 const EFFECTS_PAUSED_KEY = 'wyss-effects-paused';
 const EFFECTS_INTENSITY_KEY = 'wyss-effects-intensity';
 const PREFERRED_EVENT_KEY = 'wyss-preferred-event';
+const EVENT_SOUND_KEY = 'wyss-event-sound';
+export function getEventSound(): boolean {
+  return typeof window !== 'undefined' && localStorage.getItem(EVENT_SOUND_KEY) === 'true';
+}
+export function setEventSound(enabled: boolean): void {
+  if (typeof window !== 'undefined') localStorage.setItem(EVENT_SOUND_KEY, String(enabled));
+}
 export type EffectsIntensity = 'quiet' | 'standard' | 'party';
 
 export function getEffectsIntensity(): EffectsIntensity {

@@ -18,6 +18,7 @@ type Props = {
   event?: SpecialEventType;
   reducedMotion: boolean;
   intensity?: 'quiet' | 'standard' | 'party';
+  soundEnabled?: boolean;
 };
 
 const COLORS = ['#ff3355', '#ff9f1c', '#ffd60a', '#39ff14', '#00e5ff', '#8b5cf6', '#ff66cc'];
@@ -72,6 +73,25 @@ function drawHeart(ctx: CanvasRenderingContext2D, x: number, y: number, size: nu
   ctx.fill();
 }
 
+function playPing(enabled: boolean, event: SpecialEventType) {
+  if (!enabled || typeof window === 'undefined') return;
+  try {
+    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const audio = new AudioContextClass();
+    const oscillator = audio.createOscillator();
+    const gain = audio.createGain();
+    oscillator.type = event === 'aprilfools' ? 'square' : 'sine';
+    oscillator.frequency.value = event === 'newyear' || event === 'swiss' ? 660 : event === 'halloween' ? 180 : 440;
+    gain.gain.setValueAtTime(0.025, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.12);
+    oscillator.connect(gain).connect(audio.destination);
+    oscillator.start();
+    oscillator.stop(audio.currentTime + 0.12);
+    oscillator.addEventListener('ended', () => void audio.close());
+  } catch { /* audio is optional */ }
+}
+
 function drawBat(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, phase: number) {
   const flap = Math.sin(phase) * size * 0.45;
   ctx.beginPath();
@@ -83,7 +103,7 @@ function drawBat(ctx: CanvasRenderingContext2D, x: number, y: number, size: numb
   ctx.fill();
 }
 
-export function EventCanvas({ event, reducedMotion, intensity = 'standard' }: Props) {
+export function EventCanvas({ event, reducedMotion, intensity = 'standard', soundEnabled = false }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -201,6 +221,7 @@ export function EventCanvas({ event, reducedMotion, intensity = 'standard' }: Pr
     };
     const onPointerDown = (e: PointerEvent) => {
       addBurst(particles, event, e.clientX, e.clientY);
+      playPing(soundEnabled, event);
       unlock(event, 'first-interaction');
     };
     const onScroll = () => { scrollY = window.scrollY; };
@@ -226,7 +247,7 @@ export function EventCanvas({ event, reducedMotion, intensity = 'standard' }: Pr
       window.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [event, reducedMotion, intensity]);
+  }, [event, reducedMotion, intensity, soundEnabled]);
 
   if (!event || reducedMotion) return null;
   return <canvas ref={ref} className={`event-canvas event-canvas--${event}`} aria-hidden="true" />;
