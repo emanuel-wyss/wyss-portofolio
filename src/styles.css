@@ -1732,61 +1732,71 @@ html[data-effects-paused] .event-canvas {
 html[data-lightbox-open] main { z-index: 10000; }
 
 /* ===========================================================================
-   Nerdy Weather & Event Based Page Transitions
+   Nerdy Loading Glitch Page Transitions & View Transitions API support
    =========================================================================== */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.28s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: glitchViewOld;
+}
+
+::view-transition-new(root) {
+  animation-name: glitchViewNew;
+}
+
+@keyframes glitchViewOld {
+  0% { opacity: 1; transform: scale(1); filter: none; }
+  50% { opacity: 0.5; transform: scale(0.99) skewX(-2deg); filter: hue-rotate(90deg) contrast(1.5); }
+  100% { opacity: 0; transform: scale(0.98) translateY(10px); filter: blur(4px); }
+}
+
+@keyframes glitchViewNew {
+  0% { opacity: 0; transform: scale(1.02) translateY(-10px); filter: blur(4px); }
+  50% { opacity: 0.8; transform: scale(1.01) skewX(2deg); filter: hue-rotate(-90deg); }
+  100% { opacity: 1; transform: scale(1); filter: none; }
+}
+
 .page-transition-wrapper {
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1), transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), filter 0.28s ease;
 }
 
-.page-transition-wrapper.is-transitioning {
-  opacity: 0;
-  transform: translateY(12px) scale(0.992);
-  filter: blur(4px) contrast(1.2);
+@keyframes loadingGlitchAnim {
+  0% { opacity: 1; filter: none; transform: translate(0); }
+  20% { opacity: 0.4; filter: contrast(2) hue-rotate(45deg); transform: translate(-3px, 1px); }
+  40% { opacity: 0.7; filter: invert(0.15); transform: translate(3px, -1px); }
+  60% { opacity: 0.3; filter: blur(2px) saturate(2); transform: translate(-2px, 2px); }
+  80% { opacity: 0.8; filter: hue-rotate(-45deg); transform: translate(1px, -1px); }
+  100% { opacity: 1; filter: none; transform: translate(0); }
 }
 
-/* Cyber scanline sweep transition */
-.page-transition-wrapper.is-transitioning.page-trans-cyber {
-  transform: translateY(16px);
-  filter: hue-rotate(45deg) brightness(1.3);
+.page-transition-wrapper.is-loading-glitch {
+  animation: loadingGlitchAnim 0.28s steps(5, end) both;
 }
 
-/* Glitch / Halloween transition */
-@keyframes pageGlitch {
-  0% { transform: translate(0); filter: invert(0); }
-  25% { transform: translate(-4px, 2px); filter: hue-rotate(90deg) contrast(2); }
-  50% { transform: translate(4px, -2px); filter: invert(0.25); }
-  75% { transform: translate(-2px, -1px); filter: hue-rotate(180deg); }
-  100% { transform: translate(0); filter: invert(0); }
-}
-.page-transition-wrapper.is-transitioning.page-trans-glitch {
-  animation: pageGlitch 0.32s steps(4, end) both;
+.page-transition-wrapper.is-loading-glitch.loading-glitch-spooky {
+  filter: hue-rotate(90deg) contrast(2.2);
 }
 
-/* Snow / Cold weather fade with blur */
-.page-transition-wrapper.is-transitioning.page-trans-snow {
-  transform: scale(0.98);
-  filter: blur(8px) grayscale(0.5) brightness(1.2);
+.page-transition-wrapper.is-loading-glitch.loading-glitch-frost {
+  filter: grayscale(0.6) blur(3px) brightness(1.2);
 }
 
-/* Rain / Storm vertical shutter */
-.page-transition-wrapper.is-transitioning.page-trans-rain {
-  transform: translateY(-20px);
-  filter: blur(6px) brightness(0.8);
-}
-
-/* Neon / Pride color shift transition */
-.page-transition-wrapper.is-transitioning.page-trans-neon {
-  filter: hue-rotate(300deg) saturate(2);
-  transform: scale(0.99);
+.page-transition-wrapper.is-loading-glitch.loading-glitch-neon {
+  filter: hue-rotate(270deg) saturate(3);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root),
   .page-transition-wrapper,
-  .page-transition-wrapper.is-transitioning {
-    transition: none !important;
+  .page-transition-wrapper.is-loading-glitch {
     animation: none !important;
+    transition: none !important;
     transform: none !important;
     filter: none !important;
   }

@@ -8,34 +8,48 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
   const [transitioning, setTransitioning] = useState(false);
   const { state } = useTheme();
 
+  const reducedMotion = state?.reducedMotion ?? false;
   const weather = state?.weather || 'sunny';
   const event = state?.event;
 
   useEffect(() => {
     if (children !== displayChildren) {
-      setTransitioning(true);
-      const timer = setTimeout(() => {
+      if (reducedMotion) {
         setDisplayChildren(children);
-        setTransitioning(false);
-      }, 320);
-      return () => clearTimeout(timer);
-    }
-  }, [children, displayChildren]);
+        return;
+      }
 
-  // Determine transition scanline/glitch class based on current weather/event
-  let transitionEffectClass = 'page-trans-cyber';
+      // Check if View Transitions API is available
+      if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+        document.startViewTransition(() => {
+          setDisplayChildren(children);
+        });
+      } else {
+        setTransitioning(true);
+        const timer = setTimeout(() => {
+          setDisplayChildren(children);
+          setTransitioning(false);
+        }, 280);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [children, displayChildren, reducedMotion]);
+
+  if (reducedMotion) {
+    return <div className="page-transition-wrapper">{children}</div>;
+  }
+
+  let glitchClass = 'loading-glitch-cyber';
   if (event === 'halloween' || weather === 'stormy') {
-    transitionEffectClass = 'page-trans-glitch';
+    glitchClass = 'loading-glitch-spooky';
   } else if (weather === 'snowy' || event === 'christmas') {
-    transitionEffectClass = 'page-trans-snow';
-  } else if (weather === 'rainy') {
-    transitionEffectClass = 'page-trans-rain';
+    glitchClass = 'loading-glitch-frost';
   } else if (event === 'pride' || event === 'aprilfools') {
-    transitionEffectClass = 'page-trans-neon';
+    glitchClass = 'loading-glitch-neon';
   }
 
   return (
-    <div className={`page-transition-wrapper ${transitioning ? `is-transitioning ${transitionEffectClass}` : ''}`}>
+    <div className={`page-transition-wrapper ${transitioning ? `is-loading-glitch ${glitchClass}` : ''}`}>
       {displayChildren}
     </div>
   );
