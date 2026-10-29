@@ -141,8 +141,11 @@ export interface GitHubProfile {
   totalStars: number;
   topRepos: GitHubRepo[];
   languages: LanguageStat[];
+  techStack?: string[];
   contributions: {
     total: number;
+    publicCommits?: number;
+    privateContributions?: number;
     weeks: ContributionDay[][];
   } | null;
   generatedAt: string;

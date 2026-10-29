@@ -67,9 +67,11 @@ export function LanguageBar({ languages }: { languages: LanguageStat[] }) {
 export function ContributionHeatmap({
   weeks,
   total,
+  privateContributions = 0,
 }: {
   weeks: ContributionDay[][];
   total: number;
+  privateContributions?: number;
 }) {
   if (!weeks.length) return null;
   const cell = 11;
@@ -95,7 +97,10 @@ export function ContributionHeatmap({
     <div className="gh-heatmap">
       <div className="gh-heatmap-head">
         <h3>Contributions</h3>
-        <span className="gh-heatmap-total">{total.toLocaleString()} in the last year</span>
+        <span className="gh-heatmap-total">
+          {total.toLocaleString()} in the last year
+          {privateContributions > 0 ? ` · incl. ${privateContributions.toLocaleString()} in private repos` : ''}
+        </span>
       </div>
       <div className="gh-heatmap-scroll">
         <svg
@@ -219,11 +224,17 @@ export function TechRadar({ languages }: { languages: LanguageStat[] }) {
 }
 
 export function StatCards({ profile }: { profile: GitHubProfile }) {
+  const totalContribs = profile.contributions?.total ?? 0;
+  const privateContribs = profile.contributions?.privateContributions ?? 0;
   const stats = [
-    { label: 'Repositories', value: profile.publicRepos },
-    { label: 'Stars', value: profile.totalStars },
+    ...(totalContribs > 0
+      ? [{ label: 'Contributions (1y)', value: totalContribs }]
+      : []),
+    ...(privateContribs > 0
+      ? [{ label: 'Private Commits (1y)', value: privateContribs }]
+      : []),
+    { label: 'Public Repos', value: profile.publicRepos },
     { label: 'Followers', value: profile.followers },
-    { label: 'Following', value: profile.following },
   ];
   return (
     <div className="gh-stats">

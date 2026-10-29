@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 export const Route = createFileRoute('/changelog')({ component: ChangelogPage });
 
 const entries = [
+  ['2026-10-29', 'Added anonymized private-repo commit & tech-stack aggregation + breakdancing Halloween ghost'],
   ['2026-10-29', 'Upgraded Payload CMS to 3.92.1, Next.js to 16.4.3, React to 19.3.1, and Vite to 8.3.5'],
   ['2026-10-29', 'Added Payload Admin Command Center dashboard with live telemetry & Event Preview Studio'],
   ['2026-10-29', 'Converted Site Config into a single-page Payload Global'],

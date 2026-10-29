@@ -38,6 +38,21 @@ export const Route = createFileRoute('/about')({
 function AboutPage() {
   const { siteConfig, github } = Route.useLoaderData();
 
+  const knownLower = new Set(skills.flatMap((g) => g.items.map((i) => i.toLowerCase())));
+  const repoDetected = [
+    ...(github?.languages?.map((l) => l.name) || []),
+    ...(github?.techStack || []),
+  ].filter((item) => {
+    const k = item.toLowerCase();
+    if (knownLower.has(k)) return false;
+    knownLower.add(k);
+    return true;
+  });
+
+  const allSkillGroups = repoDetected.length
+    ? [...skills, { category: 'Languages & Topics (Repos)', items: repoDetected.slice(0, 8) }]
+    : skills;
+
   return (
     <section className="about-page">
       <div className="container" data-label="// profile.sys">
@@ -52,7 +67,7 @@ function AboutPage() {
         <div className="scroll-scene scroll-scene--about skills-section" data-scene="about">
           <h2>Skills and Tech Stack</h2>
           <div className="skills-grid">
-            {skills.map((group) => (
+            {allSkillGroups.map((group) => (
               <div className="skill-group" key={group.category}>
                 <h3>{group.category}</h3>
                 <ul>
@@ -92,6 +107,7 @@ function AboutPage() {
               <ContributionHeatmap
                 weeks={github.contributions.weeks}
                 total={github.contributions.total}
+                privateContributions={github.contributions.privateContributions}
               />
             ) : null}
           </div>
