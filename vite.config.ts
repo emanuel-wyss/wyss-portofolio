@@ -27,6 +27,12 @@ export default defineConfig({
         target: 'https://wyss.rocks',
         changeOrigin: true,
         secure: true,
+        bypass: (req) => {
+          // If it's a browser navigation request for a gallery page (not an API call), let Vite serve index.html (SPA routing)
+          if (req.headers.accept?.includes('text/html')) {
+            return '/index.html';
+          }
+        },
       },
       '/health': {
         target: 'https://wyss.rocks',
