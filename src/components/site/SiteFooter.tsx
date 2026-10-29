@@ -29,7 +29,7 @@ const SPECIAL_LABELS: Record<string, string> = {
   valentines: "Valentine's",
 };
 
-type FooterConfig = Pick<SiteConfig, 'tagline' | 'social_links' | 'cv_url'>;
+type FooterConfig = Pick<SiteConfig, 'tagline' | 'social_links' | 'cv_url' | 'event_settings'>;
 
 const DEFAULT_CONFIG: FooterConfig = {
   tagline: 'Building beautiful, functional web experiences',

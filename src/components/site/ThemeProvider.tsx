@@ -14,6 +14,7 @@ import {
   getPreferredEvent,
   setPreferredEvent,
   type SpecialEventType,
+  ALL_EVENTS,
   getEventSound,
   setEventSound,
 } from '../../lib/theme';
@@ -70,6 +71,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     getSiteConfig().then(setEventSettings);
   }, []);
+
+  // Admin preview controls the embedded homepage without URL overrides or persistence.
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      const adminOrigin = import.meta.env.PUBLIC_ADMIN_URL || 'https://admin.wyss.rocks';
+      if (event.origin !== window.location.origin && event.origin !== adminOrigin) return;
+      if (event.data?.type !== 'wyss-event-preview') return;
+      const selected = event.data.event as SpecialEventType | undefined;
+      if (selected && !ALL_EVENTS.includes(selected)) return;
+      setState(applyImmersiveTheme(mode, weatherRef.current, selected));
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [mode]);
 
   // Fetch real weather once on mount, then refresh hourly.
   useEffect(() => {

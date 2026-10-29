@@ -513,10 +513,6 @@ export function getCurrentSpecialEvent(): SpecialEventType | undefined {
   return undefined;
 }
 
-/**
- * Resolve an event override from the URL (?event=halloween) for preview.
- * Returns the override if valid, otherwise undefined. SSR-safe.
- */
 export function getPreferredEvent(): SpecialEventType | undefined {
   if (typeof window === 'undefined') return undefined;
   const value = localStorage.getItem(PREFERRED_EVENT_KEY);
@@ -527,20 +523,6 @@ export function setPreferredEvent(event?: SpecialEventType): void {
   if (typeof window === 'undefined') return;
   if (event) localStorage.setItem(PREFERRED_EVENT_KEY, event);
   else localStorage.removeItem(PREFERRED_EVENT_KEY);
-}
-
-export function getEventOverride(): SpecialEventType | undefined {
-  if (typeof window === 'undefined') return undefined;
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const raw = params.get('event');
-    if (raw && (ALL_EVENTS as string[]).includes(raw)) {
-      return raw as SpecialEventType;
-    }
-  } catch {
-    /* ignore */
-  }
-  return undefined;
 }
 
 /**
@@ -779,7 +761,7 @@ export function getImmersiveState(mode: ColorMode): ImmersiveState {
   const resolved = resolveMode(mode);
   const reducedMotion = prefersReducedMotion();
   const season = getCurrentSeason();
-  const event = getEventOverride() ?? getPreferredEvent() ?? getCurrentSpecialEvent();
+  const event = getPreferredEvent() ?? getCurrentSpecialEvent();
   const isDaytime = isDaytime_();
   let fxIntensity = isDaytime ? 0.5 : 0.85;
   if (event) fxIntensity = Math.min(1, fxIntensity + 0.25);
@@ -800,8 +782,14 @@ function isDaytime_(): boolean {
 export function applyImmersiveTheme(
   mode: ColorMode,
   weather?: WeatherType,
+  eventOverride?: SpecialEventType,
 ): ImmersiveState {
   const state = getImmersiveState(mode);
+  if (eventOverride !== undefined) {
+    state.event = eventOverride;
+    state.fxName = EVENT_FX[eventOverride].fx;
+    state.fxIntensity = state.reducedMotion ? 0 : Math.min(1, (state.isDaytime ? 0.5 : 0.85) + 0.25);
+  }
   const activeWeather: WeatherType = weather || 'sunny';
   const root = document.documentElement;
 
