@@ -6,7 +6,7 @@ export function SiteMenu() {
   });
 
   return (
-    <header className="site-nav">
+    <header className="site-nav" style={{ viewTransitionName: 'site-header' }}>
       <div className="site-nav-terminal" aria-hidden="true">
         <span className="terminal-prompt">root@wyss</span>
         <span className="terminal-path">~/rocks</span>

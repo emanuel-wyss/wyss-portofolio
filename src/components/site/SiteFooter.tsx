@@ -117,7 +117,7 @@ export function SiteFooter() {
   const wxSummary = `${themeInfo.weather}${weatherNow?.temperatureC != null ? ` ${weatherNow.temperatureC}°C` : ''} @ ${wxLocation}`;
 
   return (
-    <footer className="site-footer">
+    <footer className="site-footer" style={{ viewTransitionName: 'site-footer' }}>
       <div className="site-footer-content">
         <div className="footer-identity">
           <p className="muted">© {new Date().getFullYear()} Wyss. All rights reserved.</p>

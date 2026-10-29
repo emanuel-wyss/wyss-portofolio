@@ -1763,6 +1763,7 @@ html[data-lightbox-open] main { z-index: 10000; }
 .page-transition-wrapper {
   opacity: 1;
   transform: translateY(0);
+  view-transition-name: site-content;
 }
 
 @keyframes loadingGlitchAnim {
