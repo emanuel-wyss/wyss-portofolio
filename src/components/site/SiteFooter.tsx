@@ -135,11 +135,11 @@ export function SiteFooter() {
 
         <nav aria-label="Social links" className="site-socials">
           <Link to="/changelog" className={`footer-changelog-link${pathname === '/changelog' ? ' active' : ''}`}>
-            changelog ↗
+            changelog
           </Link>
           {(config.social_links || []).map((link) => (
             <a key={`${link.platform}-${link.url}`} href={link.url} target="_blank" rel="noopener noreferrer">
-              {link.platform}
+              {link.platform} ↗
             </a>
           ))}
         </nav>
