@@ -97,6 +97,7 @@ type GqlRepoNode = {
   description: string | null;
   isPrivate: boolean;
   isFork: boolean;
+  isArchived: boolean;
   stargazerCount: number;
   forkCount: number;
   pushedAt: string;
@@ -135,6 +136,7 @@ async function fetchGraphqlData(login: string) {
             description
             isPrivate
             isFork
+            isArchived
             stargazerCount
             forkCount
             pushedAt
@@ -158,6 +160,7 @@ async function fetchGraphqlData(login: string) {
             description
             isPrivate
             isFork
+            isArchived
             stargazerCount
             forkCount
             pushedAt
@@ -279,8 +282,8 @@ export async function getGitHubProfile(): Promise<GitHubProfile> {
           if (t?.topic?.name) topicSet.add(t.topic.name);
         }
 
-        // STRICT PRIVACY GATE: never include private repos in public topRepos list
-        if (!r.isPrivate) {
+        // STRICT PRIVACY GATE: never include private repos; skip archived repos too
+        if (!r.isPrivate && !r.isArchived) {
           publicRepoMap.set(r.nameWithOwner, {
             name: r.name,
             fullName: r.nameWithOwner,
@@ -329,6 +332,11 @@ export async function getGitHubProfile(): Promise<GitHubProfile> {
       if (topic) topicSet.add(topic);
     }
     if (r.language) topicSet.add(r.language);
+
+    if (r.archived) {
+      publicRepoMap.delete(r.full_name);
+      continue;
+    }
 
     if (!r.private && !publicRepoMap.has(r.full_name)) {
       publicRepoMap.set(r.full_name, {
