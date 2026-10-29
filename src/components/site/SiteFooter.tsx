@@ -92,7 +92,7 @@ export function SiteFooter() {
         ) : null}
 
         <div>
-          <p className="muted">theme</p>
+          <p className="muted">CURRENT THEME</p>
           <ul className="site-theme-meta">
             <li>weather: {themeInfo.weather}</li>
             <li>daytime: {themeInfo.daytime}</li>
