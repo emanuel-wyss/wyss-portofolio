@@ -167,7 +167,8 @@ function drawGhost(
   vx: number,
   mode: 'follow' | 'flee' | 'breakdance',
   lookAngle: number,
-  phantom = 0
+  phantom = 0,
+  raygun = 0
 ) {
   ctx.save();
   ctx.translate(x, y);
@@ -184,7 +185,9 @@ function drawGhost(
   // Breakdance: cycles through moves every ~4s of dance time
   //  0 toprock      1 windmill     2 headspin     3 freeze      4 moonwalk
   //  5 kangaroo     6 floor roll   7 the crawl (Raygun specials)
-  const move = mode === 'breakdance' ? Math.floor(phase / 6) % 8 : -1;
+  // Regular breakdance = classic moves 0-4. Raygun mode (a reward) = specials 5-7 only.
+  const slot = Math.floor(phase / 6);
+  const move = mode !== 'breakdance' ? -1 : raygun > 0.5 ? 5 + (slot % 3) : slot % 5;
   if (mode === 'breakdance') {
     const t = phase % 6;
     if (move === 0) {
@@ -253,10 +256,11 @@ function drawGhost(
   ctx.fill();
   ctx.stroke();
 
-  // Breakdance outfit: green tracksuit over the sheet's lower half with yellow stripes
-  if (mode === 'breakdance') {
+  // Raygun outfit: green tracksuit with yellow stripes, blended in/out with `raygun`
+  if (raygun > 0.01) {
     ctx.save();
     ctx.clip(); // stay inside the body path we just drew
+    ctx.globalAlpha = raygun;
     ctx.fillStyle = `rgba(0, 135, 62, ${0.95 - phantom * 0.6})`;
     ctx.fillRect(-r - 2, 2, r * 2 + 4, 28);
     ctx.fillStyle = `rgba(255, 214, 10, ${1 - phantom * 0.6})`;
@@ -279,9 +283,12 @@ function drawGhost(
   if (phantom > 0.5) ctx.stroke();
   ctx.setLineDash([]);
 
-  // Green cap with a yellow brim and button while dancing
-  if (mode === 'breakdance') {
+  // Green cap with a yellow brim, blended in/out with `raygun`
+  if (raygun > 0.01) {
     ctx.save();
+    ctx.globalAlpha = raygun;
+    // cap drops in from above as it appears
+    ctx.translate(0, (1 - raygun) * -14);
     ctx.shadowBlur = 0;
     ctx.setLineDash([]);
     ctx.fillStyle = '#00873e';
@@ -474,6 +481,11 @@ export function EventCanvas({
       phantom: 0, // 0 solid → 1 see-through with dashed outline
       phantomTarget: 0,
       phantomTimer: 400,
+      // Raygun reward: annoy the ghost (spook it repeatedly) to unlock it
+      annoy: 0, // decays over time; each spook adds 1
+      spookCooldown: 0,
+      raygun: 0, // outfit blend 0..1
+      raygunFrames: 0, // remaining reward time
     };
 
     // =========================================================================
@@ -924,11 +936,30 @@ export function EventCanvas({
 
         // Only trigger flee when the cursor actually touches the ghost's body (radius ~38px)
         if (hasPointer && dist < 38) {
+          if (ghost.spookCooldown <= 0 && ghost.raygunFrames <= 0) {
+            ghost.annoy += 1;
+            ghost.spookCooldown = 40;
+          }
           ghost.fleeFrames = 34;
           unlock('halloween', 'spooked-the-ghost');
         }
 
-        const isBreakdancing = hasPointer && ghost.idleFrames > 145 && ghost.fleeFrames <= 0;
+        // Annoyance fades if you leave it alone (~1 point per 4s)
+        ghost.spookCooldown = Math.max(0, ghost.spookCooldown - dt);
+        ghost.annoy = Math.max(0, ghost.annoy - 0.004 * dt);
+        // 4 spooks in quick succession: the ghost suits up and shows off
+        if (ghost.annoy >= 4 && ghost.raygunFrames <= 0) {
+          ghost.raygunFrames = 720; // ~12s
+          ghost.annoy = 0;
+          ghost.idleFrames = 999; // start dancing right away
+          ghost.fleeFrames = 0;
+          unlock('halloween', 'raygun-unlocked');
+        }
+        if (ghost.raygunFrames > 0) {
+          ghost.raygunFrames -= dt;
+          ghost.fleeFrames = 0; // too busy dancing to flee
+        }
+        const isBreakdancing = ghost.raygunFrames > 0 || (hasPointer && ghost.idleFrames > 145 && ghost.fleeFrames <= 0);
         const mode: 'follow' | 'flee' | 'breakdance' =
           ghost.fleeFrames > 0 ? 'flee' : isBreakdancing ? 'breakdance' : 'follow';
 
@@ -1029,15 +1060,21 @@ export function EventCanvas({
         }
 
         // Every so often the ghost fades into a see-through phantom for a few seconds
+        // Rarer, and never while breakdancing (the outfit needs a solid body).
         ghost.phantomTimer -= dt;
-        if (ghost.phantomTimer <= 0) {
-          ghost.phantomTarget = ghost.phantomTarget ? 0 : Math.random() < 0.35 ? 1 : 0;
-          ghost.phantomTimer = ghost.phantomTarget ? rand(50, 95) : rand(300, 700);
+        if (mode === 'breakdance') {
+          ghost.phantomTarget = 0;
+          ghost.phantomTimer = Math.max(ghost.phantomTimer, 240); // pause before it may hide again
+        } else if (ghost.phantomTimer <= 0) {
+          ghost.phantomTarget = ghost.phantomTarget ? 0 : Math.random() < 0.15 ? 1 : 0;
+          ghost.phantomTimer = ghost.phantomTarget ? rand(40, 70) : rand(600, 1200);
         }
         // fade out gently, fade back in quickly
         const k = ghost.phantomTarget > ghost.phantom ? 0.07 : 0.16;
         ghost.phantom += (ghost.phantomTarget - ghost.phantom) * k * dt;
-        drawGhost(ctx, ghost.x, ghost.y, ghost.phase, ghost.vx, mode, lookAngle, ghost.phantom);
+        const raygunTarget = ghost.raygunFrames > 0 && mode === 'breakdance' ? 1 : 0;
+        ghost.raygun += (raygunTarget - ghost.raygun) * 0.05 * dt;
+        drawGhost(ctx, ghost.x, ghost.y, ghost.phase, ghost.vx, mode, lookAngle, ghost.phantom, ghost.raygun);
       }
 
       // =======================================================================
