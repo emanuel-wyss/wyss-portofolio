@@ -17,6 +17,7 @@ type Particle = {
 type Props = {
   event?: SpecialEventType;
   reducedMotion: boolean;
+  intensity?: 'quiet' | 'standard' | 'party';
 };
 
 const COLORS = ['#ff3355', '#ff9f1c', '#ffd60a', '#39ff14', '#00e5ff', '#8b5cf6', '#ff66cc'];
@@ -82,7 +83,7 @@ function drawBat(ctx: CanvasRenderingContext2D, x: number, y: number, size: numb
   ctx.fill();
 }
 
-export function EventCanvas({ event, reducedMotion }: Props) {
+export function EventCanvas({ event, reducedMotion, intensity = 'standard' }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -103,6 +104,7 @@ export function EventCanvas({ event, reducedMotion }: Props) {
     let pointerY = -1000;
     let autoTick = 0;
     const particles: Particle[] = [];
+    const particleCap = intensity === 'quiet' ? 70 : intensity === 'party' ? MAX_PARTICLES : 130;
 
     const resize = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 1.5);
@@ -116,7 +118,7 @@ export function EventCanvas({ event, reducedMotion }: Props) {
     };
 
     const spawnAmbient = () => {
-      if (particles.length >= MAX_PARTICLES) return;
+      if (particles.length >= particleCap) return;
       if (event === 'christmas') {
         particles.push({ x: rand(0, width), y: -10, vx: rand(-0.25, 0.25), vy: rand(0.4, 1.25), life: 0, maxLife: height * 2, size: rand(2, 5), color: '#ffffff', kind: 'snow', phase: rand(0, 6) });
       } else if (event === 'halloween' && Math.random() < 0.2) {
@@ -224,7 +226,7 @@ export function EventCanvas({ event, reducedMotion }: Props) {
       window.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [event, reducedMotion]);
+  }, [event, reducedMotion, intensity]);
 
   if (!event || reducedMotion) return null;
   return <canvas ref={ref} className={`event-canvas event-canvas--${event}`} aria-hidden="true" />;

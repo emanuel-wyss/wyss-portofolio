@@ -59,7 +59,7 @@ export function SiteFooter() {
     };
   }, []);
 
-  const { state, effectsPaused, toggleEffectsPaused, weatherNow } = useTheme();
+  const { state, effectsPaused, toggleEffectsPaused, effectsIntensity, setIntensity, weatherNow } = useTheme();
 
   useEffect(() => {
     const update = () => {
@@ -123,6 +123,14 @@ export function SiteFooter() {
           </ul>
           <ThemeToggle />
           {achievementCount > 0 ? <p className="muted event-achievements">discoveries: {achievementCount}</p> : null}
+          <label className="effects-intensity">
+            intensity:{' '}
+            <select value={effectsIntensity} onChange={(event) => setIntensity(event.target.value as typeof effectsIntensity)}>
+              <option value="quiet">quiet</option>
+              <option value="standard">standard</option>
+              <option value="party">party</option>
+            </select>
+          </label>
           <button type="button" className="effects-toggle" onClick={toggleEffectsPaused} aria-pressed={effectsPaused}>
             {effectsPaused ? 'Resume effects' : 'Pause effects'}
           </button>

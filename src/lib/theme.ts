@@ -604,6 +604,19 @@ export function initializeTheme(weatherOverride?: WeatherType): void {
 export type ColorMode = 'light' | 'dark' | 'auto';
 
 const EFFECTS_PAUSED_KEY = 'wyss-effects-paused';
+const EFFECTS_INTENSITY_KEY = 'wyss-effects-intensity';
+export type EffectsIntensity = 'quiet' | 'standard' | 'party';
+
+export function getEffectsIntensity(): EffectsIntensity {
+  if (typeof window === 'undefined') return 'standard';
+  const value = localStorage.getItem(EFFECTS_INTENSITY_KEY);
+  return value === 'quiet' || value === 'party' ? value : 'standard';
+}
+
+export function setEffectsIntensity(value: EffectsIntensity): void {
+  if (typeof window !== 'undefined') localStorage.setItem(EFFECTS_INTENSITY_KEY, value);
+  document.documentElement.setAttribute('data-effects-intensity', value);
+}
 
 export function getEffectsPaused(): boolean {
   if (typeof window === 'undefined') return false;
