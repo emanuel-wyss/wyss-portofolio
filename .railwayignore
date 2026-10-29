@@ -1,0 +1,13 @@
+# Never upload secrets or local artifacts to Railway (Nixpacks ignores .gitignore)
+.env
+.env.*
+.env.local
+node_modules
+dist
+.git
+.astro
+.tanstack
+.claude
+coverage
+*.log
+.DS_Store

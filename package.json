@@ -16,6 +16,7 @@
     "payload": "PAYLOAD_CONFIG_PATH=server/payload/config.ts ./node_modules/.bin/payload",
     "migrate": "PAYLOAD_CONFIG_PATH=server/payload/config.ts ./node_modules/.bin/payload migrate",
     "migrate:create": "PAYLOAD_CONFIG_PATH=server/payload/config.ts ./node_modules/.bin/payload migrate:create",
+    "rotate-secrets": "bun --bun scripts/rotate-secrets.ts",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
