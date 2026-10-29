@@ -592,3 +592,13 @@ html[data-lightbox-open] main { z-index: 10000; }
   background: transparent;
   padding: 0;
 }
+
+/* Event Canvas Layering & Pointer Events Fix */
+.event-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
