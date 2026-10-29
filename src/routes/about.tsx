@@ -49,7 +49,7 @@ function AboutPage() {
           </p>
         </div>
 
-        <div className="skills-section">
+        <div className="scroll-scene scroll-scene--about skills-section" data-scene="about">
           <h2>Skills and Tech Stack</h2>
           <div className="skills-grid">
             {skills.map((group) => (
@@ -66,7 +66,7 @@ function AboutPage() {
         </div>
 
         {github?.configured ? (
-          <div className="github-section">
+          <div className="scroll-scene scroll-scene--work github-section" data-scene="work">
             <div className="github-header">
               <h2>GitHub</h2>
               {github.url ? (
@@ -97,7 +97,7 @@ function AboutPage() {
           </div>
         ) : null}
 
-        <div className="contact-section">
+        <div className="scroll-scene scroll-scene--contact contact-section" data-scene="contact">
           <h2>Contact</h2>
           <nav className="social-grid" aria-label="Social links">
             {(siteConfig?.social_links?.length
@@ -120,7 +120,7 @@ function AboutPage() {
         {siteConfig?.friends_links?.length ? (
           <div className="friends-section">
             <h2>Good friends &amp; orgs</h2>
-            <div className="friends-grid">
+            <div className="scroll-scene scroll-scene--friends friends-grid" data-scene="friends">
               {siteConfig.friends_links.map((link) => (
                 <a
                   key={`${link.name}-${link.url}`}

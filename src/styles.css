@@ -765,6 +765,32 @@ nav.site-menu,
   opacity: calc(0.08 * var(--fx-intensity));
 }
 
+/* ---- Scroll scenes ---- */
+.scroll-scene {
+  --scene-progress: 0;
+}
+
+@supports (animation-timeline: view()) {
+  .scroll-scene {
+    animation: sceneReveal linear both;
+    animation-timeline: view(block 10% 85%);
+  }
+  @keyframes sceneReveal {
+    from { opacity: .45; transform: translateY(28px) scale(.985); filter: saturate(.8); }
+    45% { opacity: 1; transform: translateY(0) scale(1); filter: saturate(1); }
+    to { opacity: .7; transform: translateY(-14px) scale(.995); filter: saturate(.9); }
+  }
+}
+
+.scroll-scene--about { --scene-accent: var(--primary); }
+.scroll-scene--work { --scene-accent: var(--accent); }
+.scroll-scene--contact { --scene-accent: var(--primary-light); }
+.scroll-scene--friends { --scene-accent: var(--accent-light); }
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-scene { animation: none !important; }
+}
+
 /* ---- Interactive event canvas ---- */
 .event-canvas {
   position: fixed;
