@@ -77,6 +77,7 @@ export function SiteFooter() {
     ? Math.max(0, getEventWindow(state.event).end.getTime() - Date.now())
     : 0;
   const eventDaysLeft = eventCountdown ? Math.ceil(eventCountdown / 86400000) : 0;
+  const timezone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'local';
 
   const themeInfo = {
     mode: state ? state.resolved : 'dark',
@@ -120,6 +121,7 @@ export function SiteFooter() {
             <li>daytime: {themeInfo.daytime}</li>
             <li>season: {themeInfo.season}</li>
             {state?.event ? <li aria-live="polite">event: {eventDaysLeft} day{eventDaysLeft === 1 ? '' : 's'} left</li> : null}
+            <li>timezone: {timezone}</li>
           </ul>
           <ThemeToggle />
           {achievementCount > 0 ? <p className="muted event-achievements">discoveries: {achievementCount}</p> : null}
