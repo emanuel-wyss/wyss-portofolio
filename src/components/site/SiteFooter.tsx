@@ -78,6 +78,10 @@ export function SiteFooter() {
     : 0;
   const eventDaysLeft = eventCountdown ? Math.ceil(eventCountdown / 86400000) : 0;
   const timezone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'local';
+  const sourceLinks = [
+    { label: 'Codeberg', url: 'https://codeberg.org/maenu/wyss-portofolio' },
+    { label: 'GitHub mirror', url: 'https://github.com/emanuel-wyss/wyss-portofolio' },
+  ];
 
   const themeInfo = {
     mode: state ? state.resolved : 'dark',
@@ -94,8 +98,12 @@ export function SiteFooter() {
   return (
     <footer className="site-footer">
       <div className="site-footer-content">
-        <div>
+        <div className="footer-identity">
           <p className="muted">© {new Date().getFullYear()} Wyss. All rights reserved.</p>
+          <p className="footer-telemetry"><span>SYS</span> ONLINE · <span>API</span> OK · <span>WX</span> {weatherNow?.location || 'BERN'}</p>
+          <nav className="footer-source" aria-label="Source repositories">
+            {sourceLinks.map((link) => <a key={link.label} href={link.url} target="_blank" rel="noreferrer">{link.label} ↗</a>)}
+          </nav>
         </div>
 
         <nav aria-label="Social links" className="site-socials">
@@ -124,30 +132,21 @@ export function SiteFooter() {
             <li>timezone: {timezone}</li>
           </ul>
           {state?.event && config.event_settings?.announcement ? <p className="event-announcement">{config.event_settings.announcement}</p> : null}
-          <ThemeToggle />
-          {achievementCount > 0 ? <p className="muted event-achievements">discoveries: {achievementCount}</p> : null}
-          <label className="effects-intensity">
-            <input type="checkbox" checked={soundEnabled} onChange={(event) => setSoundEnabled(event.target.checked)} />
-            event sounds
-          </label>
-          <label className="effects-intensity">
-            preferred event:{' '}
-            <select value={preferredEvent || ''} onChange={(event) => setPreferredEventChoice((event.target.value || undefined) as SpecialEventType | undefined)}>
-              <option value="">automatic</option>
-              {ALL_EVENTS.map((event) => <option key={event} value={event}>{event}</option>)}
-            </select>
-          </label>
-          <label className="effects-intensity">
-            intensity:{' '}
-            <select value={effectsIntensity} onChange={(event) => setIntensity(event.target.value as typeof effectsIntensity)}>
-              <option value="quiet">quiet</option>
-              <option value="standard">standard</option>
-              <option value="party">party</option>
-            </select>
-          </label>
-          <button type="button" className="effects-toggle" onClick={toggleEffectsPaused} aria-pressed={effectsPaused}>
-            {effectsPaused ? 'Resume effects' : 'Pause effects'}
-          </button>
+          <div className="footer-controls">
+            <ThemeToggle />
+            <button type="button" className="control-chip" onClick={toggleEffectsPaused} aria-pressed={effectsPaused}>
+              {effectsPaused ? '▶ effects' : 'Ⅱ effects'}
+            </button>
+            <details className="controls-menu">
+              <summary>⚙ controls</summary>
+              <div className="controls-popover">
+                <label><span>intensity</span><select value={effectsIntensity} onChange={(event) => setIntensity(event.target.value as typeof effectsIntensity)}><option value="quiet">quiet</option><option value="standard">standard</option><option value="party">party</option></select></label>
+                <label><span>event</span><select value={preferredEvent || ''} onChange={(event) => setPreferredEventChoice((event.target.value || undefined) as SpecialEventType | undefined)}><option value="">auto</option>{ALL_EVENTS.map((event) => <option key={event} value={event}>{event}</option>)}</select></label>
+                <label className="toggle-row"><span>sound</span><input type="checkbox" checked={soundEnabled} onChange={(event) => setSoundEnabled(event.target.checked)} /></label>
+              </div>
+            </details>
+          </div>
+          {achievementCount > 0 ? <p className="muted event-achievements">{achievementCount} discovery{achievementCount === 1 ? '' : 'ies'}</p> : null}
         </div>
       </div>
       <div className="site-footer-bottom">
