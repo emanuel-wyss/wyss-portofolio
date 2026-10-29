@@ -112,12 +112,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const apply = () => setState(applyImmersiveTheme(mode, weatherRef.current));
     apply();
 
-    // Re-apply when the OS color scheme or reduced-motion preference changes.
+    // Re-apply when the OS color scheme, reduced-motion preference, or preview hash changes.
     const schemeMq = window.matchMedia('(prefers-color-scheme: light)');
     const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
     const onChange = () => apply();
     schemeMq.addEventListener('change', onChange);
     motionMq.addEventListener('change', onChange);
+    window.addEventListener('hashchange', onChange);
 
     // Re-evaluate time-of-day / event drift every 10 minutes.
     const interval = window.setInterval(apply, 10 * 60 * 1000);
@@ -125,6 +126,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => {
       schemeMq.removeEventListener('change', onChange);
       motionMq.removeEventListener('change', onChange);
+      window.removeEventListener('hashchange', onChange);
       window.clearInterval(interval);
     };
   }, [mode]);

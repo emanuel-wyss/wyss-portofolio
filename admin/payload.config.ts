@@ -38,10 +38,7 @@ export default buildConfig({
   admin: {
     user: 'users',
     components: {
-      afterDashboard: [
-        '@/components/DeploymentDashboardField#DeploymentDashboardField',
-        '@/components/EventPreviewField#EventPreviewField',
-      ],
+      beforeDashboard: ['@/components/AdminDashboard#AdminDashboard'],
     },
   },
 

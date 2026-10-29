@@ -513,6 +513,17 @@ export function getCurrentSpecialEvent(): SpecialEventType | undefined {
   return undefined;
 }
 
+/**
+ * Read a hash-based admin preview override (#preview-event=halloween).
+ * Hash fragments are never sent to the server or indexed by crawlers.
+ */
+export function getHashPreviewEvent(): SpecialEventType | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const match = window.location.hash.match(/preview-event=([a-z]+)/i);
+  const raw = match?.[1]?.toLowerCase();
+  return raw && (ALL_EVENTS as string[]).includes(raw) ? (raw as SpecialEventType) : undefined;
+}
+
 export function getPreferredEvent(): SpecialEventType | undefined {
   if (typeof window === 'undefined') return undefined;
   const value = localStorage.getItem(PREFERRED_EVENT_KEY);
@@ -761,7 +772,7 @@ export function getImmersiveState(mode: ColorMode): ImmersiveState {
   const resolved = resolveMode(mode);
   const reducedMotion = prefersReducedMotion();
   const season = getCurrentSeason();
-  const event = getCurrentSpecialEvent();
+  const event = getHashPreviewEvent() ?? getCurrentSpecialEvent();
   const isDaytime = isDaytime_();
   let fxIntensity = isDaytime ? 0.5 : 0.85;
   if (event) fxIntensity = Math.min(1, fxIntensity + 0.25);

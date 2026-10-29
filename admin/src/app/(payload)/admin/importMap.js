@@ -23,6 +23,7 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { EventPreviewField as EventPreviewField_d57aab921090b2f9ad2ce5665c79969b } from '@/components/EventPreviewField'
 import { DeploymentDashboardField as DeploymentDashboardField_fe6e4fb94302cefd1bacea54be98af40 } from '@/components/DeploymentDashboardField'
+import { AdminDashboard as AdminDashboard_d2e5e8cdcf265e3c61c4d683161d9698 } from '@/components/AdminDashboard'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -52,5 +53,6 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/EventPreviewField#EventPreviewField": EventPreviewField_d57aab921090b2f9ad2ce5665c79969b,
   "@/components/DeploymentDashboardField#DeploymentDashboardField": DeploymentDashboardField_fe6e4fb94302cefd1bacea54be98af40,
+  "@/components/AdminDashboard#AdminDashboard": AdminDashboard_d2e5e8cdcf265e3c61c4d683161d9698,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }
