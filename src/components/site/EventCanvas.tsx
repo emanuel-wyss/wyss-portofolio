@@ -110,22 +110,14 @@ function drawGhost(
         ? '#ff7518'
         : '#39ff14';
 
-  // Breakdance rotation (headspin + windmill + freeze) or directional tilt when gliding
+  // Smooth breakdance groove or gentle directional tilt when gliding
   if (mode === 'breakdance') {
-    const moveCycle = Math.floor(phase / 4) % 3;
-    if (moveCycle === 0) {
-      // Headspin upside-down with wobble
-      ctx.rotate(Math.PI + Math.sin(phase * 3.5) * 0.35);
-      ctx.scale(Math.cos(phase * 4.5), 1);
-    } else if (moveCycle === 1) {
-      // Full 360 windmill spin
-      ctx.rotate(phase * 3.2);
-    } else {
-      // B-boy side freeze bounce
-      ctx.rotate(-Math.PI * 0.38 + Math.sin(phase * 5) * 0.12);
-    }
+    const bounceY = Math.sin(phase * 2.4) * 4;
+    ctx.translate(0, bounceY);
+    const spinAngle = Math.sin(phase * 1.1) * Math.PI * 0.85;
+    ctx.rotate(spinAngle);
   } else {
-    const tilt = Math.max(-0.38, Math.min(0.38, vx * 0.055));
+    const tilt = Math.max(-0.22, Math.min(0.22, vx * 0.07));
     ctx.rotate(tilt);
   }
 
@@ -758,100 +750,110 @@ export function EventCanvas({
       }
 
       // =======================================================================
-      // 1. HALLOWEEN RENDER — Stalking / Fleeing / Breakdancing Ghost
+      // 1. HALLOWEEN RENDER — Smooth Pointer-Following / Touch-Fleeing / Breakdancing Ghost
       // =======================================================================
       if (event === 'halloween') {
         ghost.idleFrames += dt;
-        ghost.phase += 0.09 * dt;
+        ghost.phase += 0.065 * dt;
         if (ghost.fleeFrames > 0) ghost.fleeFrames = Math.max(0, ghost.fleeFrames - dt);
 
         const hasPointer = pointerX > 0 && pointerY > 0;
-        const targetX = hasPointer ? pointerX : width * 0.5 + Math.cos(ghost.phase * 0.25) * 140;
-        const targetY = hasPointer ? pointerY : height * 0.4 + Math.sin(ghost.phase * 0.4) * 70;
+        const targetX = hasPointer ? pointerX : width * 0.5 + Math.cos(ghost.phase * 0.25) * 120;
+        const targetY = hasPointer ? pointerY : height * 0.4 + Math.sin(ghost.phase * 0.4) * 60;
         const dx = targetX - ghost.x;
         const dy = targetY - ghost.y;
         const dist = Math.hypot(dx, dy);
         const lookAngle = Math.atan2(dy, dx);
 
-        const isBreakdancing = hasPointer && ghost.idleFrames > 125 && ghost.fleeFrames <= 0;
+        // Only trigger flee when the cursor actually touches the ghost's body (radius ~38px)
+        if (hasPointer && dist < 38) {
+          ghost.fleeFrames = 34;
+          unlock('halloween', 'spooked-the-ghost');
+        }
+
+        const isBreakdancing = hasPointer && ghost.idleFrames > 145 && ghost.fleeFrames <= 0;
         const mode: 'follow' | 'flee' | 'breakdance' =
           ghost.fleeFrames > 0 ? 'flee' : isBreakdancing ? 'breakdance' : 'follow';
 
         if (mode === 'flee') {
-          // Keep bolting away from the pointer
+          // Smoothly glide back away from the cursor at a gentle capped speed (no sudden jumps)
           const awayX = ghost.x - targetX;
           const awayY = ghost.y - targetY;
           const awayDist = Math.max(1, Math.hypot(awayX, awayY));
-          ghost.vx += (awayX / awayDist) * 0.55 * dt;
-          ghost.vy += (awayY / awayDist) * 0.55 * dt;
-          ghost.vx *= Math.pow(0.92, dt);
-          ghost.vy *= Math.pow(0.92, dt);
+          const fleeSpeed = 2.6;
+          const desiredVx = (awayX / awayDist) * fleeSpeed;
+          const desiredVy = (awayY / awayDist) * fleeSpeed;
+          ghost.vx += (desiredVx - ghost.vx) * 0.12 * dt;
+          ghost.vy += (desiredVy - ghost.vy) * 0.12 * dt;
         } else if (mode === 'breakdance') {
-          // Settle in place and spin / bounce to the beat
-          ghost.vx *= Math.pow(0.82, dt);
-          ghost.vy *= Math.pow(0.82, dt);
+          // Smoothly decelerate in place and groove
+          ghost.vx *= Math.pow(0.88, dt);
+          ghost.vy *= Math.pow(0.88, dt);
 
-          // Emit funky neon floor sparks while breakdancing
-          if (Math.random() < 0.35 * density && ghostWisps.length < 40) {
+          if (Math.random() < 0.22 * density && ghostWisps.length < 32) {
             const dancePalette = ['#39ff14', '#ff7518', '#00e5ff', '#ff00ff'];
             ghostWisps.push({
-              x: ghost.x + rand(-18, 18),
-              y: ghost.y + rand(8, 22),
+              x: ghost.x + rand(-16, 16),
+              y: ghost.y + rand(8, 20),
               life: 0,
               color: dancePalette[Math.floor(Math.random() * dancePalette.length)],
             });
           }
 
-          // Pulsing beat ring under the breakdancing ghost
-          const ringR = 16 + ((ghost.phase * 9) % 28);
+          const ringR = 16 + ((ghost.phase * 7) % 26);
           ctx.save();
-          ctx.strokeStyle = `rgba(57, 255, 20, ${Math.max(0, 0.55 - ringR / 60)})`;
+          ctx.strokeStyle = `rgba(57, 255, 20, ${Math.max(0, 0.5 - ringR / 60)})`;
           ctx.lineWidth = 1.5;
           ctx.beginPath();
           ctx.ellipse(ghost.x, ghost.y + 22, ringR, ringR * 0.35, 0, 0, Math.PI * 2);
           ctx.stroke();
           ctx.restore();
         } else {
-          // Follow pointer with smooth springy delay, stopping politely ~58px away
-          const desiredDist = 58;
-          if (dist > desiredDist) {
-            const pull = Math.min(0.055, (dist - desiredDist) * 0.00045);
-            ghost.vx += dx * pull * dt;
-            ghost.vy += dy * pull * dt;
-          }
-          ghost.vx *= Math.pow(0.89, dt);
-          ghost.vy *= Math.pow(0.89, dt);
+          // Follow pointer with a comfortable 95px distance and soft lag/delay
+          const desiredDist = 95;
+          const maxFollowSpeed = 1.85;
+          let desiredVx = 0;
+          let desiredVy = 0;
 
-          if (Math.hypot(ghost.vx, ghost.vy) > 0.6 && Math.random() < 0.3 && ghostWisps.length < 40) {
+          if (dist > desiredDist + 4) {
+            const speed = Math.min(maxFollowSpeed, (dist - desiredDist) * 0.018);
+            desiredVx = (dx / dist) * speed;
+            desiredVy = (dy / dist) * speed;
+          }
+
+          ghost.vx += (desiredVx - ghost.vx) * 0.055 * dt;
+          ghost.vy += (desiredVy - ghost.vy) * 0.055 * dt;
+
+          if (Math.hypot(ghost.vx, ghost.vy) > 0.45 && Math.random() < 0.22 && ghostWisps.length < 32) {
             ghostWisps.push({
-              x: ghost.x + rand(-6, 6),
+              x: ghost.x + rand(-5, 5),
               y: ghost.y + 14,
               life: 0,
-              color: 'rgba(57, 255, 20, 0.45)',
+              color: 'rgba(57, 255, 20, 0.4)',
             });
           }
         }
 
         ghost.x += ghost.vx * dt;
-        ghost.y += (ghost.vy + Math.sin(ghost.phase * 1.4) * 0.35) * dt;
+        ghost.y += ghost.vy * dt + Math.sin(ghost.phase * 1.1) * 0.22 * dt;
 
-        // Keep ghost inside the viewport margins
-        const margin = 38;
+        // Soft viewport bounds
+        const margin = 42;
         if (ghost.x < margin) {
           ghost.x = margin;
-          ghost.vx = Math.abs(ghost.vx) * 0.7;
+          ghost.vx = Math.max(0, ghost.vx);
         }
         if (ghost.x > width - margin) {
           ghost.x = width - margin;
-          ghost.vx = -Math.abs(ghost.vx) * 0.7;
+          ghost.vx = Math.min(0, ghost.vx);
         }
         if (ghost.y < margin + 30) {
           ghost.y = margin + 30;
-          ghost.vy = Math.abs(ghost.vy) * 0.7;
+          ghost.vy = Math.max(0, ghost.vy);
         }
         if (ghost.y > height - margin) {
           ghost.y = height - margin;
-          ghost.vy = -Math.abs(ghost.vy) * 0.7;
+          ghost.vy = Math.min(0, ghost.vy);
         }
 
         // Render ectoplasm / breakdance wisps behind the ghost
@@ -860,10 +862,10 @@ export function EventCanvas({
           w.life += dt;
           const alpha = Math.max(0, 1 - w.life / 32);
           ctx.save();
-          ctx.globalAlpha = alpha * 0.6;
+          ctx.globalAlpha = alpha * 0.55;
           ctx.fillStyle = w.color;
           ctx.beginPath();
-          ctx.arc(w.x, w.y - w.life * 0.35, (1 - alpha) * 7 + 2.5, 0, Math.PI * 2);
+          ctx.arc(w.x, w.y - w.life * 0.3, (1 - alpha) * 6 + 2, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
           if (w.life >= 32) ghostWisps.splice(i, 1);
@@ -1275,22 +1277,6 @@ export function EventCanvas({
 
       if (event === 'halloween') {
         ghost.idleFrames = 0;
-        const pvx = pointerX - prevPointerX;
-        const pvy = pointerY - prevPointerY;
-        const toGhostX = ghost.x - pointerX;
-        const toGhostY = ghost.y - pointerY;
-        const distToGhost = Math.hypot(toGhostX, toGhostY);
-
-        if (distToGhost > 1 && distToGhost < 230) {
-          // Dot product: positive when the pointer is moving towards the ghost
-          const approachSpeed = (pvx * toGhostX + pvy * toGhostY) / distToGhost;
-          if (approachSpeed > 2.2 || distToGhost < 75) {
-            ghost.fleeFrames = 36;
-            ghost.vx += (toGhostX / distToGhost) * 3.4;
-            ghost.vy += (toGhostY / distToGhost) * 3.4;
-            unlock('halloween', 'spooked-the-ghost');
-          }
-        }
       } else if (event === 'christmas' && pointerSpeed > 42) {
         // Rapidly shaking cursor shakes settled snow loose!
         for (let i = 0; i < snowBins; i++) {
@@ -1326,13 +1312,10 @@ export function EventCanvas({
         const toGhostX = ghost.x - x;
         const toGhostY = ghost.y - y;
         const dist = Math.max(1, Math.hypot(toGhostX, toGhostY));
-        if (dist < 160) {
-          ghost.fleeFrames = 45;
-          ghost.vx = (toGhostX / dist) * 8.5;
-          ghost.vy = (toGhostY / dist) * 8.5;
+        if (dist < 48) {
+          ghost.fleeFrames = 34;
         } else {
-          // Clicking far away makes the ghost do an instant breakdance spin!
-          ghost.idleFrames = 140;
+          ghost.idleFrames = 150;
         }
       } else if (event === 'christmas') {
         // Carve a scoop out of the snowbank or puff snow into the air
