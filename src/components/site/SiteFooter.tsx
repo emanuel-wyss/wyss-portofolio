@@ -214,7 +214,9 @@ export function SiteFooter() {
       </div>
 
       <div className="site-footer-bottom">
-        <p className="muted">{config.tagline}</p>
+        <p className="footer-privacy">
+          <span>PRIVACY //</span> ZERO TRACKING · ZERO COOKIES · ZERO THIRD-PARTY FONTS · 100% SELF-HOSTED
+        </p>
       </div>
     </footer>
   );

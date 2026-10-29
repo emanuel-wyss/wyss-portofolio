@@ -1,3 +1,14 @@
+/* Self-hosted fonts (zero third-party requests) */
+@import '@fontsource/monaspace-krypton/latin-600.css';
+@import '@fontsource/monaspace-krypton/latin-700.css';
+@import '@fontsource/monaspace-argon/latin-400.css';
+@import '@fontsource/monaspace-argon/latin-500.css';
+@import '@fontsource/monaspace-argon/latin-600.css';
+@import '@fontsource/monaspace-neon/latin-400.css';
+@import '@fontsource/monaspace-neon/latin-500.css';
+@import '@fontsource/monaspace-neon/latin-700.css';
+@import '@fontsource/silkscreen/latin-400.css';
+@import '@fontsource/silkscreen/latin-700.css';
 @import './styles/theme-animations.css';
 
 :root {
@@ -10,9 +21,10 @@
   --accent: #ffd700;
   --accent-light: #332e00;
 
-  --font-display: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'Geist Mono', monospace;
+  --font-display: 'Monaspace Krypton', ui-monospace, monospace;
+  --font-body: 'Monaspace Argon', ui-monospace, monospace;
+  --font-mono: 'Monaspace Neon', ui-monospace, monospace;
+  --font-pixel: 'Silkscreen', 'Monaspace Neon', monospace;
 
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -55,8 +67,8 @@ body::before {
   z-index: 3;
   color: var(--text-secondary);
   opacity: .45;
-  font: 10px var(--font-mono);
-  letter-spacing: .12em;
+  font: 9px var(--font-pixel);
+  letter-spacing: .06em;
   pointer-events: none;
 } 
 
@@ -76,6 +88,7 @@ h4,
 h5,
 h6 {
   font-family: var(--font-display);
+  letter-spacing: 0.01em;
   font-weight: 600;
   line-height: 1.2;
   margin-bottom: var(--spacing-md);
@@ -130,8 +143,8 @@ code {
   left: var(--spacing-lg);
   color: var(--text-secondary);
   opacity: .6;
-  font: 10px var(--font-mono);
-  letter-spacing: .14em;
+  font: 9px var(--font-pixel);
+  letter-spacing: .1em;
   text-transform: uppercase;
 }
 
@@ -158,8 +171,8 @@ code {
   gap: .75rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
   color: var(--text-secondary);
-  font: 10px var(--font-mono);
-  letter-spacing: .08em;
+  font: 9px var(--font-pixel);
+  letter-spacing: .06em;
   text-transform: uppercase;
 }
 
@@ -238,11 +251,18 @@ code {
 }
 
 .footer-telemetry,
-.footer-source {
-  font: 10px var(--font-mono);
-  letter-spacing: .08em;
+.footer-source,
+.footer-privacy {
+  font: 9px var(--font-pixel);
+  letter-spacing: .06em;
   text-transform: uppercase;
 }
+.footer-privacy {
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.8;
+}
+.footer-privacy span { color: var(--accent); }
 .footer-telemetry span { color: var(--accent); }
 .footer-source { display: flex; gap: .75rem; margin-top: .75rem; }
 
@@ -305,10 +325,11 @@ code {
 .theme-bar-tag {
   color: var(--bg-primary);
   background: var(--accent);
-  padding: 0.1rem 0.4rem;
+  padding: 0.18rem 0.4rem;
+  font-family: var(--font-pixel);
   font-weight: 700;
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  font-size: 9px;
+  letter-spacing: 0.04em;
   margin-right: 0.25rem;
 }
 
@@ -410,7 +431,9 @@ code {
 .home-badge {
   color: var(--bg-primary);
   background: var(--accent);
-  padding: 0.1rem 0.45rem;
+  padding: 0.18rem 0.45rem;
+  font-family: var(--font-pixel);
+  font-size: 9px;
   font-weight: 700;
 }
 
@@ -448,8 +471,8 @@ code {
 }
 
 .eyebrow {
-  font: 10px var(--font-mono);
-  letter-spacing: 0.12em;
+  font: 9px var(--font-pixel);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
   margin-bottom: 0.25rem;
@@ -1446,7 +1469,7 @@ html[data-effects-paused] .event-canvas {
   display: flex;
   justify-content: space-between;
   pointer-events: none;
-  font: 10px var(--font-mono);
+  font: 9px var(--font-pixel);
   opacity: 0;
   transform: translateY(-4px);
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -1537,9 +1560,10 @@ html[data-effects-paused] .event-canvas {
 .nerdy-lightbox-title .tag-badge {
   background: var(--accent);
   color: var(--bg-primary);
+  font-family: var(--font-pixel);
   font-weight: 700;
-  font-size: 10px;
-  padding: 0.1rem 0.4rem;
+  font-size: 9px;
+  padding: 0.18rem 0.4rem;
 }
 
 .nerdy-lightbox-title .filename {
@@ -1609,9 +1633,10 @@ html[data-effects-paused] .event-canvas {
 
 .nerdy-lightbox-meta .meta-head {
   color: var(--accent);
+  font-family: var(--font-pixel);
   font-weight: 700;
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  font-size: 9px;
+  letter-spacing: 0.05em;
   padding-bottom: 0.5rem;
   margin-bottom: 0.65rem;
   border-bottom: 1px dashed var(--border-color);
@@ -1624,10 +1649,11 @@ html[data-effects-paused] .event-canvas {
 }
 
 .nerdy-lightbox-meta dt {
-  font-size: 9px;
-  letter-spacing: 0.1em;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  letter-spacing: 0.05em;
   color: var(--text-secondary);
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 .nerdy-lightbox-meta dd {

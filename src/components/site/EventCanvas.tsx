@@ -189,7 +189,7 @@ function drawGhost(
     ctx.fill();
 
     ctx.fillStyle = '#ff7518';
-    ctx.font = 'bold 14px "Geist Mono", monospace';
+    ctx.font = 'bold 14px "Monaspace Neon", monospace';
     ctx.fillText('!', -3, -r - 12);
   } else {
     // Cute stalking eyes looking toward pointer
@@ -1038,7 +1038,7 @@ export function EventCanvas({
 
         // HUD pill in bottom-left showing egg hunt progress
         ctx.save();
-        ctx.font = '11px "Geist Mono", monospace';
+        ctx.font = '11px "Monaspace Neon", monospace';
         ctx.fillStyle = 'rgba(20, 20, 16, 0.82)';
         ctx.strokeStyle = 'rgba(255, 179, 204, 0.55)';
         ctx.fillRect(16, height - 38, 128, 24);
@@ -1220,7 +1220,7 @@ export function EventCanvas({
         runawayBtn.y = Math.min(height - runawayBtn.h - 40, Math.max(75, runawayBtn.y));
 
         // Draw fake terminal modal windows
-        ctx.font = '11px "Geist Mono", monospace';
+        ctx.font = '11px "Monaspace Neon", monospace';
         for (let i = modals.length - 1; i >= 0; i--) {
           const m = modals[i];
           m.life += dt;
@@ -1246,7 +1246,7 @@ export function EventCanvas({
         ctx.fillRect(runawayBtn.x, runawayBtn.y, runawayBtn.w, runawayBtn.h);
         ctx.strokeRect(runawayBtn.x, runawayBtn.y, runawayBtn.w, runawayBtn.h);
         ctx.fillStyle = '#39ff14';
-        ctx.font = '11px "Geist Mono", monospace';
+        ctx.font = '11px "Monaspace Neon", monospace';
         ctx.fillText(
           runawayBtn.caught ? '[ BUG FIXED! ]' : `[ FIX BUG (${runawayBtn.dodges}) ]`,
           runawayBtn.x + 12,

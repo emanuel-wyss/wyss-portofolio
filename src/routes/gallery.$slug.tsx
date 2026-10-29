@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import ReactDOM from 'react-dom';
 import { getAlbumBySlug } from '../lib/api';
 
 export const Route = createFileRoute('/gallery/$slug')({
@@ -170,7 +170,7 @@ function GalleryDetailPage() {
 
   const lightboxNode =
     activeImg && activeIndex !== null && typeof document !== 'undefined'
-      ? createPortal(
+      ? ReactDOM.createPortal(
           <div
             className="nerdy-lightbox"
             role="dialog"

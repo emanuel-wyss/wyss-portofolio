@@ -29,6 +29,10 @@
     "deploy:admin": "bunx @railway/cli up ./admin --path-as-root --service admin --detach"
   },
   "dependencies": {
+    "@fontsource/monaspace-argon": "^5.3.0",
+    "@fontsource/monaspace-krypton": "^5.3.0",
+    "@fontsource/monaspace-neon": "^5.3.0",
+    "@fontsource/silkscreen": "^5.3.0",
     "@payloadcms/db-postgres": "^3.92.1",
     "@payloadcms/plugin-cloud-storage": "^3.92.1",
     "@payloadcms/richtext-lexical": "^3.92.1",

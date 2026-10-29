@@ -5,6 +5,10 @@
     "": {
       "name": "wyss-portfolio",
       "dependencies": {
+        "@fontsource/monaspace-argon": "^5.3.0",
+        "@fontsource/monaspace-krypton": "^5.3.0",
+        "@fontsource/monaspace-neon": "^5.3.0",
+        "@fontsource/silkscreen": "^5.3.0",
         "@payloadcms/db-postgres": "^3.92.1",
         "@payloadcms/plugin-cloud-storage": "^3.92.1",
         "@payloadcms/richtext-lexical": "^3.92.1",
@@ -332,6 +336,14 @@
     "@floating-ui/react-dom": ["@floating-ui/react-dom@2.1.8", "", { "dependencies": { "@floating-ui/dom": "^1.7.6" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-cC52bHwM/n/CxS87FH0yWdngEZrjdtLW/qVruo68qg+prK7ZQ4YGdut2GyDVpoGeAYe/h899rVeOVm6Oi40k2A=="],
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.11", "", {}, "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="],
+
+    "@fontsource/monaspace-argon": ["@fontsource/monaspace-argon@5.3.0", "", {}, "sha512-sfP9wbeL7OLt/vxHCOtssa4AadPFjQAClYg1rl+PybqfJLw8yG86f8q3qtx4dCHpsN82x8Cb2z0BmP7y93QUNQ=="],
+
+    "@fontsource/monaspace-krypton": ["@fontsource/monaspace-krypton@5.3.0", "", {}, "sha512-dAvofm5VNugRpprnOYMOEnlcnlAJWrQXcoy0PEnmdc9NU+fyDeSDYOTFoJPmJBADwcnVqXA6fLgTlz7TUQQx6g=="],
+
+    "@fontsource/monaspace-neon": ["@fontsource/monaspace-neon@5.3.0", "", {}, "sha512-a4B4L4nmW+mW42gDb6JUugy2fA3DC0QKi2yRMXKzuNsN+wHhUvrqgYndIBMds+Evq/cWaMJgd06x14dHuBNxwA=="],
+
+    "@fontsource/silkscreen": ["@fontsource/silkscreen@5.3.0", "", {}, "sha512-M1NQ3LQH0LFNvyFPd/piHEGMImPPtpLglNnLC6Vdcq9kL0jNIOtTQmksAWCc4enbDnw1OnIpZtjNEfRqYm/QmA=="],
 
     "@hapi/hoek": ["@hapi/hoek@9.3.0", "", {}, "sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ=="],
 
