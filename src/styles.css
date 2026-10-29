@@ -1730,3 +1730,64 @@ html[data-effects-paused] .event-canvas {
 
 /* Lightbox open: lift <main> above the sticky nav so the inline lightbox overlays everything */
 html[data-lightbox-open] main { z-index: 10000; }
+
+/* ===========================================================================
+   Nerdy Weather & Event Based Page Transitions
+   =========================================================================== */
+.page-transition-wrapper {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1), transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), filter 0.28s ease;
+}
+
+.page-transition-wrapper.is-transitioning {
+  opacity: 0;
+  transform: translateY(12px) scale(0.992);
+  filter: blur(4px) contrast(1.2);
+}
+
+/* Cyber scanline sweep transition */
+.page-transition-wrapper.is-transitioning.page-trans-cyber {
+  transform: translateY(16px);
+  filter: hue-rotate(45deg) brightness(1.3);
+}
+
+/* Glitch / Halloween transition */
+@keyframes pageGlitch {
+  0% { transform: translate(0); filter: invert(0); }
+  25% { transform: translate(-4px, 2px); filter: hue-rotate(90deg) contrast(2); }
+  50% { transform: translate(4px, -2px); filter: invert(0.25); }
+  75% { transform: translate(-2px, -1px); filter: hue-rotate(180deg); }
+  100% { transform: translate(0); filter: invert(0); }
+}
+.page-transition-wrapper.is-transitioning.page-trans-glitch {
+  animation: pageGlitch 0.32s steps(4, end) both;
+}
+
+/* Snow / Cold weather fade with blur */
+.page-transition-wrapper.is-transitioning.page-trans-snow {
+  transform: scale(0.98);
+  filter: blur(8px) grayscale(0.5) brightness(1.2);
+}
+
+/* Rain / Storm vertical shutter */
+.page-transition-wrapper.is-transitioning.page-trans-rain {
+  transform: translateY(-20px);
+  filter: blur(6px) brightness(0.8);
+}
+
+/* Neon / Pride color shift transition */
+.page-transition-wrapper.is-transitioning.page-trans-neon {
+  filter: hue-rotate(300deg) saturate(2);
+  transform: scale(0.99);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-transition-wrapper,
+  .page-transition-wrapper.is-transitioning {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
