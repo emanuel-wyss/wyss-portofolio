@@ -2,6 +2,7 @@ import { buildConfig } from 'payload';
 import { postgresAdapter } from '@payloadcms/db-postgres';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { s3Storage } from '@payloadcms/storage-s3';
+import sharp from 'sharp';
 
 import { Posts } from './collections/Posts';
 import { Gallery } from './collections/Gallery';
@@ -34,6 +35,7 @@ if (r2AccountId && !r2Enabled) {
 
 export default buildConfig({
   secret: process.env.PAYLOAD_SECRET || 'dev-secret-change-me',
+  sharp,
 
   admin: {
     user: 'users',

@@ -49,6 +49,13 @@ export interface AlbumDetail extends Album {
     alt: string;
     caption?: string;
     order?: number;
+    filename?: string;
+    mimeType?: string;
+    filesize?: number;
+    width?: number;
+    height?: number;
+    createdAt?: string;
+    tags?: string[];
   }>;
 }
 
