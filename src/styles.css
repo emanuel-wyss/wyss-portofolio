@@ -52,6 +52,23 @@ body {
   background-position: center top;
 }
 
+/* Low-contrast network-map traces behind the workstation surface. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .18;
+  background:
+    radial-gradient(circle at 18% 22%, var(--accent) 0 1px, transparent 2px),
+    radial-gradient(circle at 78% 38%, var(--accent) 0 1px, transparent 2px),
+    radial-gradient(circle at 42% 76%, var(--accent) 0 1px, transparent 2px),
+    linear-gradient(24deg, transparent 49.8%, var(--border-color) 50%, transparent 50.2%),
+    linear-gradient(-18deg, transparent 49.8%, var(--border-color) 50%, transparent 50.2%);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 420px 300px, 520px 360px;
+}
+
 body::before {
   content: 'WYSS//ROCKS  •  SYSTEM ONLINE';
   position: fixed;
@@ -242,6 +259,15 @@ code {
   backdrop-filter: blur(10px);
 }
 
+.footer-telemetry,
+.footer-source {
+  font: 10px var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.footer-telemetry span { color: var(--accent); }
+.footer-source { display: flex; gap: .75rem; margin-top: .75rem; }
+
 .site-footer-content {
   max-width: 1200px;
   position: relative;
@@ -273,6 +299,44 @@ code {
   font-size: 0.875rem;
 }
 
+.footer-controls {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.control-chip,
+.controls-menu summary {
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  padding: .35rem .55rem;
+  font: 10px var(--font-mono);
+  letter-spacing: .05em;
+  cursor: pointer;
+  list-style: none;
+}
+.control-chip:hover,
+.controls-menu summary:hover,
+.control-chip[aria-pressed='true'] { color: var(--accent); border-color: var(--accent); }
+.controls-menu { position: relative; }
+.controls-menu summary::-webkit-details-marker { display: none; }
+.controls-popover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + .5rem);
+  z-index: 5;
+  min-width: 190px;
+  padding: .7rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  box-shadow: 0 10px 30px rgba(0,0,0,.3);
+}
+.controls-popover label { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin: .4rem 0; font: 11px var(--font-mono); color: var(--text-secondary); }
+.controls-popover select { max-width: 105px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font: 11px var(--font-mono); }
+.toggle-row input { accent-color: var(--accent); }
+
 .site-footer-bottom {
   max-width: 1200px;
   font-family: var(--font-mono);
@@ -280,6 +344,25 @@ code {
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--border-color);
 }
+
+.boot-sequence {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: var(--bg-primary);
+  font: 13px var(--font-mono);
+}
+.boot-window { width: min(440px, calc(100vw - 2rem)); padding: 1.25rem; border: 1px solid var(--border-color); box-shadow: 0 0 40px var(--accent-light); }
+.boot-title { color: var(--accent); margin-bottom: 1rem; }
+.boot-window p { margin: .35rem 0; color: var(--text-secondary); }
+.boot-window p span { color: #39ff14; }
+.boot-window button { margin-top: 1rem; border: 0; background: transparent; color: var(--accent); font: inherit; cursor: pointer; }
+
+.changelog-list { list-style: none; border-left: 1px solid var(--border-color); margin: 2rem 0; padding: 0; }
+.changelog-list li { display: grid; grid-template-columns: 130px 1fr; gap: 1rem; padding: .8rem 1rem; border-bottom: 1px dashed var(--border-color); font-family: var(--font-mono); }
+.changelog-list time { color: var(--accent); font-size: .8rem; }
 
 .hero {
   padding: var(--spacing-2xl) 0;
@@ -914,6 +997,13 @@ nav.site-menu,
 
 @media (prefers-reduced-motion: reduce) {
   .event-canvas { display: none !important; animation: none !important; }
+  .boot-sequence { display: none !important; }
+}
+
+@media (max-width: 600px) {
+  .site-footer-content { grid-template-columns: 1fr; }
+  .changelog-list li { grid-template-columns: 1fr; gap: .2rem; }
+  body::before { display: none; }
 }
 
 html[data-effects-paused] .fx-layer,

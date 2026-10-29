@@ -2,6 +2,7 @@ import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router';
 import { SiteFooter } from '../components/site/SiteFooter';
 import { SiteMenu } from '../components/site/SiteMenu';
 import { ThemeProvider } from '../components/site/ThemeProvider';
+import { BootSequence } from '../components/site/BootSequence';
 import stylesHref from '../styles.css?url';
 
 // Runs before hydration to set data-mode/data-daytime so there is no flash of
@@ -45,6 +46,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider>
+          <BootSequence />
           <SiteMenu />
           <main>{children}</main>
           <SiteFooter />

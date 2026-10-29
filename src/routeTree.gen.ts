@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkRouteImport } from './routes/work'
+import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SnippetsSlugRouteImport } from './routes/snippets.$slug'
@@ -19,6 +20,11 @@ import { Route as GallerySlugRouteImport } from './routes/gallery.$slug'
 const WorkRoute = WorkRouteImport.update({
   id: '/work',
   path: '/work',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -50,6 +56,7 @@ const GallerySlugRoute = GallerySlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/changelog': typeof ChangelogRoute
   '/work': typeof WorkRoute
   '/gallery/$slug': typeof GallerySlugRoute
   '/posts/$slug': typeof PostsSlugRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/changelog': typeof ChangelogRoute
   '/work': typeof WorkRoute
   '/gallery/$slug': typeof GallerySlugRoute
   '/posts/$slug': typeof PostsSlugRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/changelog': typeof ChangelogRoute
   '/work': typeof WorkRoute
   '/gallery/$slug': typeof GallerySlugRoute
   '/posts/$slug': typeof PostsSlugRoute
@@ -77,6 +86,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/changelog'
     | '/work'
     | '/gallery/$slug'
     | '/posts/$slug'
@@ -85,6 +95,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/changelog'
     | '/work'
     | '/gallery/$slug'
     | '/posts/$slug'
@@ -93,6 +104,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/changelog'
     | '/work'
     | '/gallery/$slug'
     | '/posts/$slug'
@@ -102,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  ChangelogRoute: typeof ChangelogRoute
   WorkRoute: typeof WorkRoute
   GallerySlugRoute: typeof GallerySlugRoute
   PostsSlugRoute: typeof PostsSlugRoute
@@ -115,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/work'
       fullPath: '/work'
       preLoaderRoute: typeof WorkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -158,6 +178,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  ChangelogRoute: ChangelogRoute,
   WorkRoute: WorkRoute,
   GallerySlugRoute: GallerySlugRoute,
   PostsSlugRoute: PostsSlugRoute,
