@@ -515,15 +515,22 @@
 
 /* Lightbox & Privacy */
 .nerdy-lightbox {
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  background: rgba(6, 6, 5, 0.85);
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  z-index: 999999 !important;
+  background: rgba(6, 6, 5, 0.88);
   backdrop-filter: blur(28px) saturate(140%) brightness(0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5vh 1.5vw;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1.5vh 1.5vw !important;
+  overflow: hidden !important;
 }
 .nerdy-lightbox-window {
   width: min(1440px, 96vw);
