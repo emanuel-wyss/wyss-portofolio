@@ -57,7 +57,7 @@ export function SiteFooter() {
     };
   }, []);
 
-  const { state } = useTheme();
+  const { state, effectsPaused, toggleEffectsPaused } = useTheme();
 
   const themeInfo = {
     mode: state ? state.resolved : 'dark',
@@ -101,6 +101,9 @@ export function SiteFooter() {
             <li>season: {themeInfo.season}</li>
           </ul>
           <ThemeToggle />
+          <button type="button" className="effects-toggle" onClick={toggleEffectsPaused} aria-pressed={effectsPaused}>
+            {effectsPaused ? 'Resume effects' : 'Pause effects'}
+          </button>
         </div>
       </div>
       <div className="site-footer-bottom">

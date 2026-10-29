@@ -6,6 +6,8 @@ import {
   type ColorMode,
   type ImmersiveState,
   type WeatherType,
+  getEffectsPaused,
+  setEffectsPaused,
 } from '../../lib/theme';
 import { getWeather } from '../../lib/api';
 import { EventCanvas } from './EventCanvas';
@@ -14,6 +16,8 @@ interface ThemeContextValue {
   mode: ColorMode;
   setMode: (m: ColorMode) => void;
   state: ImmersiveState | null;
+  effectsPaused: boolean;
+  toggleEffectsPaused: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -27,11 +31,15 @@ export function useTheme(): ThemeContextValue {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ColorMode>('auto');
   const [state, setState] = useState<ImmersiveState | null>(null);
+  const [effectsPaused, setEffectsPausedState] = useState(false);
   const weatherRef = useRef<WeatherType | undefined>(undefined);
 
-  // Hydrate stored mode on mount (client only).
+  // Hydrate stored preferences on mount (client only).
   useEffect(() => {
     setModeState(getStoredMode());
+    const paused = getEffectsPaused();
+    setEffectsPausedState(paused);
+    setEffectsPaused(paused);
   }, []);
 
   // Fetch real weather once on mount, then refresh hourly.
@@ -81,8 +89,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setModeState(m);
   };
 
+  const toggleEffectsPaused = () => {
+    const next = !effectsPaused;
+    setEffectsPausedState(next);
+    setEffectsPaused(next);
+  };
+
   return (
-    <ThemeContext.Provider value={{ mode, setMode, state }}>
+    <ThemeContext.Provider value={{ mode, setMode, state, effectsPaused, toggleEffectsPaused }}>
       {children}
       {/* Immersive FX layers — purely decorative, hidden from a11y tree. */}
       <div className="fx-layer fx-grid" aria-hidden="true" />

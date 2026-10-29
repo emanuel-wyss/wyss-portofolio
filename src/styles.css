@@ -798,6 +798,29 @@ nav.site-menu,
   .event-canvas { display: none !important; animation: none !important; }
 }
 
+html[data-effects-paused] .fx-layer,
+html[data-effects-paused] .event-canvas {
+  display: none !important;
+  animation: none !important;
+}
+
+.effects-toggle {
+  display: block;
+  margin-top: .75rem;
+  padding: .35rem .55rem;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.effects-toggle:hover,
+.effects-toggle:focus-visible {
+  color: var(--text-primary);
+  border-color: var(--primary);
+}
+
 /* ---- Event color palettes (CSS-driven so server-rendered detail pages match) ---- */
 /* Dark-mode Halloween: deep purple-black + pumpkin/toxic-green neon. */
 :root[data-mode='dark'].event-halloween {

@@ -578,6 +578,18 @@ export function initializeTheme(weatherOverride?: WeatherType): void {
 // ===========================================================================
 
 export type ColorMode = 'light' | 'dark' | 'auto';
+
+const EFFECTS_PAUSED_KEY = 'wyss-effects-paused';
+
+export function getEffectsPaused(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(EFFECTS_PAUSED_KEY) === 'true';
+}
+
+export function setEffectsPaused(paused: boolean): void {
+  if (typeof window !== 'undefined') localStorage.setItem(EFFECTS_PAUSED_KEY, String(paused));
+  document.documentElement.toggleAttribute('data-effects-paused', paused);
+}
 export const COLOR_MODE_KEY = 'wyss-color-mode';
 
 /** Resolve 'auto' to the system preference. SSR-safe. */
