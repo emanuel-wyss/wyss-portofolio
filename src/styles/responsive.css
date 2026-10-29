@@ -1,0 +1,115 @@
+/* ===========================================================================
+   Responsive / mobile (down to 320px)
+   Restores breakpoints lost in the stylesheet split and tunes small screens.
+   =========================================================================== */
+
+/* ---- Tablet and below ---- */
+@media (max-width: 768px) {
+  .container,
+  .site-nav-inner,
+  .site-nav-terminal { padding-inline: var(--spacing-md); }
+  .terminal-path { display: none; }
+
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.5rem; }
+  .detail-header h1 { font-size: 1.75rem; }
+
+  .work-page,
+  .about-page { padding: var(--spacing-xl) 0; }
+  .about-header { margin-bottom: var(--spacing-xl); }
+  .skills-section,
+  .social-section { margin-bottom: var(--spacing-xl); }
+
+  .site-footer { padding: 2.5rem var(--spacing-md) 1.5rem; margin-top: 4rem; }
+}
+
+/* ---- Phones ---- */
+@media (max-width: 600px) {
+  .site-footer-content { grid-template-columns: 1fr; gap: 1.5rem; }
+  body::before { display: none; }
+
+  /* changelog: date above entry instead of a 130px column */
+  .changelog-list li { grid-template-columns: 1fr; gap: 0.25rem; padding: 0.8rem 0.75rem; }
+
+  /* privacy key table stacks */
+  .privacy-keys li { grid-template-columns: 1fr; gap: 0.15rem; }
+
+  /* GitHub stats: 2 columns */
+  .gh-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-sm); }
+  .gh-stat { padding: var(--spacing-md) var(--spacing-sm); }
+  .gh-stat-value { font-size: 1.5rem; }
+  .gh-stat-label { font-size: 0.68rem; letter-spacing: 0.02em; overflow-wrap: anywhere; }
+
+  /* tighter cards */
+  .feed-grid { grid-template-columns: 1fr; gap: var(--spacing-md); }
+  .feed-card,
+  .skill-group { padding: var(--spacing-md); }
+  .skills-grid { grid-template-columns: 1fr; gap: var(--spacing-md); }
+  .gh-repo-grid { grid-template-columns: 1fr; }
+  .gh-repo { padding: var(--spacing-md); }
+  .home-terminal-hero { padding: 1rem; }
+
+  /* long words / urls never push the layout wider */
+  .prose, .feed-card, .detail-header, .changelog-list, .privacy-block { overflow-wrap: anywhere; }
+  .code-block pre { padding: var(--spacing-md); }
+}
+
+/* ---- Touch: comfortable tap targets (WCAG 2.5.8 min 24px, aim 44px) ---- */
+@media (pointer: coarse) {
+  .site-nav-links a,
+  .site-logo,
+  .detail-page .back-link,
+  .view-all-inline,
+  .github-link,
+  .feed-card > a,
+  .footer-source a,
+  .site-socials a,
+  .footer-changelog-link,
+  .footer-privacy a,
+  .view-all {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .term-chip { min-height: 36px; padding-inline: 0.65rem; }
+  .copy-btn { min-height: 36px; min-width: 56px; }
+  .view-all { display: flex; width: fit-content; }
+  .footer-source { gap: 0 1rem; flex-wrap: wrap; margin-top: 0.25rem; }
+  .site-socials { gap: 0; }
+  .site-nav-links { gap: 0.5rem; }
+}
+
+/* ---- Very small (320px) ---- */
+@media (max-width: 360px) {
+  :root { --spacing-lg: 1.25rem; --spacing-xl: 2.5rem; --spacing-2xl: 4rem; }
+  .site-logo { font-size: 1rem; letter-spacing: 0.08em; }
+  .nav-index { display: none; }
+  .site-nav-links { gap: 0.9rem; }
+  .site-nav-terminal { gap: 0.5rem; }
+  .home-terminal-hero h1 { font-size: 1.75rem; }
+  .home-hero-meta { font-size: 10px; }
+  /* pixel font stays legible */
+  .site-nav-terminal,
+  .footer-telemetry,
+  .footer-source,
+  .footer-privacy,
+  .eyebrow { font-size: 10px; }
+  .site-theme-bar { padding: 0.5rem; font-size: 10.5px; }
+}
+
+/* ---- Lightbox on phones: compact chrome, image gets the space ---- */
+@media (max-width: 600px) {
+  .nerdy-lightbox-bar { padding: 0.4rem 0.6rem; gap: 0.4rem; }
+  .nerdy-lightbox-title .tag-badge { display: none; }
+  .nerdy-lightbox-controls { width: 100%; justify-content: space-between; }
+  .nerdy-lightbox-meta { padding: 0.45rem 0.6rem; gap: 0.3rem 0.75rem; font-size: 10.5px; max-height: 28dvh; overflow-y: auto; }
+  .nerdy-lightbox-meta .meta-head { display: none; }
+  .nerdy-lightbox-slider { --lb-pad: 0.35rem; }
+}
+
+/* changelog: nested item list uses inline padding, reclaim it on phones */
+@media (max-width: 600px) {
+  .changelog-list li ul { padding-left: 0.9rem !important; }
+  .changelog-list li li { padding: 0.2rem 0; border: 0; display: list-item; }
+  .changelog-list h3 { font-size: 1.15rem; margin-bottom: 0.25rem; }
+}

@@ -383,7 +383,13 @@ function GalleryDetailPage() {
     const dy = e.clientY - d.y0;
     if (!d.axis && Math.hypot(dx, dy) > 8) {
       d.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-      if (d.axis === 'x') (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      if (d.axis === 'x') {
+        try {
+          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        } catch {
+          /* pointer already released (e.g. fast flick); dragging still works */
+        }
+      }
     }
     if (d.axis !== 'x') return;
     const now = performance.now();
