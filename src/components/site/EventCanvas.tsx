@@ -21,6 +21,19 @@ type Props = {
 
 const COLORS = ['#ff3355', '#ff9f1c', '#ffd60a', '#39ff14', '#00e5ff', '#8b5cf6', '#ff66cc'];
 const MAX_PARTICLES = 180;
+const ACHIEVEMENT_KEY = 'wyss-event-achievements';
+
+function unlock(event: SpecialEventType, achievement: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const current = JSON.parse(localStorage.getItem(ACHIEVEMENT_KEY) || '{}') as Record<string, string[]>;
+    const list = new Set(current[event] || []);
+    list.add(achievement);
+    current[event] = [...list];
+    localStorage.setItem(ACHIEVEMENT_KEY, JSON.stringify(current));
+    window.dispatchEvent(new CustomEvent('wyss-achievement', { detail: { event, achievement } }));
+  } catch { /* ignore storage failures */ }
+}
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
 
 function addBurst(particles: Particle[], event: SpecialEventType, x: number, y: number) {
@@ -181,10 +194,12 @@ export function EventCanvas({ event, reducedMotion }: Props) {
       // Hearts and April Fools paint a restrained cursor trail.
       if ((event === 'valentines' || event === 'aprilfools') && Math.random() < 0.22 && particles.length < MAX_PARTICLES) {
         addBurst(particles, event, pointerX, pointerY);
+        unlock(event, 'cursor-trail');
       }
     };
     const onPointerDown = (e: PointerEvent) => {
       addBurst(particles, event, e.clientX, e.clientY);
+      unlock(event, 'first-interaction');
     };
     const onScroll = () => { scrollY = window.scrollY; };
     const onVisibility = () => {

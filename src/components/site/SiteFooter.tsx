@@ -41,6 +41,7 @@ const DEFAULT_CONFIG: FooterConfig = {
 
 export function SiteFooter() {
   const [config, setConfig] = useState<FooterConfig>(DEFAULT_CONFIG);
+  const [achievementCount, setAchievementCount] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -59,6 +60,18 @@ export function SiteFooter() {
   }, []);
 
   const { state, effectsPaused, toggleEffectsPaused, weatherNow } = useTheme();
+
+  useEffect(() => {
+    const update = () => {
+      try {
+        const data = JSON.parse(localStorage.getItem('wyss-event-achievements') || '{}');
+        setAchievementCount(Object.values(data as Record<string, string[]>).flat().length);
+      } catch { /* ignore */ }
+    };
+    update();
+    window.addEventListener('wyss-achievement', update);
+    return () => window.removeEventListener('wyss-achievement', update);
+  }, []);
 
   const eventCountdown = state?.event
     ? Math.max(0, getEventWindow(state.event).end.getTime() - Date.now())
@@ -109,6 +122,7 @@ export function SiteFooter() {
             {state?.event ? <li aria-live="polite">event: {eventDaysLeft} day{eventDaysLeft === 1 ? '' : 's'} left</li> : null}
           </ul>
           <ThemeToggle />
+          {achievementCount > 0 ? <p className="muted event-achievements">discoveries: {achievementCount}</p> : null}
           <button type="button" className="effects-toggle" onClick={toggleEffectsPaused} aria-pressed={effectsPaused}>
             {effectsPaused ? 'Resume effects' : 'Pause effects'}
           </button>
