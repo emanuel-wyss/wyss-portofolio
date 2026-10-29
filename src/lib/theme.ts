@@ -517,6 +517,18 @@ export function getCurrentSpecialEvent(): SpecialEventType | undefined {
  * Resolve an event override from the URL (?event=halloween) for preview.
  * Returns the override if valid, otherwise undefined. SSR-safe.
  */
+export function getPreferredEvent(): SpecialEventType | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const value = localStorage.getItem(PREFERRED_EVENT_KEY);
+  return value && (ALL_EVENTS as string[]).includes(value) ? value as SpecialEventType : undefined;
+}
+
+export function setPreferredEvent(event?: SpecialEventType): void {
+  if (typeof window === 'undefined') return;
+  if (event) localStorage.setItem(PREFERRED_EVENT_KEY, event);
+  else localStorage.removeItem(PREFERRED_EVENT_KEY);
+}
+
 export function getEventOverride(): SpecialEventType | undefined {
   if (typeof window === 'undefined') return undefined;
   try {
@@ -605,6 +617,7 @@ export type ColorMode = 'light' | 'dark' | 'auto';
 
 const EFFECTS_PAUSED_KEY = 'wyss-effects-paused';
 const EFFECTS_INTENSITY_KEY = 'wyss-effects-intensity';
+const PREFERRED_EVENT_KEY = 'wyss-preferred-event';
 export type EffectsIntensity = 'quiet' | 'standard' | 'party';
 
 export function getEffectsIntensity(): EffectsIntensity {
@@ -759,7 +772,7 @@ export function getImmersiveState(mode: ColorMode): ImmersiveState {
   const resolved = resolveMode(mode);
   const reducedMotion = prefersReducedMotion();
   const season = getCurrentSeason();
-  const event = getEventOverride() ?? getCurrentSpecialEvent();
+  const event = getEventOverride() ?? getPreferredEvent() ?? getCurrentSpecialEvent();
   const isDaytime = isDaytime_();
   let fxIntensity = isDaytime ? 0.5 : 0.85;
   if (event) fxIntensity = Math.min(1, fxIntensity + 0.25);

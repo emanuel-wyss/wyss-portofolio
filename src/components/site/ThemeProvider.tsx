@@ -11,6 +11,9 @@ import {
   getEffectsIntensity,
   setEffectsIntensity,
   type EffectsIntensity,
+  getPreferredEvent,
+  setPreferredEvent,
+  type SpecialEventType,
 } from '../../lib/theme';
 import { getWeather } from '../../lib/api';
 import { EventCanvas } from './EventCanvas';
@@ -23,6 +26,8 @@ interface ThemeContextValue {
   toggleEffectsPaused: () => void;
   effectsIntensity: EffectsIntensity;
   setIntensity: (value: EffectsIntensity) => void;
+  preferredEvent?: SpecialEventType;
+  setPreferredEventChoice: (event?: SpecialEventType) => void;
   weatherNow: Awaited<ReturnType<typeof getWeather>>;
 }
 
@@ -39,6 +44,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ImmersiveState | null>(null);
   const [effectsPaused, setEffectsPausedState] = useState(false);
   const [effectsIntensity, setEffectsIntensityState] = useState<EffectsIntensity>('standard');
+  const [preferredEvent, setPreferredEventState] = useState<SpecialEventType | undefined>();
   const weatherRef = useRef<WeatherType | undefined>(undefined);
   const [weatherNow, setWeatherNow] = useState<Awaited<ReturnType<typeof getWeather>>>(null);
 
@@ -51,6 +57,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const intensity = getEffectsIntensity();
     setEffectsIntensityState(intensity);
     setEffectsIntensity(intensity);
+    setPreferredEventState(getPreferredEvent());
   }, []);
 
   // Fetch real weather once on mount, then refresh hourly.
@@ -106,6 +113,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setEffectsIntensity(value);
   };
 
+  const setPreferredEventChoice = (event?: SpecialEventType) => {
+    setPreferredEvent(event);
+    setPreferredEventState(event);
+    setState(applyImmersiveTheme(mode, weatherRef.current));
+  };
+
   const toggleEffectsPaused = () => {
     const next = !effectsPaused;
     setEffectsPausedState(next);
@@ -113,7 +126,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ mode, setMode, state, effectsPaused, toggleEffectsPaused, effectsIntensity, setIntensity, weatherNow }}>
+    <ThemeContext.Provider value={{ mode, setMode, state, effectsPaused, toggleEffectsPaused, effectsIntensity, setIntensity, preferredEvent, setPreferredEventChoice, weatherNow }}>
       {children}
       {/* Immersive FX layers — purely decorative, hidden from a11y tree. */}
       <div className="fx-layer fx-grid" aria-hidden="true" />

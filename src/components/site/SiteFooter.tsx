@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getSiteConfig, type SiteConfig } from '../../lib/api';
-import { getEventWindow } from '../../lib/theme';
+import { ALL_EVENTS, getEventWindow, type SpecialEventType } from '../../lib/theme';
 import { useTheme } from './ThemeProvider';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -59,7 +59,7 @@ export function SiteFooter() {
     };
   }, []);
 
-  const { state, effectsPaused, toggleEffectsPaused, effectsIntensity, setIntensity, weatherNow } = useTheme();
+  const { state, effectsPaused, toggleEffectsPaused, effectsIntensity, setIntensity, weatherNow, preferredEvent, setPreferredEventChoice } = useTheme();
 
   useEffect(() => {
     const update = () => {
@@ -123,6 +123,13 @@ export function SiteFooter() {
           </ul>
           <ThemeToggle />
           {achievementCount > 0 ? <p className="muted event-achievements">discoveries: {achievementCount}</p> : null}
+          <label className="effects-intensity">
+            preferred event:{' '}
+            <select value={preferredEvent || ''} onChange={(event) => setPreferredEventChoice((event.target.value || undefined) as SpecialEventType | undefined)}>
+              <option value="">automatic</option>
+              {ALL_EVENTS.map((event) => <option key={event} value={event}>{event}</option>)}
+            </select>
+          </label>
           <label className="effects-intensity">
             intensity:{' '}
             <select value={effectsIntensity} onChange={(event) => setIntensity(event.target.value as typeof effectsIntensity)}>
