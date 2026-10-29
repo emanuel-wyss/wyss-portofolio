@@ -15,7 +15,26 @@ export type WeatherType =
 
 export type SeasonType = 'spring' | 'summer' | 'autumn' | 'winter';
 
-export type SpecialEventType = 'christmas' | 'easter' | 'halloween' | 'newyear' | 'valentines';
+export type SpecialEventType =
+  | 'christmas'
+  | 'easter'
+  | 'halloween'
+  | 'newyear'
+  | 'valentines'
+  | 'pride'
+  | 'swiss'
+  | 'aprilfools';
+
+export const ALL_EVENTS: SpecialEventType[] = [
+  'christmas',
+  'easter',
+  'halloween',
+  'newyear',
+  'valentines',
+  'pride',
+  'swiss',
+  'aprilfools',
+];
 
 export interface ThemeConfig {
   weather: WeatherType;
@@ -348,6 +367,48 @@ const SPECIAL_THEMES: Record<SpecialEventType, Partial<ThemeVariables>> = {
     '--particle-count': '50',
     '--animation-intensity': '1.1',
   },
+
+  // Pride: vivid rainbow accents
+  pride: {
+    '--primary': '#FF0080',
+    '--primary-light': '#FF66B3',
+    '--accent': '#00E5FF',
+    '--accent-light': '#99F5FF',
+    '--season-color-1': '#FF0080',
+    '--season-color-2': '#00E5FF',
+    '--season-color-3': '#FFD700',
+    '--particle-color': '#FFD700',
+    '--particle-count': '60',
+    '--animation-intensity': '1.2',
+  },
+
+  // Swiss National Day: red & white
+  swiss: {
+    '--primary': '#FF3333',
+    '--primary-light': '#FF6666',
+    '--accent': '#FFFFFF',
+    '--accent-light': '#FFE0E0',
+    '--season-color-1': '#FF3333',
+    '--season-color-2': '#FFFFFF',
+    '--season-color-3': '#FF6666',
+    '--particle-color': '#FF3333',
+    '--particle-count': '80',
+    '--animation-intensity': '1.2',
+  },
+
+  // April Fools: chaotic neon green
+  aprilfools: {
+    '--primary': '#39FF14',
+    '--primary-light': '#8DFF7A',
+    '--accent': '#FF00FF',
+    '--accent-light': '#FF99FF',
+    '--season-color-1': '#39FF14',
+    '--season-color-2': '#FF00FF',
+    '--season-color-3': '#00E5FF',
+    '--particle-color': '#39FF14',
+    '--particle-count': '100',
+    '--animation-intensity': '1.5',
+  },
 };
 
 /**
@@ -361,29 +422,88 @@ export function getCurrentSeason(): SeasonType {
   return 'winter';
 }
 
+/** Gregorian Easter Sunday (Meeus/Jones/Butcher algorithm). */
+function getEasterSunday(year: number): Date {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+
+function isWithin(now: Date, start: Date, end: Date): boolean {
+  const value = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  return value >= start.getTime() && value <= end.getTime();
+}
+
 /**
- * Get current special event if any
+ * Get the current event. Fixed-date celebrations begin at least three days
+ * before their date; April Fools stays intentionally limited to April 1.
+ * Overlap priority is deliberate: New Year supersedes Christmas from Dec 29.
  */
 export function getCurrentSpecialEvent(): SpecialEventType | undefined {
   const now = new Date();
+  const year = now.getFullYear();
   const month = now.getMonth() + 1;
   const day = now.getDate();
 
-  // Christmas (Dec 20-31)
-  if (month === 12 && day >= 20) return 'christmas';
+  // April Fools is the only event without a lead-in.
+  if (month === 4 && day === 1) return 'aprilfools';
 
-  // New Year (Jan 1-3)
-  if (month === 1 && day <= 3) return 'newyear';
+  // New Year: Dec 29–Jan 3 (takes priority over Christmas).
+  if ((month === 12 && day >= 29) || (month === 1 && day <= 3)) return 'newyear';
 
-  // Easter (approximate, varies by year - around April)
-  if (month === 4 && day >= 8 && day <= 22) return 'easter';
+  // Christmas: Dec 22–28 (three-day lead-in, then yields to New Year).
+  if (month === 12 && day >= 22 && day <= 28) return 'christmas';
 
-  // Halloween (Oct 20-31)
-  if (month === 10 && day >= 20) return 'halloween';
+  // Easter: Good Friday through Easter Monday, computed every year.
+  const easter = getEasterSunday(year);
+  const easterStart = new Date(easter);
+  easterStart.setDate(easter.getDate() - 3);
+  const easterEnd = new Date(easter);
+  easterEnd.setDate(easter.getDate() + 1);
+  if (isWithin(now, easterStart, easterEnd)) return 'easter';
 
-  // Valentine's Day (Feb 10-20)
-  if (month === 2 && day >= 10 && day <= 20) return 'valentines';
+  // Halloween: Oct 28–31.
+  if (month === 10 && day >= 28) return 'halloween';
 
+  // Valentine's Day: Feb 11–14.
+  if (month === 2 && day >= 11 && day <= 14) return 'valentines';
+
+  // Pride: June (already a month-long observance).
+  if (month === 6) return 'pride';
+
+  // Swiss National Day: Jul 29–Aug 1.
+  if ((month === 7 && day >= 29) || (month === 8 && day === 1)) return 'swiss';
+
+  return undefined;
+}
+
+/**
+ * Resolve an event override from the URL (?event=halloween) for preview.
+ * Returns the override if valid, otherwise undefined. SSR-safe.
+ */
+export function getEventOverride(): SpecialEventType | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('event');
+    if (raw && (ALL_EVENTS as string[]).includes(raw)) {
+      return raw as SpecialEventType;
+    }
+  } catch {
+    /* ignore */
+  }
   return undefined;
 }
 
@@ -540,8 +660,34 @@ const EVENT_FX: Record<SpecialEventType, { dark: Partial<ThemeVariables>; fx: st
     fx: 'hearts',
   },
   easter: {
-    dark: {},
-    fx: 'none',
+    dark: {
+      '--accent': '#ffb3cc',
+      '--particle-color': '#ffd700',
+    },
+    fx: 'easter',
+  },
+  pride: {
+    dark: {
+      '--primary': '#ff0080',
+      '--accent': '#00e5ff',
+      '--particle-color': '#ffd700',
+    },
+    fx: 'pride',
+  },
+  swiss: {
+    dark: {
+      '--primary': '#ff3333',
+      '--primary-light': '#ff6666',
+      '--accent': '#ffffff',
+      '--particle-color': '#ff3333',
+    },
+    fx: 'swiss',
+  },
+  aprilfools: {
+    dark: {
+      '--particle-color': '#39ff14',
+    },
+    fx: 'aprilfools',
   },
 };
 
@@ -555,6 +701,8 @@ export interface ImmersiveState {
   /** 0..1 FX intensity; higher at night and on events. */
   fxIntensity: number;
   fxName: string;
+  /** Active weather (from real data when available). */
+  weather?: WeatherType;
 }
 
 /** Compute the current immersive state from date + user prefs. */
@@ -562,7 +710,7 @@ export function getImmersiveState(mode: ColorMode): ImmersiveState {
   const resolved = resolveMode(mode);
   const reducedMotion = prefersReducedMotion();
   const season = getCurrentSeason();
-  const event = getCurrentSpecialEvent();
+  const event = getEventOverride() ?? getCurrentSpecialEvent();
   const isDaytime = isDaytime_();
   let fxIntensity = isDaytime ? 0.5 : 0.85;
   if (event) fxIntensity = Math.min(1, fxIntensity + 0.25);
@@ -580,13 +728,17 @@ function isDaytime_(): boolean {
  * Apply the full immersive theme to <html>: color vars (season + mode +
  * event), data attributes, and weather/event classes. Returns the state.
  */
-export function applyImmersiveTheme(mode: ColorMode): ImmersiveState {
+export function applyImmersiveTheme(
+  mode: ColorMode,
+  weather?: WeatherType,
+): ImmersiveState {
   const state = getImmersiveState(mode);
+  const activeWeather: WeatherType = weather || 'sunny';
   const root = document.documentElement;
 
-  // 1. Base theme (season colors + weather effects + event color override).
+  // 1. Base theme (season colors + real weather effects + event color override).
   const config: ThemeConfig = {
-    weather: 'sunny', // weather simulation kept minimal; FX driven by event/time
+    weather: activeWeather,
     season: state.season,
     specialEvent: state.event,
     isDaytime: state.isDaytime,
@@ -611,11 +763,13 @@ export function applyImmersiveTheme(mode: ColorMode): ImmersiveState {
   root.setAttribute('data-daytime', state.isDaytime ? 'day' : 'night');
   root.style.setProperty('--fx-intensity', String(state.fxIntensity));
 
-  // event-* class for spooky/festive layers
+  // weather-* and event-* classes for the CSS particle/FX layers.
   Array.from(root.classList)
     .filter((c) => c.startsWith('event-') || c.startsWith('weather-'))
     .forEach((c) => root.classList.remove(c));
+  // Weather particles only when motion is allowed.
+  if (!state.reducedMotion) root.classList.add(`weather-${activeWeather}`);
   if (state.event) root.classList.add(`event-${state.event}`);
 
-  return state;
+  return { ...state, weather: activeWeather };
 }

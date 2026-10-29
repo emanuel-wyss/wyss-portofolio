@@ -1,11 +1,14 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   applyImmersiveTheme,
   getStoredMode,
   setStoredMode,
   type ColorMode,
   type ImmersiveState,
+  type WeatherType,
 } from '../../lib/theme';
+import { getWeather } from '../../lib/api';
+import { EventCanvas } from './EventCanvas';
 
 interface ThemeContextValue {
   mode: ColorMode;
@@ -24,17 +27,36 @@ export function useTheme(): ThemeContextValue {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ColorMode>('auto');
   const [state, setState] = useState<ImmersiveState | null>(null);
+  const weatherRef = useRef<WeatherType | undefined>(undefined);
 
   // Hydrate stored mode on mount (client only).
   useEffect(() => {
     setModeState(getStoredMode());
   }, []);
 
+  // Fetch real weather once on mount, then refresh hourly.
+  useEffect(() => {
+    let mounted = true;
+    const load = () =>
+      getWeather().then((w) => {
+        if (!mounted || !w) return;
+        weatherRef.current = w.weather;
+        setState(applyImmersiveTheme(mode, weatherRef.current));
+      });
+    load();
+    const wi = window.setInterval(load, 60 * 60 * 1000);
+    return () => {
+      mounted = false;
+      window.clearInterval(wi);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
   // Apply theme whenever mode changes, and react to system preference changes.
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const apply = () => setState(applyImmersiveTheme(mode));
+    const apply = () => setState(applyImmersiveTheme(mode, weatherRef.current));
     apply();
 
     // Re-apply when the OS color scheme or reduced-motion preference changes.
@@ -64,8 +86,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       {children}
       {/* Immersive FX layers — purely decorative, hidden from a11y tree. */}
       <div className="fx-layer fx-grid" aria-hidden="true" />
+      <div className="fx-layer fx-glitch" aria-hidden="true" />
       <div className="fx-layer fx-scanlines" aria-hidden="true" />
       <div className="fx-layer fx-event" aria-hidden="true" />
+      <EventCanvas event={state?.event} reducedMotion={state?.reducedMotion ?? true} />
     </ThemeContext.Provider>
   );
 }

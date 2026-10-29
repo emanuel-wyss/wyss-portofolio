@@ -3,6 +3,16 @@ import { getSiteConfig, type SiteConfig } from '../../lib/api';
 import { useTheme } from './ThemeProvider';
 import { ThemeToggle } from './ThemeToggle';
 
+const WEATHER_LABELS: Record<string, string> = {
+  sunny: 'Sunny',
+  cloudy: 'Cloudy',
+  rainy: 'Rainy',
+  foggy: 'Foggy',
+  stormy: 'Stormy',
+  windy: 'Windy',
+  snowy: 'Snowy',
+};
+
 const SEASON_LABELS: Record<string, string> = {
   spring: 'Spring',
   summer: 'Summer',
@@ -52,6 +62,7 @@ export function SiteFooter() {
   const themeInfo = {
     mode: state ? state.resolved : 'dark',
     daytime: state ? (state.isDaytime ? 'Day' : 'Night') : '—',
+    weather: state?.weather ? WEATHER_LABELS[state.weather] : '—',
     season:
       state && state.event
         ? SPECIAL_LABELS[state.event] || state.event
@@ -85,6 +96,7 @@ export function SiteFooter() {
           <p className="muted">CURRENT THEME</p>
           <ul className="site-theme-meta">
             <li>mode: {themeInfo.mode}</li>
+            <li>weather: {themeInfo.weather}</li>
             <li>daytime: {themeInfo.daytime}</li>
             <li>season: {themeInfo.season}</li>
           </ul>
