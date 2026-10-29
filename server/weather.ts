@@ -23,10 +23,11 @@ export interface WeatherNow {
   generatedAt: string;
 }
 
-// Default: Bern, Switzerland. Override via env.
+// Default: Bern, Schweiz. Override via env.
 const LAT = parseFloat(process.env.WEATHER_LAT || '46.948');
 const LON = parseFloat(process.env.WEATHER_LON || '7.4474');
-const LOCATION = process.env.WEATHER_LOCATION || 'Switzerland';
+const RAW_LOCATION = process.env.WEATHER_LOCATION;
+const LOCATION = !RAW_LOCATION || RAW_LOCATION === 'Switzerland' ? 'Bern, Schweiz' : RAW_LOCATION;
 
 // WMO weather interpretation codes -> our vocabulary.
 // https://open-meteo.com/en/docs

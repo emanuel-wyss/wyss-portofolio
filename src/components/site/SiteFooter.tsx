@@ -106,7 +106,11 @@ export function SiteFooter() {
     setIntensity(next);
   };
 
-  const wxSummary = `${themeInfo.weather}${weatherNow?.temperatureC != null ? ` ${weatherNow.temperatureC}°C` : ''}${weatherNow?.location ? ` @ ${weatherNow.location}` : ''}`;
+  const wxLocation =
+    !weatherNow?.location || weatherNow.location === 'Switzerland'
+      ? 'Bern, Schweiz'
+      : weatherNow.location;
+  const wxSummary = `${themeInfo.weather}${weatherNow?.temperatureC != null ? ` ${weatherNow.temperatureC}°C` : ''} @ ${wxLocation}`;
 
   return (
     <footer className="site-footer">
@@ -114,7 +118,7 @@ export function SiteFooter() {
         <div className="footer-identity">
           <p className="muted">© {new Date().getFullYear()} Wyss. All rights reserved.</p>
           <p className="footer-telemetry">
-            <span>SYS</span> ONLINE · <span>API</span> OK · <span>WX</span> {weatherNow?.location || 'BERN'}
+            <span>SYS</span> ONLINE · <span>API</span> OK · <span>WX</span> {wxLocation}
           </p>
           <nav className="footer-source" aria-label="Source repositories">
             {sourceLinks.map((link) => (
