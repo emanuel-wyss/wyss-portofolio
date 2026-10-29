@@ -5,8 +5,9 @@ import { logger } from 'hono/logger';
 import { getPayload } from 'payload';
 import type { Payload } from 'payload';
 import payloadConfig from './payload/config';
-import { renderPage, lexicalToHtml } from './render';
+import { lexicalToHtml } from './render';
 import { getGitHubProfileCached } from './github';
+import { getWeatherCached } from './weather';
 
 // Initialize app
 const app = new Hono();
@@ -47,6 +48,8 @@ app.use('/api/*', async (c, next) => {
     cacheControl = 'public, max-age=300, stale-while-revalidate=3600';
   } else if (path === '/api/github') {
     cacheControl = 'public, max-age=1800, stale-while-revalidate=7200';
+  } else if (path === '/api/weather') {
+    cacheControl = 'public, max-age=1800, stale-while-revalidate=3600';
   } else if (path.startsWith('/api/posts/') || path.startsWith('/api/snippets/') || path.startsWith('/api/gallery/')) {
     cacheControl = 'public, max-age=180, stale-while-revalidate=900';
   }
@@ -125,7 +128,7 @@ app.get('/api/posts/:slug', async (c) => {
       return c.json({ success: false, error: 'Post not found' }, 404);
     }
 
-    const post = posts.docs[0];
+    const post = posts.docs[0] as any;
     return c.json({
       success: true,
       post: {
@@ -134,8 +137,9 @@ app.get('/api/posts/:slug', async (c) => {
         slug: post.slug,
         excerpt: post.excerpt,
         content: post.content,
+        contentHtml: lexicalToHtml(post.content),
         category: post.category,
-        tags: post.tags || [],
+        tags: (post.tags || []).map((t: any) => t.tag || t).filter(Boolean),
         publishedAt: post.publishedAt,
         updatedAt: post.updatedAt,
         featured_image: post.featured_image?.url,
@@ -431,6 +435,7 @@ app.get('/api/site-config', async (c) => {
         tagline: siteConfig.tagline,
         description: siteConfig.description,
         social_links: siteConfig.social_links || [],
+        friends_links: siteConfig.friends_links || [],
         cv_url: siteConfig.cv_url?.url,
         seo: siteConfig.seo,
       },
@@ -452,237 +457,18 @@ app.get('/api/github', async (c) => {
   }
 });
 
-// ---------------------------------------------------------------------------
-// Detail pages (server-rendered HTML)
-// ---------------------------------------------------------------------------
-
-function escapeAttr(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-// Post detail page
-app.get('/posts/:slug', async (c) => {
-  const payload = await initPayload();
-  const { slug } = c.req.param();
-
+// Real weather for the dynamic theme (Open-Meteo, cached)
+app.get('/api/weather', async (c) => {
   try {
-    const posts = await payload.find({
-      collection: 'posts',
-      where: { slug: { equals: slug } },
-    });
-
-    if (posts.docs.length === 0) {
-      return c.notFound();
-    }
-
-    const post = posts.docs[0] as any;
-    const contentHtml = lexicalToHtml(post.content);
-    const publishedAt = post.publishedAt
-      ? new Date(post.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-      : '';
-    const tags = (post.tags || []).map((t: any) => t.tag || t).filter(Boolean);
-
-    const mainHtml = `
-      <article class="detail-page">
-        <div class="container">
-          <a href="/work" class="back-link">← Back to Work</a>
-          ${post.featured_image?.url ? `<img src="${escapeAttr(post.featured_image.url)}" alt="${escapeAttr(post.title)}" class="featured-image">` : ''}
-          <header class="detail-header">
-            <h1>${escapeAttr(post.title)}</h1>
-            <div class="detail-meta">
-              ${post.category ? `<span class="category">${escapeAttr(post.category)}</span>` : ''}
-              ${publishedAt ? `<time>${publishedAt}</time>` : ''}
-            </div>
-            ${tags.length ? `<div class="tags">${tags.map((t: string) => `<span class="tag">${escapeAttr(t)}</span>`).join('')}</div>` : ''}
-          </header>
-          <div class="prose">${contentHtml}</div>
-        </div>
-      </article>
-      <style>
-        .detail-page { padding: var(--spacing-xl) 0; }
-        .back-link { display: inline-block; margin-bottom: var(--spacing-lg); font-size: 0.9rem; color: var(--text-secondary); }
-        .back-link:hover { color: var(--text-primary); }
-        .featured-image { width: 100%; max-height: 480px; object-fit: cover; border-radius: 12px; margin-bottom: var(--spacing-xl); }
-        .detail-header { margin-bottom: var(--spacing-xl); }
-        .detail-header h1 { font-size: 2.5rem; margin-bottom: var(--spacing-sm); }
-        .detail-meta { display: flex; gap: var(--spacing-md); align-items: center; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: var(--spacing-sm); }
-        .category { background: var(--accent-light); color: var(--accent); padding: 0.2em 0.6em; border-radius: 4px; font-size: 0.8rem; font-weight: 500; }
-        .tags { display: flex; gap: var(--spacing-sm); flex-wrap: wrap; }
-        .tag { background: var(--bg-secondary); padding: 0.2em 0.6em; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary); }
-        .prose { max-width: 720px; line-height: 1.8; }
-        .prose h2 { margin-top: var(--spacing-xl); }
-        .prose h3 { margin-top: var(--spacing-lg); }
-        .prose p { margin-bottom: var(--spacing-md); }
-        .prose ul, .prose ol { margin-bottom: var(--spacing-md); padding-left: var(--spacing-lg); }
-        .prose li { margin-bottom: var(--spacing-xs); color: var(--text-secondary); }
-        .prose blockquote { border-left: 3px solid var(--accent); padding-left: var(--spacing-md); margin: var(--spacing-lg) 0; color: var(--text-secondary); font-style: italic; }
-        .prose pre { background: var(--bg-secondary); padding: var(--spacing-lg); border-radius: 8px; overflow-x: auto; margin-bottom: var(--spacing-lg); }
-        .prose pre code { padding: 0; background: transparent; font-size: 0.875rem; }
-        .prose img { max-width: 100%; border-radius: 8px; margin: var(--spacing-lg) 0; }
-        .prose hr { border: none; border-top: 1px solid var(--border-color); margin: var(--spacing-xl) 0; }
-        @media (max-width: 768px) { .detail-header h1 { font-size: 1.75rem; } }
-      </style>`;
-
-    const html = await renderPage(
-      post.title,
-      post.excerpt || '',
-      mainHtml,
-    );
-    return c.html(html);
+    const weather = await getWeatherCached();
+    return c.json({ success: true, weather });
   } catch (error) {
-    console.error('Error rendering post page:', error);
-    return c.notFound();
+    console.error('Error fetching weather:', error);
+    return c.json({ success: false, error: 'Failed to fetch weather' }, 500);
   }
 });
 
-// Snippet detail page
-app.get('/snippets/:slug', async (c) => {
-  const payload = await initPayload();
-  const { slug } = c.req.param();
 
-  try {
-    const snippets = await payload.find({
-      collection: 'snippets',
-      where: { slug: { equals: slug } },
-    });
-
-    if (snippets.docs.length === 0) {
-      return c.notFound();
-    }
-
-    const snippet = snippets.docs[0] as any;
-    const publishedAt = snippet.publishedAt
-      ? new Date(snippet.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-      : '';
-    const tags = (snippet.tags || []).map((t: any) => t.tag || t).filter(Boolean);
-
-    const mainHtml = `
-      <article class="detail-page">
-        <div class="container">
-          <a href="/work" class="back-link">← Back to Work</a>
-          <header class="detail-header">
-            <h1>${escapeAttr(snippet.title)}</h1>
-            <div class="detail-meta">
-              ${snippet.language ? `<span class="category">${escapeAttr(snippet.language)}</span>` : ''}
-              ${snippet.category ? `<span class="category">${escapeAttr(snippet.category)}</span>` : ''}
-              ${publishedAt ? `<time>${publishedAt}</time>` : ''}
-            </div>
-            ${tags.length ? `<div class="tags">${tags.map((t: string) => `<span class="tag">${escapeAttr(t)}</span>`).join('')}</div>` : ''}
-            ${snippet.description ? `<p class="description">${escapeAttr(snippet.description)}</p>` : ''}
-          </header>
-          <div class="code-block">
-            <div class="code-header">
-              <span class="code-lang">${escapeAttr(snippet.language || 'text')}</span>
-              <button class="copy-btn" onclick="navigator.clipboard.writeText(document.querySelector('.code-block code').textContent)">Copy</button>
-            </div>
-            <pre><code class="language-${escapeAttr(snippet.language || 'text')}">${escapeAttr(snippet.code || '')}</code></pre>
-          </div>
-        </div>
-      </article>
-      <style>
-        .detail-page { padding: var(--spacing-xl) 0; }
-        .back-link { display: inline-block; margin-bottom: var(--spacing-lg); font-size: 0.9rem; color: var(--text-secondary); }
-        .back-link:hover { color: var(--text-primary); }
-        .detail-header { margin-bottom: var(--spacing-xl); }
-        .detail-header h1 { font-size: 2.5rem; margin-bottom: var(--spacing-sm); }
-        .detail-meta { display: flex; gap: var(--spacing-md); align-items: center; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: var(--spacing-sm); }
-        .category { background: var(--accent-light); color: var(--accent); padding: 0.2em 0.6em; border-radius: 4px; font-size: 0.8rem; font-weight: 500; }
-        .tags { display: flex; gap: var(--spacing-sm); flex-wrap: wrap; margin-bottom: var(--spacing-sm); }
-        .tag { background: var(--bg-secondary); padding: 0.2em 0.6em; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary); }
-        .description { color: var(--text-secondary); font-size: 1.05rem; margin-top: var(--spacing-sm); }
-        .code-block { border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
-        .code-header { display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-sm) var(--spacing-md); background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); }
-        .code-lang { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
-        .copy-btn { font-family: var(--font-body); font-size: 0.8rem; padding: 0.3em 0.8em; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-primary); color: var(--text-secondary); cursor: pointer; }
-        .copy-btn:hover { color: var(--text-primary); border-color: var(--text-secondary); }
-        .code-block pre { margin: 0; border-radius: 0; padding: var(--spacing-lg); background: var(--bg-secondary); overflow-x: auto; }
-        .code-block pre code { font-size: 0.875rem; line-height: 1.7; background: transparent; padding: 0; }
-        @media (max-width: 768px) { .detail-header h1 { font-size: 1.75rem; } }
-      </style>`;
-
-    const html = await renderPage(
-      snippet.title,
-      snippet.description || '',
-      mainHtml,
-    );
-    return c.html(html);
-  } catch (error) {
-    console.error('Error rendering snippet page:', error);
-    return c.notFound();
-  }
-});
-
-// Gallery detail page
-app.get('/gallery/:slug', async (c) => {
-  const payload = await initPayload();
-  const { slug } = c.req.param();
-
-  try {
-    const albums = await payload.find({
-      collection: 'gallery',
-      where: { slug: { equals: slug } },
-    });
-
-    if (albums.docs.length === 0) {
-      return c.notFound();
-    }
-
-    const album = albums.docs[0] as any;
-    const images = (album.images || [])
-      .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
-      .map((img: any) => ({
-        url: img.image?.url || '',
-        alt: img.image?.alt || album.title,
-        caption: img.image?.caption || '',
-      }))
-      .filter((img: any) => img.url);
-
-    const mainHtml = `
-      <article class="detail-page">
-        <div class="container">
-          <a href="/work" class="back-link">← Back to Work</a>
-          <header class="detail-header">
-            <h1>${escapeAttr(album.title)}</h1>
-            ${album.album ? `<p class="album-name">${escapeAttr(album.album)}</p>` : ''}
-            ${album.description ? `<p class="description">${escapeAttr(album.description)}</p>` : ''}
-          </header>
-          <div class="gallery-grid">
-            ${images.map((img: any) => `
-              <figure class="gallery-item">
-                <img src="${escapeAttr(img.url)}" alt="${escapeAttr(img.alt)}" loading="lazy">
-                ${img.caption ? `<figcaption>${escapeAttr(img.caption)}</figcaption>` : ''}
-              </figure>
-            `).join('')}
-          </div>
-        </div>
-      </article>
-      <style>
-        .detail-page { padding: var(--spacing-xl) 0; }
-        .back-link { display: inline-block; margin-bottom: var(--spacing-lg); font-size: 0.9rem; color: var(--text-secondary); }
-        .back-link:hover { color: var(--text-primary); }
-        .detail-header { margin-bottom: var(--spacing-xl); }
-        .detail-header h1 { font-size: 2.5rem; margin-bottom: var(--spacing-sm); }
-        .album-name { color: var(--text-secondary); font-size: 1.05rem; margin-bottom: var(--spacing-xs); }
-        .description { color: var(--text-secondary); }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--spacing-lg); }
-        .gallery-item { margin: 0; }
-        .gallery-item img { width: 100%; border-radius: 8px; display: block; transition: transform 0.3s ease; }
-        .gallery-item img:hover { transform: scale(1.02); }
-        .gallery-item figcaption { font-size: 0.85rem; color: var(--text-secondary); margin-top: var(--spacing-sm); text-align: center; }
-        @media (max-width: 768px) { .detail-header h1 { font-size: 1.75rem; } .gallery-grid { grid-template-columns: 1fr; } }
-      </style>`;
-
-    const html = await renderPage(
-      album.title,
-      album.description || '',
-      mainHtml,
-    );
-    return c.html(html);
-  } catch (error) {
-    console.error('Error rendering gallery page:', error);
-    return c.notFound();
-  }
-});
 
 // Serve static frontend assets for all other routes.
 app.use('*', serveStatic({ root: './dist/public' }));

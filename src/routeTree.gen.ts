@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkRouteImport } from './routes/work'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SnippetsSlugRouteImport } from './routes/snippets.$slug'
+import { Route as PostsSlugRouteImport } from './routes/posts.$slug'
+import { Route as GallerySlugRouteImport } from './routes/gallery.$slug'
 
 const WorkRoute = WorkRouteImport.update({
   id: '/work',
@@ -28,35 +31,81 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SnippetsSlugRoute = SnippetsSlugRouteImport.update({
+  id: '/snippets/$slug',
+  path: '/snippets/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostsSlugRoute = PostsSlugRouteImport.update({
+  id: '/posts/$slug',
+  path: '/posts/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GallerySlugRoute = GallerySlugRouteImport.update({
+  id: '/gallery/$slug',
+  path: '/gallery/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/work': typeof WorkRoute
+  '/gallery/$slug': typeof GallerySlugRoute
+  '/posts/$slug': typeof PostsSlugRoute
+  '/snippets/$slug': typeof SnippetsSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/work': typeof WorkRoute
+  '/gallery/$slug': typeof GallerySlugRoute
+  '/posts/$slug': typeof PostsSlugRoute
+  '/snippets/$slug': typeof SnippetsSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/work': typeof WorkRoute
+  '/gallery/$slug': typeof GallerySlugRoute
+  '/posts/$slug': typeof PostsSlugRoute
+  '/snippets/$slug': typeof SnippetsSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/work'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/work'
+    | '/gallery/$slug'
+    | '/posts/$slug'
+    | '/snippets/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/work'
-  id: '__root__' | '/' | '/about' | '/work'
+  to:
+    | '/'
+    | '/about'
+    | '/work'
+    | '/gallery/$slug'
+    | '/posts/$slug'
+    | '/snippets/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/work'
+    | '/gallery/$slug'
+    | '/posts/$slug'
+    | '/snippets/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   WorkRoute: typeof WorkRoute
+  GallerySlugRoute: typeof GallerySlugRoute
+  PostsSlugRoute: typeof PostsSlugRoute
+  SnippetsSlugRoute: typeof SnippetsSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +131,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/snippets/$slug': {
+      id: '/snippets/$slug'
+      path: '/snippets/$slug'
+      fullPath: '/snippets/$slug'
+      preLoaderRoute: typeof SnippetsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/posts/$slug': {
+      id: '/posts/$slug'
+      path: '/posts/$slug'
+      fullPath: '/posts/$slug'
+      preLoaderRoute: typeof PostsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gallery/$slug': {
+      id: '/gallery/$slug'
+      path: '/gallery/$slug'
+      fullPath: '/gallery/$slug'
+      preLoaderRoute: typeof GallerySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +159,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   WorkRoute: WorkRoute,
+  GallerySlugRoute: GallerySlugRoute,
+  PostsSlugRoute: PostsSlugRoute,
+  SnippetsSlugRoute: SnippetsSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
