@@ -32,6 +32,9 @@ export const Route = createFileRoute('/about')({
     ]);
     return { siteConfig, github };
   },
+  head: () => ({
+    meta: [{ title: 'wyss: about' }],
+  }),
   component: AboutPage,
 });
 

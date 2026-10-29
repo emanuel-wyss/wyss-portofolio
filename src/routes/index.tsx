@@ -7,6 +7,9 @@ export const Route = createFileRoute('/')({
     const siteConfig = await getSiteConfig();
     return { siteConfig };
   },
+  head: () => ({
+    meta: [{ title: 'wyss: workstation' }],
+  }),
   component: HomePage,
 });
 

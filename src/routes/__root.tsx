@@ -22,10 +22,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Wyss.rocks' },
+      { title: 'wyss: home' },
     ],
     links: [
-      { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+      { rel: 'icon', type: 'image/svg+xml', href: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%230a0a08"/><text x="50" y="70" font-size="65" font-family="monospace" font-weight="bold" fill="%23ffd700" text-anchor="middle">[W]</text></svg>' },
       { rel: 'stylesheet', href: stylesHref },
     ],
     scripts: [{ children: noFlashScript }],

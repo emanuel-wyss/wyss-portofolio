@@ -348,3 +348,8 @@ export async function getFeed(
     return { items: [], totalDocs: 0, totalPages: 0, page: 1, hasNextPage: false };
   }
 }
+
+export async function getGitHubRepos(): Promise<GitHubRepo[]> {
+  const profile = await getGitHubProfile();
+  return profile?.topRepos || [];
+}

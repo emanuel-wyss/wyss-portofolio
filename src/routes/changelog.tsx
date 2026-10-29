@@ -1,37 +1,66 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/changelog')({ component: ChangelogPage });
+export const Route = createFileRoute('/changelog')({
+  head: () => ({
+    meta: [{ title: 'wyss: changelog' }],
+  }),
+  component: ChangelogPage,
+});
 
-const entries = [
-  ['2026-10-29', 'Added /privacy page, 4K-capped lightbox images, and fixed the gallery lightbox crash'],
-  ['2026-10-29', 'Added nerdy gallery lightbox with EXIF/image metadata inspector, installed sharp, and redesigned startpage'],
-  ['2026-10-29', 'Added anonymized private-repo commit & tech-stack aggregation + breakdancing Halloween ghost'],
-  ['2026-10-29', 'Upgraded Payload CMS to 3.92.1, Next.js to 16.4.3, React to 19.3.1, and Vite to 8.3.5'],
-  ['2026-10-29', 'Added Payload Admin Command Center dashboard with live telemetry & Event Preview Studio'],
-  ['2026-10-29', 'Converted Site Config into a single-page Payload Global'],
-  ['2026-10-29', 'Added scroll-sensitive parallax motes, live Bern weather particles, and 8 unique seasonal event scenes'],
-  ['2026-10-29', 'Redesigned site shell and footer with a concise terminal workstation readout'],
-  ['2026-10-29', 'Moved post, snippet, and gallery detail views into the SPA'],
-  ['2026-10-28', 'Added GitHub profile showcase, contribution heatmap, and SVG tech radar'],
+const CHANGES = [
+  {
+    date: '2026-03-31',
+    title: 'Thematic Weather View Transitions & Modular Styles',
+    items: [
+      'Added weather-based View Transitions for site content (sun glare, rain wash, cloud roll, blizzard frost, storm flash).',
+      'Split monolithic styles.css into modular stylesheets (tokens, base, components, transitions).',
+      'Separated site header, content, and footer into distinct view-transition names.',
+    ],
+  },
+  {
+    date: '2026-03-30',
+    title: 'Self-Hosted Fonts & Privacy Notice',
+    items: [
+      'Self-hosted Monaspace & Silkscreen fonts, completely dropping Google Fonts requests for 100% zero-tracking compliance.',
+      'Added dedicated /privacy notice page detailing zero cookies and zero third-party telemetry.',
+    ],
+  },
+  {
+    date: '2026-02-15',
+    title: 'Payload CMS 3 & Hono Integration',
+    items: [
+      'Migrated backend API to Hono with Bun.serve().',
+      'Integrated Payload CMS 3 for posts, snippets, and galleries.',
+    ],
+  },
 ];
 
 function ChangelogPage() {
   return (
-    <section className="changelog-page">
-      <div className="container" data-label="// changelog.log">
-        <header className="page-header">
-          <p className="eyebrow">RELEASE NOTES / SYSTEM HISTORY</p>
+    <section className="detail-page">
+      <div className="container" data-label="// changelog.sys">
+        <div className="detail-header">
           <h1>Changelog</h1>
-          <p>Selected changes, experiments, and shipped improvements.</p>
-        </header>
-        <ol className="changelog-list">
-          {entries.map(([date, text]) => (
-            <li key={`${date}-${text}`}>
-              <time>{date}</time>
-              <span>{text}</span>
+          <p className="subtitle">System updates, architectural overhauls, and feature releases.</p>
+        </div>
+
+        <ul className="changelog-list">
+          {CHANGES.map((entry) => (
+            <li key={entry.date}>
+              <time>{entry.date}</time>
+              <div>
+                <h3>{entry.title}</h3>
+                <ul style={{ paddingLeft: '1.2rem', marginTop: '0.5rem' }}>
+                  {entry.items.map((item, idx) => (
+                    <li key={idx} style={{ color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </li>
           ))}
-        </ol>
+        </ul>
       </div>
     </section>
   );
