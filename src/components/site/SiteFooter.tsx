@@ -57,7 +57,7 @@ export function SiteFooter() {
     };
   }, []);
 
-  const { state, effectsPaused, toggleEffectsPaused } = useTheme();
+  const { state, effectsPaused, toggleEffectsPaused, weatherNow } = useTheme();
 
   const themeInfo = {
     mode: state ? state.resolved : 'dark',
@@ -96,7 +96,8 @@ export function SiteFooter() {
           <p className="muted">CURRENT THEME</p>
           <ul className="site-theme-meta">
             <li>mode: {themeInfo.mode}</li>
-            <li>weather: {themeInfo.weather}</li>
+            <li>weather: {themeInfo.weather}{weatherNow?.temperatureC != null ? ` · ${weatherNow.temperatureC}°C` : ''}</li>
+            {weatherNow?.location ? <li>location: {weatherNow.location}</li> : null}
             <li>daytime: {themeInfo.daytime}</li>
             <li>season: {themeInfo.season}</li>
           </ul>

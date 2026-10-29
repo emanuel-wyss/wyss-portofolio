@@ -18,6 +18,7 @@ interface ThemeContextValue {
   state: ImmersiveState | null;
   effectsPaused: boolean;
   toggleEffectsPaused: () => void;
+  weatherNow: Awaited<ReturnType<typeof getWeather>>;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -33,6 +34,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ImmersiveState | null>(null);
   const [effectsPaused, setEffectsPausedState] = useState(false);
   const weatherRef = useRef<WeatherType | undefined>(undefined);
+  const [weatherNow, setWeatherNow] = useState<Awaited<ReturnType<typeof getWeather>>>(null);
 
   // Hydrate stored preferences on mount (client only).
   useEffect(() => {
@@ -49,6 +51,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       getWeather().then((w) => {
         if (!mounted || !w) return;
         weatherRef.current = w.weather;
+        setWeatherNow(w);
         setState(applyImmersiveTheme(mode, weatherRef.current));
       });
     load();
@@ -96,7 +99,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ mode, setMode, state, effectsPaused, toggleEffectsPaused }}>
+    <ThemeContext.Provider value={{ mode, setMode, state, effectsPaused, toggleEffectsPaused, weatherNow }}>
       {children}
       {/* Immersive FX layers — purely decorative, hidden from a11y tree. */}
       <div className="fx-layer fx-grid" aria-hidden="true" />
