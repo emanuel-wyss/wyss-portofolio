@@ -14,6 +14,15 @@ export const SiteConfig: CollectionConfig = {
   },
   fields: [
     {
+      name: 'eventPreview',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/components/EventPreviewField#EventPreviewField',
+        },
+      },
+    },
+    {
       name: 'siteName',
       type: 'text',
       required: true,
@@ -71,6 +80,32 @@ export const SiteConfig: CollectionConfig = {
       admin: {
         description: 'PDF file of CV/Resume',
       },
+    },
+    {
+      name: 'friends_links',
+      type: 'array',
+      labels: { singular: 'Friend / Org', plural: 'Friends & Orgs' },
+      admin: {
+        description: 'Curated link-list of good friends and orgs shown on the About page',
+      },
+      fields: [
+        { name: 'name', type: 'text', required: true },
+        { name: 'url', type: 'text', required: true },
+        {
+          name: 'description',
+          type: 'text',
+          admin: { description: 'Optional one-liner shown under the name' },
+        },
+        {
+          name: 'category',
+          type: 'select',
+          defaultValue: 'friend',
+          options: [
+            { label: 'Friend', value: 'friend' },
+            { label: 'Organisation', value: 'org' },
+          ],
+        },
+      ],
     },
     {
       name: 'seo',
