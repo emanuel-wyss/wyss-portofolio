@@ -15,6 +15,7 @@ Reusable agent skills for this repository live in `.agents/skills/`. Each skill 
 | DB migrations | `.agents/skills/migrate/SKILL.md` |
 | New content type | `.agents/skills/add-collection/SKILL.md` |
 | New route/page | `.agents/skills/add-page/SKILL.md` |
+| Check / update changelog | `.agents/skills/changelog/SKILL.md` |
 
 ---
 

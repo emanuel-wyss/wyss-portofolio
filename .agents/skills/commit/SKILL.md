@@ -73,7 +73,8 @@ Do not commit if any step fails.
 
 ## Steps
 
-1. Run the pre-commit gate (all three checks above).
+1. Check if `src/routes/changelog.tsx` needs an entry for notable user-facing or architectural changes (see `.agents/skills/changelog/SKILL.md`).
+2. Run the pre-commit gate (all checks above).
 2. Run `git diff --stat` and `git status` — understand what changed.
 3. Derive or confirm the commit message:
    - If the user provided a message, validate it matches conventional format; suggest a correction if not.
