@@ -3,14 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 
 const events = [
-  ['halloween', 'Halloween — bats'],
-  ['christmas', 'Christmas — interactive snow'],
-  ['newyear', 'New Year — fireworks'],
-  ['valentines', 'Valentine’s — cursor hearts'],
-  ['easter', 'Easter — egg burst'],
-  ['pride', 'Pride — rainbow confetti'],
-  ['swiss', 'Swiss National Day — cross fireworks'],
-  ['aprilfools', 'April Fools — pixel glitch'],
+  ['halloween', 'Halloween — moon, ghost trail & boss bat'],
+  ['christmas', 'Christmas — snowbank accumulation & wind'],
+  ['newyear', 'New Year — rockets & WYSS skywriting'],
+  ['valentines', 'Valentine’s — heart constellation web'],
+  ['easter', 'Easter — hidden egg hunt & bunny'],
+  ['pride', 'Pride — flowing rainbow ribbon painter'],
+  ['swiss', 'Swiss National Day — Alpine bonfires & cross rockets'],
+  ['aprilfools', 'April Fools — runaway button & kernel panic'],
 ] as const;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://wyss.rocks';
