@@ -436,6 +436,7 @@ app.get('/api/site-config', async (c) => {
         description: siteConfig.description,
         social_links: siteConfig.social_links || [],
         friends_links: siteConfig.friends_links || [],
+        event_settings: siteConfig.event_settings || null,
         cv_url: siteConfig.cv_url?.url,
         seo: siteConfig.seo,
       },

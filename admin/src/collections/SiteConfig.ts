@@ -23,6 +23,21 @@ export const SiteConfig: CollectionConfig = {
       },
     },
     {
+      name: 'event_settings',
+      type: 'group',
+      admin: { description: 'Optional seasonal event schedule and visual overrides.' },
+      fields: [
+        { name: 'enabled', type: 'checkbox', defaultValue: true },
+        { name: 'event', type: 'select', options: ['christmas', 'newyear', 'easter', 'halloween', 'valentines', 'pride', 'swiss', 'aprilfools'] },
+        { name: 'startDate', type: 'date' },
+        { name: 'endDate', type: 'date' },
+        { name: 'intensity', type: 'select', defaultValue: 'standard', options: ['quiet', 'standard', 'party'] },
+        { name: 'announcement', type: 'text' },
+        { name: 'primaryColor', type: 'text' },
+        { name: 'accentColor', type: 'text' },
+      ],
+    },
+    {
       name: 'siteName',
       type: 'text',
       required: true,

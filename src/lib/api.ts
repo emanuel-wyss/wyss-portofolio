@@ -76,6 +76,16 @@ export interface FriendLink {
 
 export interface SiteConfig {
   siteName: string;
+  event_settings?: {
+    enabled?: boolean;
+    event?: string;
+    startDate?: string;
+    endDate?: string;
+    intensity?: 'quiet' | 'standard' | 'party';
+    announcement?: string;
+    primaryColor?: string;
+    accentColor?: string;
+  } | null;
   tagline: string;
   description: string;
   social_links: Array<{
