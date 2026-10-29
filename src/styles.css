@@ -431,3 +431,225 @@ code {
     font-size: 1.5rem;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   GitHub showcase (About + Work)
+   --------------------------------------------------------------------------- */
+.github-section {
+  margin-top: var(--spacing-xl);
+}
+.github-header,
+.work-repos-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-lg);
+}
+.github-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+.github-link:hover {
+  border-color: var(--accent);
+}
+.github-block {
+  margin-top: var(--spacing-lg);
+}
+.github-block h3,
+.gh-heatmap-head h3 {
+  font-size: 1.1rem;
+  margin-bottom: var(--spacing-md);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Stat cards */
+.gh-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+}
+.gh-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-lg);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  text-align: center;
+}
+.gh-stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: var(--font-display);
+  line-height: 1;
+}
+.gh-stat-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Language bar + legend */
+.gh-langbar {
+  display: flex;
+  width: 100%;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+.gh-langbar-seg {
+  height: 100%;
+}
+.gh-langlegend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm) var(--spacing-lg);
+  margin-top: var(--spacing-md);
+  padding: 0;
+}
+.gh-langlegend li {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.85rem;
+}
+.gh-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.gh-langname {
+  color: var(--text-primary);
+}
+.gh-langpct {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+/* Contribution heatmap */
+.gh-heatmap {
+  margin-top: var(--spacing-xl);
+}
+.gh-heatmap-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+.gh-heatmap-total {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+.gh-heatmap-scroll {
+  overflow-x: auto;
+  padding-bottom: var(--spacing-sm);
+}
+.gh-heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--spacing-sm);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.gh-heatmap-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+/* Repo cards (Work page) */
+.work-repos {
+  margin-bottom: var(--spacing-xl);
+}
+.gh-repo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-md);
+}
+.gh-repo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+.gh-repo:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.gh-repo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+.gh-repo-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+.gh-repo-stars {
+  color: var(--accent);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.gh-repo-desc {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+.gh-repo-meta {
+  display: flex;
+  gap: var(--spacing-md);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: auto;
+}
+.gh-repo-lang {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+.gh-repo-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+.gh-topic {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 640px) {
+  .gh-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

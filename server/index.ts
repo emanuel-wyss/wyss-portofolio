@@ -6,6 +6,7 @@ import { getPayload } from 'payload';
 import type { Payload } from 'payload';
 import payloadConfig from './payload/config';
 import { renderPage, lexicalToHtml } from './render';
+import { getGitHubProfileCached } from './github';
 
 // Initialize app
 const app = new Hono();
@@ -44,6 +45,8 @@ app.use('/api/*', async (c, next) => {
     cacheControl = 'public, max-age=60, stale-while-revalidate=300';
   } else if (path === '/api/site-config') {
     cacheControl = 'public, max-age=300, stale-while-revalidate=3600';
+  } else if (path === '/api/github') {
+    cacheControl = 'public, max-age=1800, stale-while-revalidate=7200';
   } else if (path.startsWith('/api/posts/') || path.startsWith('/api/snippets/') || path.startsWith('/api/gallery/')) {
     cacheControl = 'public, max-age=180, stale-while-revalidate=900';
   }
@@ -435,6 +438,17 @@ app.get('/api/site-config', async (c) => {
   } catch (error) {
     console.error('Error fetching site config:', error);
     return c.json({ success: false, error: 'Failed to fetch site config' }, 500);
+  }
+});
+
+// GitHub profile showcase (proxied + cached server-side)
+app.get('/api/github', async (c) => {
+  try {
+    const profile = await getGitHubProfileCached();
+    return c.json({ success: true, profile });
+  } catch (error) {
+    console.error('Error fetching GitHub profile:', error);
+    return c.json({ success: false, error: 'Failed to fetch GitHub profile' }, 500);
   }
 });
 

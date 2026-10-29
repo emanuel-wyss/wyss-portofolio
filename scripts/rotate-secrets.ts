@@ -54,6 +54,8 @@ const VAR_SERVICES: Record<string, readonly string[]> = {
   DATABASE_URL: SERVICES,
   R2_ACCESS_KEY_ID: SERVICES,
   R2_SECRET_ACCESS_KEY: SERVICES,
+  // GitHub API token - only the Hono server (web) reads it at request time.
+  GITHUB_TOKEN: ["web"],
   // Local-only: a management credential used solely by this script to call the
   // Cloudflare API. The app never reads it, so it must NOT live in Railway's
   // runtime env (smaller blast radius). Persisted to .env.local only.

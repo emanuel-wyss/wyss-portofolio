@@ -1,5 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { getSiteConfig } from '../lib/api';
+import { getSiteConfig, getGitHubProfile } from '../lib/api';
+import {
+  StatCards,
+  LanguageBar,
+  ContributionHeatmap,
+} from '../components/github/GitHubCharts';
 
 const skills = [
   { category: 'Frontend', items: ['TypeScript', 'React', 'Astro', 'Next.js', 'Tailwind CSS'] },
@@ -10,14 +15,17 @@ const skills = [
 
 export const Route = createFileRoute('/about')({
   loader: async () => {
-    const siteConfig = await getSiteConfig();
-    return { siteConfig };
+    const [siteConfig, github] = await Promise.all([
+      getSiteConfig(),
+      getGitHubProfile(),
+    ]);
+    return { siteConfig, github };
   },
   component: AboutPage,
 });
 
 function AboutPage() {
-  const { siteConfig } = Route.useLoaderData();
+  const { siteConfig, github } = Route.useLoaderData();
 
   return (
     <section className="about-page">
@@ -45,6 +53,32 @@ function AboutPage() {
             ))}
           </div>
         </div>
+
+        {github?.configured ? (
+          <div className="github-section">
+            <div className="github-header">
+              <h2>GitHub</h2>
+              {github.url ? (
+                <a href={github.url} target="_blank" rel="noopener noreferrer" className="github-link">
+                  @{github.username}
+                </a>
+              ) : null}
+            </div>
+            <StatCards profile={github} />
+            {github.languages.length ? (
+              <div className="github-block">
+                <h3>Most used languages</h3>
+                <LanguageBar languages={github.languages} />
+              </div>
+            ) : null}
+            {github.contributions ? (
+              <ContributionHeatmap
+                weeks={github.contributions.weeks}
+                total={github.contributions.total}
+              />
+            ) : null}
+          </div>
+        ) : null}
 
         {siteConfig?.social_links?.length ? (
           <div className="social-section">

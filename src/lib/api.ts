@@ -83,6 +83,64 @@ export interface SiteConfig {
   };
 }
 
+// GitHub
+export interface GitHubRepo {
+  name: string;
+  fullName: string;
+  url: string;
+  description: string | null;
+  language: string | null;
+  stars: number;
+  forks: number;
+  topics: string[];
+  updatedAt: string;
+  isFork: boolean;
+}
+
+export interface LanguageStat {
+  name: string;
+  value: number;
+  percent: number;
+}
+
+export interface ContributionDay {
+  date: string;
+  count: number;
+  level: number;
+}
+
+export interface GitHubProfile {
+  configured: boolean;
+  username: string;
+  name: string | null;
+  avatarUrl: string | null;
+  bio: string | null;
+  url: string | null;
+  followers: number;
+  following: number;
+  publicRepos: number;
+  totalStars: number;
+  topRepos: GitHubRepo[];
+  languages: LanguageStat[];
+  contributions: {
+    total: number;
+    weeks: ContributionDay[][];
+  } | null;
+  generatedAt: string;
+}
+
+export async function getGitHubProfile(): Promise<GitHubProfile | null> {
+  try {
+    const response = await fetch(`${API_BASE}/api/github`);
+    if (!response.ok) throw new Error('Failed to fetch GitHub profile');
+    const data = await response.json();
+    return data.profile ?? null;
+  } catch (error) {
+    console.error('Error fetching GitHub profile:', error);
+    return null;
+  }
+}
+
 // Posts
 export async function getPosts(): Promise<Post[]> {
   try {
