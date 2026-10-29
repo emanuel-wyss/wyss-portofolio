@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import { getFeed, type FeedItem, type FeedItemType } from '../../lib/api';
 
 type FeedMode = 'latest' | 'work';
@@ -111,7 +112,7 @@ export function ContentFeed({ mode, limit = 12, initialType = 'all' }: Props) {
               {item.language ? <span>{item.language}</span> : null}
               <span>{new Date(item.publishedAt).toLocaleDateString()}</span>
             </div>
-            <a href={cardHref(item)}>{item.type === 'gallery' ? 'View album' : 'Read more'} →</a>
+            <Link to={cardHref(item)}>{item.type === 'gallery' ? 'View album' : 'Read more'} →</Link>
           </article>
         ))}
       </div>
