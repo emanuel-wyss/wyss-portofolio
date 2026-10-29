@@ -493,19 +493,30 @@ export function EventCanvas({
       if (Math.abs(scrollVelocity) < 0.01) scrollVelocity = 0;
       const speedMag = Math.min(18, Math.abs(scrollVelocity));
 
+      const moteRgb =
+        weather === 'rainy' || weather === 'stormy'
+          ? '130, 195, 255'
+          : weather === 'snowy'
+            ? '240, 248, 255'
+            : weather === 'cloudy' || weather === 'foggy'
+              ? '200, 215, 235'
+              : isDaytime
+                ? '255, 215, 90'
+                : '230, 240, 255';
+
       for (const m of scrollMotes) {
         m.phase += 0.025 * dt;
-        // Gentle autonomous float + strong depth-scaled scroll parallax
-        m.x += (m.vx + Math.sin(m.phase) * 0.12 * m.z) * dt;
-        m.y += (m.vy + Math.cos(m.phase * 0.8) * 0.1 * m.z - scrollVelocity * m.z * 0.55) * dt;
+        // Gentle autonomous float + smooth depth-scaled scroll parallax
+        m.x += (m.vx + Math.sin(m.phase) * 0.16 * m.z) * dt;
+        m.y += (m.vy + Math.cos(m.phase * 0.8) * 0.14 * m.z - scrollVelocity * m.z * 0.62) * dt;
 
         // Subtle cursor repulsion
         const cdx = m.x - pointerX;
         const cdy = m.y - pointerY;
         const cdist = Math.hypot(cdx, cdy);
-        if (cdist < 90 && cdist > 1) {
-          m.x += (cdx / cdist) * 0.45 * m.z * dt;
-          m.y += (cdy / cdist) * 0.45 * m.z * dt;
+        if (cdist < 95 && cdist > 1) {
+          m.x += (cdx / cdist) * 0.5 * m.z * dt;
+          m.y += (cdy / cdist) * 0.5 * m.z * dt;
         }
 
         if (m.x < -10) m.x += width + 20;
@@ -514,24 +525,14 @@ export function EventCanvas({
         if (m.y > height + 20) m.y -= height + 40;
 
         const pulse = 0.65 + 0.35 * Math.sin(m.phase * 1.6);
-        const boost = Math.min(0.35, speedMag * 0.025);
-        const a = Math.min(0.9, m.alpha * pulse + boost);
-        ctx.strokeStyle = `rgba(255, 215, 0, ${a})`;
-        ctx.fillStyle = `rgba(255, 215, 0, ${a})`;
+        const boost = Math.min(0.32, speedMag * 0.02);
+        const a = Math.min(0.88, m.alpha * pulse + boost);
+        const r = m.size * (0.7 + Math.min(0.45, speedMag * 0.025));
 
-        if (speedMag > 1.2) {
-          // Stretch into a scroll-sensitive motion streak when scrolling
-          const streak = scrollVelocity * m.z * 1.15;
-          ctx.lineWidth = m.size;
-          ctx.beginPath();
-          ctx.moveTo(m.x, m.y);
-          ctx.lineTo(m.x, m.y + streak);
-          ctx.stroke();
-        } else {
-          ctx.beginPath();
-          ctx.arc(m.x, m.y, m.size * 0.55, 0, Math.PI * 2);
-          ctx.fill();
-        }
+        ctx.fillStyle = `rgba(${moteRgb}, ${a})`;
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, r, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       // =======================================================================
@@ -586,19 +587,20 @@ export function EventCanvas({
             }
           } else if (weather === 'windy') {
             p.x += (p.vx + windX) * dt;
-            p.y += (p.vy + Math.sin(p.phase) * 0.3) * dt;
-            ctx.strokeStyle = `rgba(255, 215, 0, ${p.alpha * 0.35})`;
-            ctx.lineWidth = 1;
+            p.y += (p.vy + Math.sin(p.phase) * 0.35 - scrollVelocity * 0.35) * dt;
+            ctx.fillStyle = `rgba(255, 215, 90, ${p.alpha * 0.55})`;
             ctx.beginPath();
-            ctx.moveTo(p.x - p.vx * 5, p.y);
-            ctx.lineTo(p.x, p.y);
-            ctx.stroke();
+            ctx.arc(p.x, p.y, p.size * 0.85, 0, Math.PI * 2);
+            ctx.fill();
             if (p.x > width + 40) {
               p.x = -30;
               p.y = rand(0, height);
             }
+            if (p.y < -20) p.y += height + 40;
+            if (p.y > height + 20) p.y -= height + 40;
           } else if (weather === 'foggy') {
             p.x += (0.22 + windX * 0.2) * dt;
+            p.y -= scrollVelocity * 0.25 * dt;
             const grad = ctx.createRadialGradient(p.x, p.y, 4, p.x, p.y, p.size);
             grad.addColorStop(0, `rgba(200, 210, 220, ${p.alpha * 0.12})`);
             grad.addColorStop(1, 'rgba(200, 210, 220, 0)');
@@ -607,10 +609,12 @@ export function EventCanvas({
             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
             ctx.fill();
             if (p.x - p.size > width) p.x = -p.size;
+            if (p.y < -p.size) p.y += height + p.size * 2;
+            if (p.y > height + p.size) p.y -= height + p.size * 2;
           } else {
-            // cloudy or sunny / clear night stars
+            // cloudy or sunny / clear night stars (scroll-sensitive)
             p.x += (p.vx + windX * 0.3) * dt;
-            p.y += (p.vy + Math.cos(p.phase) * 0.12) * dt;
+            p.y += (p.vy + Math.cos(p.phase) * 0.14 - scrollVelocity * 0.42) * dt;
             if (p.x < 0) p.x += width;
             if (p.x > width) p.x -= width;
             if (p.y < 0) p.y += height;
@@ -619,12 +623,12 @@ export function EventCanvas({
             const twinkle = 0.55 + 0.45 * Math.sin(p.phase * 1.4);
             ctx.fillStyle =
               weather === 'cloudy'
-                ? `rgba(195, 205, 220, ${p.alpha * 0.42 * twinkle})`
+                ? `rgba(195, 210, 230, ${p.alpha * 0.55 * twinkle})`
                 : isDaytime
-                  ? `rgba(255, 215, 80, ${p.alpha * 0.5 * twinkle})`
-                  : `rgba(240, 248, 255, ${p.alpha * 0.75 * twinkle})`;
+                  ? `rgba(255, 215, 80, ${p.alpha * 0.6 * twinkle})`
+                  : `rgba(240, 248, 255, ${p.alpha * 0.8 * twinkle})`;
             ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size * 0.75, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, p.size * 0.85, 0, Math.PI * 2);
             ctx.fill();
           }
         }

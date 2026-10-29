@@ -133,7 +133,10 @@ export const SiteConfig: GlobalConfig = {
         {
           name: 'event_settings',
           type: 'group',
-          admin: { description: 'Optional seasonal event schedule and visual overrides.' },
+          admin: {
+            description:
+              'Select an event to automatically populate its default schedule, intensity, announcement, and palette.',
+          },
           fields: [
             {
               type: 'row',
@@ -160,6 +163,15 @@ export const SiteConfig: GlobalConfig = {
                   options: ['quiet', 'standard', 'party'],
                 },
               ],
+            },
+            {
+              name: 'eventSettingsAutoFill',
+              type: 'ui',
+              admin: {
+                components: {
+                  Field: '@/components/EventSettingsAutoFill#EventSettingsAutoFill',
+                },
+              },
             },
             {
               type: 'row',

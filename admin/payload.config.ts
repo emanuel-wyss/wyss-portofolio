@@ -38,6 +38,7 @@ export default buildConfig({
   admin: {
     user: 'users',
     components: {
+      beforeNavLinks: ['@/components/AdminNavLinks#AdminNavLinks'],
       beforeDashboard: ['@/components/AdminDashboard#AdminDashboard'],
     },
   },

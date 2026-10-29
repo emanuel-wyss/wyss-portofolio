@@ -1,5 +1,5 @@
+import path from 'node:path';
 import { Hono } from 'hono';
-import { serveStatic } from 'hono/bun';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { getPayload } from 'payload';
@@ -8,6 +8,8 @@ import payloadConfig from './payload/config';
 import { lexicalToHtml } from './render';
 import { getGitHubProfileCached } from './github';
 import { getWeatherCached } from './weather';
+
+const PUBLIC_ROOT = path.resolve('./dist/public');
 
 // Initialize app
 const app = new Hono();
@@ -481,12 +483,27 @@ app.get('/api/weather', async (c) => {
 
 
 
-// Serve static frontend assets for all other routes.
-app.use('*', serveStatic({ root: './dist/public' }));
-
-// SPA fallback: let TanStack Router handle unmatched frontend routes.
+// Serve static frontend assets from ./dist/public, or fall back to the SPA index.html.
 app.get('*', async (c) => {
-  const indexFile = Bun.file('./dist/public/index.html');
+  const reqPath = decodeURIComponent(c.req.path);
+  if (reqPath !== '/' && !reqPath.includes('..')) {
+    const assetPath = path.resolve(PUBLIC_ROOT, `.${reqPath}`);
+    if (assetPath.startsWith(PUBLIC_ROOT)) {
+      const file = Bun.file(assetPath);
+      if (await file.exists()) {
+        return new Response(file, {
+          headers: {
+            'Content-Type': file.type || 'application/octet-stream',
+            ...(reqPath.startsWith('/assets/')
+              ? { 'Cache-Control': 'public, max-age=31536000, immutable' }
+              : {}),
+          },
+        });
+      }
+    }
+  }
+
+  const indexFile = Bun.file(path.join(PUBLIC_ROOT, 'index.html'));
   if (await indexFile.exists()) {
     return c.html(await indexFile.text());
   }

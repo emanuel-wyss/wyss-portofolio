@@ -21,9 +21,11 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { EventSettingsAutoFill as EventSettingsAutoFill_3091d4f700d6cf98b8d39fdedbc31385 } from '@/components/EventSettingsAutoFill'
 import { EventPreviewField as EventPreviewField_d57aab921090b2f9ad2ce5665c79969b } from '@/components/EventPreviewField'
 import { DeploymentDashboardField as DeploymentDashboardField_fe6e4fb94302cefd1bacea54be98af40 } from '@/components/DeploymentDashboardField'
 import { AdminDashboard as AdminDashboard_d2e5e8cdcf265e3c61c4d683161d9698 } from '@/components/AdminDashboard'
+import { AdminNavLinks as AdminNavLinks_a2b83e694c77ff1436f92b2bc675fcec } from '@/components/AdminNavLinks'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -51,8 +53,10 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "@/components/EventSettingsAutoFill#EventSettingsAutoFill": EventSettingsAutoFill_3091d4f700d6cf98b8d39fdedbc31385,
   "@/components/EventPreviewField#EventPreviewField": EventPreviewField_d57aab921090b2f9ad2ce5665c79969b,
   "@/components/DeploymentDashboardField#DeploymentDashboardField": DeploymentDashboardField_fe6e4fb94302cefd1bacea54be98af40,
   "@/components/AdminDashboard#AdminDashboard": AdminDashboard_d2e5e8cdcf265e3c61c4d683161d9698,
+  "@/components/AdminNavLinks#AdminNavLinks": AdminNavLinks_a2b83e694c77ff1436f92b2bc675fcec,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

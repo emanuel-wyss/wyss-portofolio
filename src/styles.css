@@ -875,48 +875,13 @@ code {
   --fx-intensity: 0.6;
 }
 
-/* Decorative full-viewport layers; never interactive, hidden from a11y tree. */
-.fx-layer {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-/* Keep real content above the FX layers. */
+/* Keep real content above the background canvas. */
 main,
 .site-footer,
 nav.site-menu,
 .site-menu {
   position: relative;
   z-index: 1;
-}
-
-/* ---- Background glitch (RGB-split color bands + digital noise) ---- */
-.fx-glitch {
-  opacity: calc(0.6 * var(--fx-intensity));
-  background:
-    linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%),
-    linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%);
-  background-repeat: no-repeat;
-  background-size: 100% 2px, 100% 1px;
-  background-position: 0 -10%, 0 -10%;
-  mix-blend-mode: screen;
-  will-change: background-position, transform, clip-path;
-}
-[data-mode='light'] .fx-glitch {
-  mix-blend-mode: multiply;
-  opacity: calc(0.25 * var(--fx-intensity));
-}
-/* A second pseudo-layer for the chromatic-aberration block displacement. */
-.fx-glitch::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(90deg, transparent 15%, var(--accent) 50%, var(--primary) 85%, transparent 100%);
-  background-size: 100% 3px;
-  background-repeat: no-repeat;
-  opacity: 0;
-  mix-blend-mode: screen;
 }
 
 /* ---- Scroll scenes ---- */
@@ -1024,18 +989,6 @@ html[data-effects-paused] .event-canvas {
   --border-color: rgba(57, 255, 20, 0.2);
 }
 
-/* ---- Event layer (spooky fog / festive glow) ---- */
-.fx-event {
-  opacity: 0;
-  transition: opacity 0.6s ease;
-}
-.event-halloween .fx-event {
-  opacity: 1;
-  background:
-    radial-gradient(ellipse at 20% 100%, rgba(57, 255, 20, 0.08), transparent 55%),
-    radial-gradient(ellipse at 80% 100%, rgba(255, 117, 24, 0.1), transparent 55%);
-}
-
 /* ---- Glitch text (headings & brand) ---- */
 .glitch {
   position: relative;
@@ -1054,45 +1007,6 @@ html[data-effects-paused] .event-canvas {
    Motion-on: animate FX only when the user allows motion
    =========================================================================== */
 @media (prefers-reduced-motion: no-preference) {
-  /* ---- Background glitch: roaming RGB color bands across the viewport ---- */
-  @keyframes fxGlitchBands {
-    0%   { background-position: 0 -10%, 0 -10%; }
-    8%   { background-position: 0 25%, 0 70%; }
-    9%   { background-position: 0 25%, 0 70%; transform: translateX(3px); }
-    10%  { background-position: 0 26%, 0 71%; transform: translateX(-3px); }
-    11%  { transform: translateX(0); }
-    30%  { background-position: 0 55%, 0 35%; }
-    50%  { background-position: 0 80%, 0 15%; }
-    70%  { background-position: 0 40%, 0 90%; }
-    71%  { transform: translateX(2px); clip-path: inset(40% 0 30% 0); }
-    72%  { transform: translateX(-2px); clip-path: inset(0 0 0 0); }
-    100% { background-position: 0 110%, 0 110%; }
-  }
-  .fx-glitch {
-    animation: fxGlitchBands 7s steps(60) infinite;
-  }
-  [data-daytime='night'] .fx-glitch {
-    animation-duration: 4.5s;
-  }
-
-  /* Occasional full-screen digital-noise displacement burst. */
-  @keyframes fxGlitchBurst {
-    0%, 92%, 100% { opacity: 0; transform: translate(0, 0); }
-    93% { opacity: calc(0.5 * var(--fx-intensity)); transform: translate(-6px, 2px); clip-path: inset(10% 0 60% 0); }
-    94% { opacity: calc(0.4 * var(--fx-intensity)); transform: translate(6px, -2px); clip-path: inset(55% 0 15% 0); }
-    95% { opacity: calc(0.5 * var(--fx-intensity)); transform: translate(-4px, 0); clip-path: inset(30% 0 40% 0); }
-    96% { opacity: 0; transform: translate(0, 0); }
-  }
-  .fx-glitch::before {
-    animation: fxGlitchBurst 9s steps(2) infinite;
-  }
-  .event-halloween .fx-glitch {
-    animation-duration: 3.5s;
-  }
-  .event-halloween .fx-glitch::before {
-    animation-duration: 5s;
-  }
-
   /* RGB-split glitch, triggered on hover/focus of .glitch elements. */
   @keyframes glitchShift {
     0%, 100% { transform: translate(0, 0); opacity: 0.45; }
@@ -1133,9 +1047,6 @@ html[data-effects-paused] .event-canvas {
    Motion-off: everything static, FX dimmed, no animation.
    =========================================================================== */
 @media (prefers-reduced-motion: reduce) {
-  .fx-glitch { animation: none; opacity: 0; }
-  .fx-glitch::before { animation: none; opacity: 0; }
-  .fx-event { transition: none; }
   .glitch::before,
   .glitch::after { display: none; }
   .event-halloween h1,
