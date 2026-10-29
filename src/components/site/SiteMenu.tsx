@@ -8,7 +8,7 @@ export function SiteMenu() {
   return (
     <header className="site-nav">
       <div className="site-nav-inner">
-        <Link to="/" className="site-logo" aria-label="Home">
+        <Link to="/" className="site-logo glitch" aria-label="Home" data-text="WYSS">
           WYSS
         </Link>
         <nav aria-label="Main navigation" className="site-nav-links">

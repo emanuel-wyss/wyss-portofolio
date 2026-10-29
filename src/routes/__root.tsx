@@ -1,7 +1,19 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router';
 import { SiteFooter } from '../components/site/SiteFooter';
 import { SiteMenu } from '../components/site/SiteMenu';
+import { ThemeProvider } from '../components/site/ThemeProvider';
 import stylesHref from '../styles.css?url';
+
+// Runs before hydration to set data-mode/data-daytime so there is no flash of
+// the wrong color scheme. Kept tiny and dependency-free.
+const noFlashScript = `(function(){try{
+  var m=localStorage.getItem('wyss-color-mode')||'auto';
+  var dark = m==='dark' || (m!=='light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  var h=document.documentElement;
+  h.setAttribute('data-mode', dark?'dark':'light');
+  var hr=new Date().getHours();
+  h.setAttribute('data-daytime',(hr>=7&&hr<22)?'day':'night');
+}catch(e){}})();`;
 
 export const Route = createRootRoute({
   head: () => ({
@@ -20,6 +32,7 @@ export const Route = createRootRoute({
       },
       { rel: 'stylesheet', href: stylesHref },
     ],
+    scripts: [{ children: noFlashScript }],
   }),
   shellComponent: RootDocument,
 });
@@ -31,9 +44,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <SiteMenu />
-        <main>{children}</main>
-        <SiteFooter />
+        <ThemeProvider>
+          <SiteMenu />
+          <main>{children}</main>
+          <SiteFooter />
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>

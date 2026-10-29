@@ -1,6 +1,7 @@
 @import './styles/theme-animations.css';
 
 :root {
+  color-scheme: dark;
   --bg-primary: #0a0a08;
   --bg-secondary: #141410;
   --text-primary: #f8f8f0;
@@ -27,6 +28,12 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Light mode: native controls + border tint follow the inverted surface. */
+:root[data-mode='light'] {
+  color-scheme: light;
+  --border-color: rgba(138, 109, 0, 0.25);
 }
 
 html {
@@ -652,4 +659,191 @@ code {
   .gh-stats {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/* ===========================================================================
+   Immersive cyberpunk / glitch FX layer
+   All motion gated behind (prefers-reduced-motion: no-preference).
+   Driven by: data-mode (light|dark), data-daytime (day|night), data-fx,
+   event-<name> class, and --fx-intensity (0..1).
+   =========================================================================== */
+
+:root {
+  --fx-intensity: 0.6;
+}
+
+/* Decorative full-viewport layers; never interactive, hidden from a11y tree. */
+.fx-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Keep real content above the FX layers. */
+main,
+.site-footer,
+nav.site-menu,
+.site-menu {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- Neon grid (cyberpunk) ---- */
+.fx-grid {
+  background-image:
+    linear-gradient(var(--accent) 1px, transparent 1px),
+    linear-gradient(90deg, var(--accent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: calc(0.04 * var(--fx-intensity));
+  mask-image: radial-gradient(ellipse at 50% 0%, black 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 0%, black 0%, transparent 75%);
+}
+/* Brighter grid at night, softer in light mode. */
+[data-daytime='night'] .fx-grid {
+  opacity: calc(0.08 * var(--fx-intensity));
+}
+[data-mode='light'] .fx-grid {
+  opacity: calc(0.03 * var(--fx-intensity));
+}
+
+/* ---- Scanlines (CRT) ---- */
+.fx-scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.12) 0px,
+    rgba(0, 0, 0, 0.12) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: calc(0.35 * var(--fx-intensity));
+  mix-blend-mode: multiply;
+}
+[data-mode='light'] .fx-scanlines {
+  opacity: calc(0.08 * var(--fx-intensity));
+}
+
+/* ---- Event layer (spooky fog / festive glow) ---- */
+.fx-event {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.event-halloween .fx-event {
+  opacity: 1;
+  background:
+    radial-gradient(ellipse at 20% 100%, rgba(57, 255, 20, 0.08), transparent 55%),
+    radial-gradient(ellipse at 80% 100%, rgba(255, 117, 24, 0.1), transparent 55%);
+}
+
+/* ---- Glitch text (headings & brand) ---- */
+.glitch {
+  position: relative;
+  display: inline-block;
+}
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ===========================================================================
+   Motion-on: animate FX only when the user allows motion
+   =========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fxScanMove {
+    from { background-position-y: 0; }
+    to { background-position-y: 3px; }
+  }
+  .fx-scanlines {
+    animation: fxScanMove 0.25s steps(2) infinite;
+  }
+
+  @keyframes fxFlicker {
+    0%, 100% { opacity: calc(0.35 * var(--fx-intensity)); }
+    50% { opacity: calc(0.28 * var(--fx-intensity)); }
+    52% { opacity: calc(0.42 * var(--fx-intensity)); }
+  }
+  [data-daytime='night'] .fx-scanlines {
+    animation: fxScanMove 0.25s steps(2) infinite, fxFlicker 4s ease-in-out infinite;
+  }
+
+  /* RGB-split glitch, triggered on hover/focus of .glitch elements. */
+  @keyframes glitchShift {
+    0%, 100% { transform: translate(0, 0); opacity: 0.9; }
+    20% { transform: translate(-2px, 1px); }
+    40% { transform: translate(2px, -1px); }
+    60% { transform: translate(-1px, -1px); }
+    80% { transform: translate(1px, 1px); }
+  }
+  .glitch:hover::before,
+  .glitch:focus-visible::before {
+    opacity: 0.8;
+    color: var(--accent);
+    transform: translate(-2px, 0);
+    animation: glitchShift 0.4s steps(2) 2;
+    clip-path: inset(0 0 55% 0);
+  }
+  .glitch:hover::after,
+  .glitch:focus-visible::after {
+    opacity: 0.8;
+    color: var(--primary);
+    transform: translate(2px, 0);
+    animation: glitchShift 0.4s steps(2) 2 reverse;
+    clip-path: inset(55% 0 0 0);
+  }
+
+  /* On Halloween, headings get an occasional auto-glitch flicker. */
+  @keyframes spookyGlitch {
+    0%, 94%, 100% { transform: translate(0, 0); filter: none; }
+    95% { transform: translate(-2px, 0); filter: hue-rotate(20deg); }
+    96% { transform: translate(2px, 0); }
+    97% { transform: translate(-1px, 1px); }
+  }
+  .event-halloween h1,
+  .event-halloween h2 {
+    animation: spookyGlitch 6s ease-in-out infinite;
+  }
+}
+
+/* ===========================================================================
+   Motion-off: everything static, FX dimmed, no animation.
+   =========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .fx-scanlines { animation: none; opacity: 0.08; }
+  .fx-grid { opacity: 0.03; }
+  .fx-event { transition: none; }
+  .glitch::before,
+  .glitch::after { display: none; }
+  .event-halloween h1,
+  .event-halloween h2 { animation: none; }
+}
+
+/* ===========================================================================
+   Theme toggle button
+   =========================================================================== */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+  padding: 0.35rem 0.7rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+.theme-toggle-icon {
+  font-size: 0.95rem;
+  line-height: 1;
 }

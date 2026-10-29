@@ -1,16 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { getCurrentSeason, getCurrentSpecialEvent, isDaytime, type WeatherType } from '../../lib/theme';
+import { useEffect, useState } from 'react';
 import { getSiteConfig, type SiteConfig } from '../../lib/api';
-
-const WEATHER_LABELS: Record<WeatherType, string> = {
-  sunny: 'Sunny',
-  cloudy: 'Cloudy',
-  rainy: 'Rainy',
-  foggy: 'Foggy',
-  stormy: 'Stormy',
-  windy: 'Windy',
-  snowy: 'Snowy',
-};
+import { useTheme } from './ThemeProvider';
+import { ThemeToggle } from './ThemeToggle';
 
 const SEASON_LABELS: Record<string, string> = {
   spring: 'Spring',
@@ -56,19 +47,18 @@ export function SiteFooter() {
     };
   }, []);
 
-  const themeInfo = useMemo(() => {
-    const weatherClass = Array.from(document.documentElement.classList).find((cls) => cls.startsWith('weather-'));
-    const weatherKey = weatherClass?.replace('weather-', '') as WeatherType | undefined;
-    const weather = weatherKey && WEATHER_LABELS[weatherKey] ? WEATHER_LABELS[weatherKey] : 'Sunny';
-    const season = getCurrentSeason();
-    const special = getCurrentSpecialEvent();
+  const { state } = useTheme();
 
-    return {
-      weather,
-      daytime: isDaytime() ? 'Day' : 'Night',
-      season: special ? SPECIAL_LABELS[special] : SEASON_LABELS[season],
-    };
-  }, []);
+  const themeInfo = {
+    mode: state ? state.resolved : 'dark',
+    daytime: state ? (state.isDaytime ? 'Day' : 'Night') : '—',
+    season:
+      state && state.event
+        ? SPECIAL_LABELS[state.event] || state.event
+        : state
+          ? SEASON_LABELS[state.season]
+          : '—',
+  };
 
   return (
     <footer className="site-footer">
@@ -94,10 +84,11 @@ export function SiteFooter() {
         <div>
           <p className="muted">CURRENT THEME</p>
           <ul className="site-theme-meta">
-            <li>weather: {themeInfo.weather}</li>
+            <li>mode: {themeInfo.mode}</li>
             <li>daytime: {themeInfo.daytime}</li>
             <li>season: {themeInfo.season}</li>
           </ul>
+          <ThemeToggle />
         </div>
       </div>
       <div className="site-footer-bottom">

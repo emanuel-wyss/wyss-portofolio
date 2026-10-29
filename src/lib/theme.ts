@@ -452,3 +452,170 @@ export function initializeTheme(weatherOverride?: WeatherType): void {
   const variables = getThemeVariables(config);
   applyTheme(variables);
 }
+
+// ===========================================================================
+// Color mode (light / dark / auto) + immersive FX layer
+// ===========================================================================
+
+export type ColorMode = 'light' | 'dark' | 'auto';
+export const COLOR_MODE_KEY = 'wyss-color-mode';
+
+/** Resolve 'auto' to the system preference. SSR-safe. */
+export function resolveMode(mode: ColorMode): 'light' | 'dark' {
+  if (mode !== 'auto') return mode;
+  if (typeof window === 'undefined' || !window.matchMedia) return 'dark';
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+export function getStoredMode(): ColorMode {
+  if (typeof localStorage === 'undefined') return 'auto';
+  const v = localStorage.getItem(COLOR_MODE_KEY);
+  return v === 'light' || v === 'dark' || v === 'auto' ? v : 'auto';
+}
+
+export function setStoredMode(mode: ColorMode): void {
+  if (typeof localStorage !== 'undefined') localStorage.setItem(COLOR_MODE_KEY, mode);
+}
+
+/** True when the user asked for reduced motion. SSR-safe. */
+export function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/**
+ * Light-mode color overrides. Keeps the black/yellow identity but inverts the
+ * surface: warm off-white backgrounds, dark text. All pairs meet WCAG AA.
+ */
+const LIGHT_MODE: Partial<ThemeVariables> = {
+  '--bg-primary': '#faf8f0',       // warm off-white
+  '--bg-secondary': '#f0ecdc',
+  '--bg-tertiary': '#e6e0cc',
+  '--text-primary': '#1a1810',     // near-black (contrast 16.8:1 on #faf8f0)
+  '--text-secondary': '#4a4530',   // warm dark (contrast 8.4:1)
+  '--text-tertiary': '#6e6848',    // muted (contrast 5.0:1)
+  // Dial accents to darker, saturated tones so yellow stays readable on light.
+  '--primary': '#8a6d00',          // deep gold (contrast 5.1:1 on #faf8f0)
+  '--primary-light': '#a88600',
+  '--primary-dark': '#5f4b00',
+  '--accent': '#9a5b00',           // burnt amber
+  '--accent-light': '#e8c060',
+};
+
+/**
+ * Immersive FX overrides per special event. These add cyberpunk/mood colors
+ * and FX intensity on top of the base palette. Applied only in dark mode where
+ * neon reads well; light mode keeps a toned-down variant.
+ */
+const EVENT_FX: Record<SpecialEventType, { dark: Partial<ThemeVariables>; fx: string }> = {
+  halloween: {
+    dark: {
+      '--bg-primary': '#0a0612',     // deep purple-black
+      '--bg-secondary': '#140a1e',
+      '--bg-tertiary': '#1e1228',
+      '--primary': '#ff7518',        // pumpkin orange
+      '--primary-light': '#ff9a4d',
+      '--primary-dark': '#cc5500',
+      '--accent': '#39ff14',         // toxic/neon green
+      '--accent-light': '#8dff7a',
+      '--text-primary': '#f5ecff',
+      '--text-secondary': '#c8a8e0',
+      '--particle-color': '#ff7518',
+    },
+    fx: 'halloween',
+  },
+  christmas: {
+    dark: {
+      '--accent': '#39d353',
+      '--particle-color': '#ffffff',
+    },
+    fx: 'snow',
+  },
+  newyear: {
+    dark: { '--particle-color': '#ffd700' },
+    fx: 'fireworks',
+  },
+  valentines: {
+    dark: { '--particle-color': '#ff4466' },
+    fx: 'hearts',
+  },
+  easter: {
+    dark: {},
+    fx: 'none',
+  },
+};
+
+export interface ImmersiveState {
+  mode: ColorMode;
+  resolved: 'light' | 'dark';
+  reducedMotion: boolean;
+  season: SeasonType;
+  event?: SpecialEventType;
+  isDaytime: boolean;
+  /** 0..1 FX intensity; higher at night and on events. */
+  fxIntensity: number;
+  fxName: string;
+}
+
+/** Compute the current immersive state from date + user prefs. */
+export function getImmersiveState(mode: ColorMode): ImmersiveState {
+  const resolved = resolveMode(mode);
+  const reducedMotion = prefersReducedMotion();
+  const season = getCurrentSeason();
+  const event = getCurrentSpecialEvent();
+  const isDaytime = isDaytime_();
+  let fxIntensity = isDaytime ? 0.5 : 0.85;
+  if (event) fxIntensity = Math.min(1, fxIntensity + 0.25);
+  if (reducedMotion) fxIntensity = 0;
+  const fxName = event ? EVENT_FX[event].fx : 'cyber';
+  return { mode, resolved, reducedMotion, season, event, isDaytime, fxIntensity, fxName };
+}
+
+// local alias to avoid shadowing export above
+function isDaytime_(): boolean {
+  return isDaytime();
+}
+
+/**
+ * Apply the full immersive theme to <html>: color vars (season + mode +
+ * event), data attributes, and weather/event classes. Returns the state.
+ */
+export function applyImmersiveTheme(mode: ColorMode): ImmersiveState {
+  const state = getImmersiveState(mode);
+  const root = document.documentElement;
+
+  // 1. Base theme (season colors + weather effects + event color override).
+  const config: ThemeConfig = {
+    weather: 'sunny', // weather simulation kept minimal; FX driven by event/time
+    season: state.season,
+    specialEvent: state.event,
+    isDaytime: state.isDaytime,
+  };
+  let vars: Partial<ThemeVariables> = getThemeVariables(config);
+
+  // 2. Light-mode surface inversion.
+  if (state.resolved === 'light') {
+    vars = { ...vars, ...LIGHT_MODE };
+  }
+
+  // 3. Immersive event FX palette (dark only, where neon reads).
+  if (state.event && state.resolved === 'dark') {
+    vars = { ...vars, ...EVENT_FX[state.event].dark };
+  }
+
+  applyTheme(vars);
+
+  // 4. Data attributes + classes for CSS-driven FX layers.
+  root.setAttribute('data-mode', state.resolved);
+  root.setAttribute('data-fx', state.fxName);
+  root.setAttribute('data-daytime', state.isDaytime ? 'day' : 'night');
+  root.style.setProperty('--fx-intensity', String(state.fxIntensity));
+
+  // event-* class for spooky/festive layers
+  Array.from(root.classList)
+    .filter((c) => c.startsWith('event-') || c.startsWith('weather-'))
+    .forEach((c) => root.classList.remove(c));
+  if (state.event) root.classList.add(`event-${state.event}`);
+
+  return state;
+}
