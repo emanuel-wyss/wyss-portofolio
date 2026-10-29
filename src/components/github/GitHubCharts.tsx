@@ -133,6 +133,91 @@ export function ContributionHeatmap({
   );
 }
 
+export function TechRadar({ languages }: { languages: LanguageStat[] }) {
+  const items = languages.slice(0, 8);
+  if (items.length < 3) return null;
+  const size = 300;
+  const cx = size / 2;
+  const cy = size / 2;
+  const maxR = size / 2 - 40;
+  const rings = [0.25, 0.5, 0.75, 1];
+  const maxPct = Math.max(...items.map((l) => l.percent), 1);
+
+  const pointFor = (i: number, radius: number) => {
+    const angle = (Math.PI * 2 * i) / items.length - Math.PI / 2;
+    return {
+      x: cx + Math.cos(angle) * radius,
+      y: cy + Math.sin(angle) * radius,
+    };
+  };
+
+  const polygon = items
+    .map((l, i) => {
+      const r = (l.percent / maxPct) * maxR;
+      const p = pointFor(i, r);
+      return `${p.x},${p.y}`;
+    })
+    .join(' ');
+
+  return (
+    <div className="gh-radar">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        role="img"
+        aria-label="Technology radar based on GitHub language usage"
+      >
+        {/* concentric rings */}
+        {rings.map((r) => (
+          <circle
+            key={r}
+            cx={cx}
+            cy={cy}
+            r={maxR * r}
+            fill="none"
+            stroke="var(--border-color)"
+            strokeWidth={1}
+          />
+        ))}
+        {/* spokes + labels */}
+        {items.map((l, i) => {
+          const outer = pointFor(i, maxR);
+          const label = pointFor(i, maxR + 18);
+          return (
+            <g key={l.name}>
+              <line x1={cx} y1={cy} x2={outer.x} y2={outer.y} stroke="var(--border-color)" strokeWidth={1} />
+              <text
+                x={label.x}
+                y={label.y}
+                fill="var(--text-secondary)"
+                fontSize={10}
+                textAnchor={Math.abs(label.x - cx) < 6 ? 'middle' : label.x > cx ? 'start' : 'end'}
+                dominantBaseline="middle"
+              >
+                {l.name}
+              </text>
+            </g>
+          );
+        })}
+        {/* data polygon */}
+        <polygon
+          points={polygon}
+          fill="var(--accent)"
+          fillOpacity={0.18}
+          stroke="var(--accent)"
+          strokeWidth={2}
+        />
+        {items.map((l, i) => {
+          const r = (l.percent / maxPct) * maxR;
+          const p = pointFor(i, r);
+          return <circle key={l.name} cx={p.x} cy={p.y} r={3} fill="var(--accent)" />;
+        })}
+      </svg>
+    </div>
+  );
+}
+
 export function StatCards({ profile }: { profile: GitHubProfile }) {
   const stats = [
     { label: 'Repositories', value: profile.publicRepos },

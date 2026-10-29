@@ -28,6 +28,7 @@ export interface Post {
 
 export interface PostDetail extends Post {
   content: any;
+  contentHtml?: string;
   updatedAt?: string;
 }
 
@@ -66,6 +67,13 @@ export interface SnippetDetail extends Snippet {
   code: string;
 }
 
+export interface FriendLink {
+  name: string;
+  url: string;
+  description?: string;
+  category?: 'friend' | 'org';
+}
+
 export interface SiteConfig {
   siteName: string;
   tagline: string;
@@ -75,6 +83,7 @@ export interface SiteConfig {
     url: string;
     icon?: string;
   }>;
+  friends_links?: FriendLink[];
   cv_url?: string;
   seo?: {
     metaDescription: string;
@@ -140,6 +149,32 @@ export async function getGitHubProfile(): Promise<GitHubProfile | null> {
     return null;
   }
 }
+
+// Weather
+export type WeatherType = 'sunny' | 'cloudy' | 'rainy' | 'foggy' | 'stormy' | 'windy' | 'snowy';
+
+export interface WeatherNow {
+  configured: boolean;
+  weather: WeatherType;
+  temperatureC: number | null;
+  windKph: number | null;
+  isDay: boolean;
+  description: string;
+  location: string;
+}
+
+export async function getWeather(): Promise<WeatherNow | null> {
+  try {
+    const response = await fetch(`${API_BASE}/api/weather`);
+    if (!response.ok) throw new Error('Failed to fetch weather');
+    const data = await response.json();
+    return data.weather ?? null;
+  } catch (error) {
+    console.error('Error fetching weather:', error);
+    return null;
+  }
+}
+
 
 // Posts
 export async function getPosts(): Promise<Post[]> {

@@ -4,7 +4,18 @@ import {
   StatCards,
   LanguageBar,
   ContributionHeatmap,
+  TechRadar,
 } from '../components/github/GitHubCharts';
+
+const SOCIAL_LABELS: Record<string, string> = {
+  github: 'GitHub',
+  linkedin: 'LinkedIn',
+  instagram: 'Instagram',
+  twitter: 'Twitter',
+  discord: 'Discord',
+  email: 'Email',
+  website: 'Website',
+};
 
 const skills = [
   { category: 'Frontend', items: ['TypeScript', 'React', 'Astro', 'Next.js', 'Tailwind CSS'] },
@@ -71,6 +82,12 @@ function AboutPage() {
                 <LanguageBar languages={github.languages} />
               </div>
             ) : null}
+            {github.languages.length >= 3 ? (
+              <div className="github-block">
+                <h3>Tech radar</h3>
+                <TechRadar languages={github.languages} />
+              </div>
+            ) : null}
             {github.contributions ? (
               <ContributionHeatmap
                 weeks={github.contributions.weeks}
@@ -80,19 +97,56 @@ function AboutPage() {
           </div>
         ) : null}
 
-        {siteConfig?.social_links?.length ? (
-          <div className="social-section">
-            <h2>Connect</h2>
-            <nav className="social-grid" aria-label="Social links">
-              {siteConfig.social_links.map((link) => (
-                <a key={`${link.platform}-${link.url}`} href={link.url} target="_blank" rel="noopener noreferrer" className="social-card">
-                  {link.platform}
+        <div className="contact-section">
+          <h2>Contact</h2>
+          <nav className="social-grid" aria-label="Social links">
+            {(siteConfig?.social_links?.length
+              ? siteConfig.social_links
+              : DEFAULT_SOCIALS
+            ).map((link) => (
+              <a
+                key={`${link.platform}-${link.url}`}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="social-card"
+              >
+                {SOCIAL_LABELS[link.platform] || link.platform}
+              </a>
+            ))}
+          </nav>
+        </div>
+
+        {siteConfig?.friends_links?.length ? (
+          <div className="friends-section">
+            <h2>Good friends &amp; orgs</h2>
+            <div className="friends-grid">
+              {siteConfig.friends_links.map((link) => (
+                <a
+                  key={`${link.name}-${link.url}`}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`friend-card friend-${link.category || 'friend'}`}
+                >
+                  <span className="friend-name">{link.name}</span>
+                  {link.description ? (
+                    <span className="friend-desc">{link.description}</span>
+                  ) : null}
+                  {link.category === 'org' ? (
+                    <span className="friend-badge">org</span>
+                  ) : null}
                 </a>
               ))}
-            </nav>
+            </div>
           </div>
         ) : null}
       </div>
     </section>
   );
 }
+
+const DEFAULT_SOCIALS = [
+  { platform: 'github', url: 'https://github.com/emanuel-wyss' },
+  { platform: 'linkedin', url: 'https://www.linkedin.com/in/emanuel-wyss/' },
+];
