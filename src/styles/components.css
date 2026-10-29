@@ -553,3 +553,42 @@
 }
 .privacy-page { padding: var(--spacing-xl) 0 var(--spacing-2xl); }
 html[data-lightbox-open] main { z-index: 10000; }
+
+/* Snippet Code Block Enhancements */
+.code-block {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  overflow: hidden;
+  margin-top: var(--spacing-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 1rem;
+  background: color-mix(in srgb, var(--bg-primary) 85%, var(--bg-secondary));
+  border-bottom: 1px solid var(--border-color);
+}
+.code-lang {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.code-block pre {
+  margin: 0;
+  padding: 1.25rem;
+  background: var(--bg-secondary);
+  overflow-x: auto;
+}
+.code-block pre code {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  background: transparent;
+  padding: 0;
+}
