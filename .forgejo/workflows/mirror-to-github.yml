@@ -1,0 +1,35 @@
+name: Mirror to GitHub
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mirror repository to GitHub
+        env:
+          GH_MIRROR_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
+        run: |
+          set -eu
+
+          if [ -z "${GH_MIRROR_TOKEN}" ]; then
+            echo "GH_MIRROR_TOKEN is not configured" >&2
+            exit 1
+          fi
+
+          git init --bare mirror.git
+          cd mirror.git
+          git remote add codeberg "https://codeberg.org/maenu/wyss-portofolio.git"
+          git fetch --prune --tags codeberg '+refs/heads/*:refs/heads/*'
+          git remote add github "https://github.com/emanuel-wyss/wyss-portofolio.git"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0=http.https://github.com/.extraheader
+          export GIT_CONFIG_VALUE_0="Authorization: Bearer ${GH_MIRROR_TOKEN}"
+          git push --mirror github
+          unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0
