@@ -459,6 +459,16 @@ app.get('/api/github', async (c) => {
 });
 
 // Real weather for the dynamic theme (Open-Meteo, cached)
+app.get('/api/system-status', (c) => {
+  return c.json({
+    service: 'web',
+    status: 'online',
+    environment: process.env.NODE_ENV || 'production',
+    commit: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.GIT_COMMIT_SHA || null,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/api/weather', async (c) => {
   try {
     const weather = await getWeatherCached();

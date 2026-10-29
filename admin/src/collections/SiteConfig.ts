@@ -14,6 +14,15 @@ export const SiteConfig: CollectionConfig = {
   },
   fields: [
     {
+      name: 'deploymentDashboard',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/components/DeploymentDashboardField#DeploymentDashboardField',
+        },
+      },
+    },
+    {
       name: 'eventPreview',
       type: 'ui',
       admin: {
