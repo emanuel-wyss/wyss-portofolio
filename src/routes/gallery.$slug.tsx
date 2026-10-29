@@ -1,6 +1,5 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
 import { getAlbumBySlug } from '../lib/api';
 
 export const Route = createFileRoute('/gallery/$slug')({
@@ -119,9 +118,11 @@ function GalleryDetailPage() {
     const prevBodyOverflow = document.body.style.overflow;
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
+    document.documentElement.setAttribute('data-lightbox-open', '');
     return () => {
       document.documentElement.style.overflow = prevHtmlOverflow;
       document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.removeAttribute('data-lightbox-open');
     };
   }, [activeIndex]);
 
@@ -170,7 +171,7 @@ function GalleryDetailPage() {
 
   const lightboxNode =
     activeImg && activeIndex !== null && typeof document !== 'undefined'
-      ? ReactDOM.createPortal(
+      ? (
           <div
             className="nerdy-lightbox"
             role="dialog"
@@ -301,8 +302,9 @@ function GalleryDetailPage() {
                 >
                   <img
                     ref={imgRef}
-                    key={activeImg.url}
-                    src={activeImg.url}
+                    key={activeImg.displayUrl || activeImg.url}
+                    src={activeImg.displayUrl || activeImg.url}
+                    decoding="async"
                     alt={activeImg.alt || album.title}
                     draggable={false}
                     className="nerdy-lightbox-img"
@@ -370,7 +372,11 @@ function GalleryDetailPage() {
                       </div>
                       <div>
                         <dt>FILE</dt>
-                        <dd>{fileFromUrl(activeImg.url, activeImg.filename)}</dd>
+                        <dd>
+                          <a href={activeImg.url} target="_blank" rel="noreferrer">
+                            {fileFromUrl(activeImg.url, activeImg.filename)} ↗
+                          </a>
+                        </dd>
                       </div>
                       {activeImg.alt ? (
                         <div className="meta-full">
@@ -389,8 +395,7 @@ function GalleryDetailPage() {
                 ) : null}
               </div>
             </div>
-          </div>,
-          document.body
+          </div>
         )
       : null;
 

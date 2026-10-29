@@ -47,6 +47,7 @@ export interface AlbumDetail extends Album {
     id: string;
     url: string;
     thumbUrl?: string;
+    displayUrl?: string;
     alt: string;
     caption?: string;
     order?: number;

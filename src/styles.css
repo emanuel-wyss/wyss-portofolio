@@ -1612,7 +1612,6 @@ html[data-effects-paused] .event-canvas {
   object-fit: contain;
   padding: 0.85rem;
   transform-origin: center center;
-  will-change: transform;
 }
 
 .nerdy-lightbox-meta {
@@ -1687,3 +1686,42 @@ html[data-effects-paused] .event-canvas {
     max-height: calc(100dvh - 1rem);
   }
 }
+
+/* ===========================================================================
+   Privacy page
+   =========================================================================== */
+.privacy-page { padding: var(--spacing-xl) 0 var(--spacing-2xl); }
+.privacy-block {
+  margin-top: var(--spacing-lg);
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--bg-secondary) 75%, transparent);
+}
+.privacy-h {
+  font: 600 0.95rem var(--font-mono);
+  color: var(--accent);
+  margin-bottom: 0.85rem;
+}
+.privacy-checklist, .privacy-keys { list-style: none; padding: 0; margin: 0; font: 0.85rem var(--font-mono); }
+.privacy-checklist li { padding: 0.3rem 0; color: var(--text-secondary); }
+.privacy-ok { color: #39ff14; margin-right: 0.4rem; }
+.privacy-processors { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.privacy-card { border: 1px solid var(--border-color); background: var(--bg-primary); padding: 0.85rem; }
+.privacy-card-head {
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  font: 0.8rem var(--font-mono); color: var(--text-primary);
+  padding-bottom: 0.55rem; margin-bottom: 0.6rem; border-bottom: 1px dashed var(--border-color);
+}
+.privacy-tag { font: 700 9px var(--font-pixel); background: var(--accent); color: var(--bg-primary); padding: 0.18rem 0.4rem; }
+.privacy-card dl { display: flex; flex-direction: column; gap: 0.5rem; margin: 0; }
+.privacy-card dt { font: 8px var(--font-pixel); color: var(--text-secondary); opacity: 0.8; }
+.privacy-card dd { margin: 0.1rem 0 0; font: 0.8rem var(--font-mono); color: var(--text-primary); word-break: break-word; }
+.privacy-note { font-size: 0.85rem; margin: 0.85rem 0 0; }
+.privacy-keys li { display: grid; grid-template-columns: 210px 1fr; gap: 0.75rem; padding: 0.35rem 0; border-bottom: 1px dashed var(--border-color); }
+.privacy-keys code { color: var(--accent); background: transparent; padding: 0; }
+.privacy-keys span { color: var(--text-secondary); }
+.privacy-updated { font: 9px var(--font-pixel); color: var(--text-secondary); margin: 1rem 0 0; }
+@media (max-width: 600px) { .privacy-keys li { grid-template-columns: 1fr; gap: 0.15rem; } }
+
+/* Lightbox open: lift <main> above the sticky nav so the inline lightbox overlays everything */
+html[data-lightbox-open] main { z-index: 10000; }

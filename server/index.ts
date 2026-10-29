@@ -198,7 +198,7 @@ app.get('/api/gallery', async (c) => {
 app.get('/api/media/thumb', async (c) => {
   const url = c.req.query('url') || '';
   const widthRaw = parseInt(c.req.query('w') || '640', 10);
-  const width = Math.min(1280, Math.max(160, Number.isFinite(widthRaw) ? widthRaw : 640));
+  const width = Math.min(3840, Math.max(160, Number.isFinite(widthRaw) ? widthRaw : 640));
 
   if (!url || !isAllowedMediaUrl(url)) {
     return c.json({ success: false, error: 'Invalid media URL' }, 400);
@@ -244,11 +244,14 @@ app.get('/api/gallery/:slug', async (c) => {
         const prebuiltThumb = img.image?.sizes?.card?.url || img.image?.sizes?.thumbnail?.url;
         const thumbUrl =
           prebuiltThumb || (url ? `/api/media/thumb?url=${encodeURIComponent(url)}&w=640` : undefined);
+        // Lightbox display copy: max 4K (3840px) WebP instead of the 24MP original
+        const displayUrl = url ? `/api/media/thumb?url=${encodeURIComponent(url)}&w=3840` : undefined;
 
         return {
           id: img.image?.id || img.id,
           url,
           thumbUrl,
+          displayUrl,
           alt: img.image?.alt,
           caption: img.image?.caption || img.caption,
           order: img.order,

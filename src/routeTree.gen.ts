@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as ChangelogRouteImport } from './routes/changelog'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as WorkRouteImport } from './routes/work'
 import { Route as GallerySlugRouteImport } from './routes/gallery.$slug'
 import { Route as PostsSlugRouteImport } from './routes/posts.$slug'
@@ -30,6 +31,11 @@ const AboutRoute = AboutRouteImport.update({
 const ChangelogRoute = ChangelogRouteImport.update({
   id: '/changelog',
   path: '/changelog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WorkRoute = WorkRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/changelog': typeof ChangelogRoute
+  '/privacy': typeof PrivacyRoute
   '/work': typeof WorkRoute
   '/gallery/$slug': typeof GallerySlugRoute
   '/posts/$slug': typeof PostsSlugRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/changelog': typeof ChangelogRoute
+  '/privacy': typeof PrivacyRoute
   '/work': typeof WorkRoute
   '/gallery/$slug': typeof GallerySlugRoute
   '/posts/$slug': typeof PostsSlugRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/changelog': typeof ChangelogRoute
+  '/privacy': typeof PrivacyRoute
   '/work': typeof WorkRoute
   '/gallery/$slug': typeof GallerySlugRoute
   '/posts/$slug': typeof PostsSlugRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/changelog'
+    | '/privacy'
     | '/work'
     | '/gallery/$slug'
     | '/posts/$slug'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/changelog'
+    | '/privacy'
     | '/work'
     | '/gallery/$slug'
     | '/posts/$slug'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/changelog'
+    | '/privacy'
     | '/work'
     | '/gallery/$slug'
     | '/posts/$slug'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   ChangelogRoute: typeof ChangelogRoute
+  PrivacyRoute: typeof PrivacyRoute
   WorkRoute: typeof WorkRoute
   GallerySlugRoute: typeof GallerySlugRoute
   PostsSlugRoute: typeof PostsSlugRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/changelog'
       fullPath: '/changelog'
       preLoaderRoute: typeof ChangelogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/work': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   ChangelogRoute: ChangelogRoute,
+  PrivacyRoute: PrivacyRoute,
   WorkRoute: WorkRoute,
   GallerySlugRoute: GallerySlugRoute,
   PostsSlugRoute: PostsSlugRoute,

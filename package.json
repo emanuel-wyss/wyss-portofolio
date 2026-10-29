@@ -34,6 +34,7 @@
     "@fontsource/monaspace-neon": "^5.3.0",
     "@fontsource/silkscreen": "^5.3.0",
     "@payloadcms/db-postgres": "^3.92.1",
+    "@payloadcms/graphql": "3.92.1",
     "@payloadcms/plugin-cloud-storage": "^3.92.1",
     "@payloadcms/richtext-lexical": "^3.92.1",
     "@payloadcms/storage-s3": "^3.92.1",
@@ -52,23 +53,25 @@
     "sharp": "^0.35.5"
   },
   "devDependencies": {
+    "@payloadcms/next": "3.92.1",
+    "@payloadcms/richtext-slate": "3.92.1",
     "@storybook/blocks": "^8.6.14",
     "@storybook/test": "^8.6.15",
     "@storybook/test-runner": "^0.24.5",
-    "@typescript-eslint/eslint-plugin": "^8.72.1",
-    "@typescript-eslint/parser": "^8.72.1",
-    "@vitest/coverage-v8": "^4.1.12",
-    "@vitest/ui": "^4.1.12",
-    "@vitejs/plugin-react": "^6.1.2",
+    "@types/bun": "^1.4.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.72.1",
+    "@typescript-eslint/parser": "^8.72.1",
+    "@vitejs/plugin-react": "^6.1.2",
+    "@vitest/coverage-v8": "^4.1.12",
+    "@vitest/ui": "^4.1.12",
     "eslint": "^10.13.0",
     "happy-dom": "^20.14.6",
     "storybook": "^10.6.5",
     "typescript": "^6.0.3",
     "vite": "^8.3.5",
-    "vitest": "^4.1.12",
-    "@types/bun": "^1.4.4"
+    "vitest": "^4.1.12"
   },
   "private": true
 }

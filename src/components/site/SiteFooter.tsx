@@ -215,7 +215,8 @@ export function SiteFooter() {
 
       <div className="site-footer-bottom">
         <p className="footer-privacy">
-          <span>PRIVACY //</span> ZERO TRACKING · ZERO COOKIES · ZERO THIRD-PARTY FONTS · 100% SELF-HOSTED
+          <span>PRIVACY //</span> ZERO TRACKING · ZERO COOKIES · ZERO THIRD-PARTY FONTS · 100% SELF-HOSTED ·{' '}
+          <a href="/privacy">DETAILS →</a>
         </p>
       </div>
     </footer>

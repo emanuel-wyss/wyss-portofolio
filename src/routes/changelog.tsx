@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 export const Route = createFileRoute('/changelog')({ component: ChangelogPage });
 
 const entries = [
+  ['2026-10-29', 'Added /privacy page, 4K-capped lightbox images, and fixed the gallery lightbox crash'],
   ['2026-10-29', 'Added nerdy gallery lightbox with EXIF/image metadata inspector, installed sharp, and redesigned startpage'],
   ['2026-10-29', 'Added anonymized private-repo commit & tech-stack aggregation + breakdancing Halloween ghost'],
   ['2026-10-29', 'Upgraded Payload CMS to 3.92.1, Next.js to 16.4.3, React to 19.3.1, and Vite to 8.3.5'],

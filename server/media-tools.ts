@@ -57,7 +57,7 @@ function formatCapturedAt(dt: unknown, offset?: string): string | undefined {
 // In-memory caches so repeated gallery visits are instant.
 const exifCache = new Map<string, ImageExif>();
 const thumbCache = new Map<string, Uint8Array>();
-const MAX_THUMB_CACHE = 80;
+const MAX_THUMB_CACHE = 40;
 
 export async function getExifAndThumb(
   imageUrl: string,
@@ -136,7 +136,7 @@ export async function getExifAndThumb(
     const out = await sharp(buf)
       .rotate() // auto-orient via EXIF
       .resize({ width: wantThumbWidth, withoutEnlargement: true })
-      .webp({ quality: 80 })
+      .webp({ quality: wantThumbWidth > 1600 ? 86 : 80 })
       .toBuffer();
     thumb = new Uint8Array(out);
     if (thumbCache.size >= MAX_THUMB_CACHE) {
