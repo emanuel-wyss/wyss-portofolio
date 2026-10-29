@@ -89,23 +89,136 @@ function drawHeart(ctx: CanvasRenderingContext2D, x: number, y: number, size: nu
   ctx.fill();
 }
 
-function drawBat(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, phase: number, boss = false) {
-  const flap = Math.sin(phase) * size * 0.55;
+function drawGhost(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  phase: number,
+  vx: number,
+  mode: 'follow' | 'flee' | 'breakdance',
+  lookAngle: number
+) {
   ctx.save();
-  ctx.fillStyle = boss ? '#ff7518' : '#c8a8e0';
-  ctx.shadowColor = boss ? '#39ff14' : '#ff7518';
-  ctx.shadowBlur = boss ? 14 : 6;
+  ctx.translate(x, y);
+
+  const r = 22;
+  const danceColors = ['#39ff14', '#ff7518', '#00e5ff', '#ff00ff'];
+  const glowColor =
+    mode === 'breakdance'
+      ? danceColors[Math.floor(phase * 1.5) % danceColors.length]
+      : mode === 'flee'
+        ? '#ff7518'
+        : '#39ff14';
+
+  // Breakdance rotation (headspin + windmill + freeze) or directional tilt when gliding
+  if (mode === 'breakdance') {
+    const moveCycle = Math.floor(phase / 4) % 3;
+    if (moveCycle === 0) {
+      // Headspin upside-down with wobble
+      ctx.rotate(Math.PI + Math.sin(phase * 3.5) * 0.35);
+      ctx.scale(Math.cos(phase * 4.5), 1);
+    } else if (moveCycle === 1) {
+      // Full 360 windmill spin
+      ctx.rotate(phase * 3.2);
+    } else {
+      // B-boy side freeze bounce
+      ctx.rotate(-Math.PI * 0.38 + Math.sin(phase * 5) * 0.12);
+    }
+  } else {
+    const tilt = Math.max(-0.38, Math.min(0.38, vx * 0.055));
+    ctx.rotate(tilt);
+  }
+
+  ctx.shadowColor = glowColor;
+  ctx.shadowBlur = mode === 'breakdance' ? 20 : 12;
+  ctx.fillStyle = mode === 'flee' ? 'rgba(255, 240, 230, 0.94)' : 'rgba(245, 248, 255, 0.92)';
+  ctx.strokeStyle = glowColor;
+  ctx.lineWidth = 1.5;
+
+  // Sheet body with wavy skirt folds
   ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.quadraticCurveTo(x - size * 0.6, y - size * 0.65 - flap, x - size * 1.15, y - flap * 0.4);
-  ctx.quadraticCurveTo(x - size * 0.5, y + size * 0.15, x, y + size * 0.32);
-  ctx.quadraticCurveTo(x + size * 0.5, y + size * 0.15, x + size * 1.15, y - flap * 0.4);
-  ctx.quadraticCurveTo(x + size * 0.6, y - size * 0.65 - flap, x, y);
+  ctx.arc(0, -6, r, Math.PI, 0, false);
+  ctx.lineTo(r, 18);
+  const folds = 4;
+  const foldW = (r * 2) / folds;
+  for (let i = 0; i < folds; i++) {
+    const fx1 = r - i * foldW - foldW * 0.5;
+    const fx2 = r - (i + 1) * foldW;
+    const wave = Math.sin(phase * 2.2 + i * 1.3) * 4.5;
+    ctx.quadraticCurveTo(fx1, 24 + wave, fx2, 17 - wave * 0.3);
+  }
+  ctx.lineTo(-r, -6);
+  ctx.closePath();
   ctx.fill();
-  // tiny glowing eyes
-  ctx.fillStyle = boss ? '#39ff14' : '#ff3355';
-  ctx.fillRect(x - 3, y - 1, 2, 2);
-  ctx.fillRect(x + 1, y - 1, 2, 2);
+  ctx.stroke();
+
+  // Stubby ghost arms
+  const armWave = mode === 'breakdance' ? Math.sin(phase * 5) * 9 : mode === 'flee' ? -8 : Math.sin(phase * 1.8) * 3;
+  ctx.beginPath();
+  ctx.ellipse(-r - 3, 2 + armWave, 6, 3.5, -0.35, 0, Math.PI * 2);
+  ctx.ellipse(r + 3, 2 - armWave, 6, 3.5, 0.35, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Face details
+  ctx.shadowBlur = 0;
+  const ex = Math.cos(lookAngle) * 3.5;
+  const ey = Math.sin(lookAngle) * 2.5;
+
+  if (mode === 'breakdance') {
+    // Cool pixel shades while breakdancing
+    ctx.fillStyle = '#0a0612';
+    ctx.fillRect(-13, -12, 11, 6);
+    ctx.fillRect(2, -12, 11, 6);
+    ctx.fillRect(-2, -11, 4, 2);
+    ctx.fillStyle = glowColor;
+    ctx.fillRect(-11, -11, 4, 2);
+    ctx.fillRect(4, -11, 4, 2);
+    // boombox grin
+    ctx.strokeStyle = '#0a0612';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, -1, 5, 0.15, Math.PI - 0.15);
+    ctx.stroke();
+  } else if (mode === 'flee') {
+    // Wide startled eyes + O mouth + '!' panic marker
+    ctx.fillStyle = '#0a0612';
+    ctx.beginPath();
+    ctx.arc(-7 + ex * 0.5, -9 + ey * 0.5, 4.2, 0, Math.PI * 2);
+    ctx.arc(7 + ex * 0.5, -9 + ey * 0.5, 4.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(-7 + ex * 0.5, -9 + ey * 0.5, 1.5, 0, Math.PI * 2);
+    ctx.arc(7 + ex * 0.5, -9 + ey * 0.5, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0a0612';
+    ctx.beginPath();
+    ctx.ellipse(0, 1, 3.8, 5.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ff7518';
+    ctx.font = 'bold 14px "Geist Mono", monospace';
+    ctx.fillText('!', -3, -r - 12);
+  } else {
+    // Cute stalking eyes looking toward pointer
+    ctx.fillStyle = '#0a0612';
+    ctx.beginPath();
+    ctx.arc(-7 + ex, -9 + ey, 3.2, 0, Math.PI * 2);
+    ctx.arc(7 + ex, -9 + ey, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#39ff14';
+    ctx.beginPath();
+    ctx.arc(-6 + ex, -10 + ey, 1.1, 0, Math.PI * 2);
+    ctx.arc(8 + ex, -10 + ey, 1.1, 0, Math.PI * 2);
+    ctx.fill();
+    // Little spooky smile
+    ctx.strokeStyle = '#0a0612';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(ex * 0.4, -2 + ey * 0.3, 4, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+  }
+
   ctx.restore();
 }
 
@@ -205,13 +318,20 @@ export function EventCanvas({
     let lightningFlash = 0;
 
     // =========================================================================
-    // 1. HALLOWEEN STATE — Moon + swooping bats + ghost cursor trail
+    // 1. HALLOWEEN STATE — Delayed pointer-following Ghost that flees when approached & breakdances when idle
     // =========================================================================
-    type Bat = { x: number; y: number; vx: number; vy: number; size: number; phase: number; boss?: boolean; scared?: number };
-    type GhostNode = { x: number; y: number; life: number };
-    const bats: Bat[] = [];
-    const ghostTrail: GhostNode[] = [];
-    let batsClicked = 0;
+    type GhostWisp = { x: number; y: number; life: number; color: string };
+    const ghostWisps: GhostWisp[] = [];
+    const ghost = {
+      x: 240,
+      y: 200,
+      vx: 0,
+      vy: 0,
+      phase: 0,
+      idleFrames: 0,
+      fleeFrames: 0,
+      inited: false,
+    };
 
     // =========================================================================
     // 2. CHRISTMAS STATE — Falling snow + settling snowbank + wind brush
@@ -327,18 +447,10 @@ export function EventCanvas({
         }
       }
 
-      if (event === 'halloween' && bats.length === 0) {
-        const count = Math.round(8 * density);
-        for (let i = 0; i < count; i++) {
-          bats.push({
-            x: rand(0, width),
-            y: rand(40, height * 0.55),
-            vx: rand(0.9, 2.1) * (Math.random() < 0.5 ? 1 : -1),
-            vy: rand(-0.35, 0.35),
-            size: rand(9, 15),
-            phase: rand(0, Math.PI * 2),
-          });
-        }
+      if (event === 'halloween' && !ghost.inited) {
+        ghost.x = width * 0.68;
+        ghost.y = height * 0.34;
+        ghost.inited = true;
       } else if (event === 'christmas' && flakes.length === 0) {
         const count = Math.round(75 * density);
         for (let i = 0; i < count; i++) {
@@ -646,49 +758,118 @@ export function EventCanvas({
       }
 
       // =======================================================================
-      // 1. HALLOWEEN RENDER
+      // 1. HALLOWEEN RENDER — Stalking / Fleeing / Breakdancing Ghost
       // =======================================================================
       if (event === 'halloween') {
-        // Eerie moon in top right with parallax
-        const moonX = width - 110;
-        const moonY = 95 - (scrollY * 0.06) % 40;
-        ctx.save();
-        const grad = ctx.createRadialGradient(moonX, moonY, 8, moonX, moonY, 54);
-        grad.addColorStop(0, 'rgba(255, 230, 180, 0.85)');
-        grad.addColorStop(0.55, 'rgba(255, 117, 24, 0.35)');
-        grad.addColorStop(1, 'rgba(255, 117, 24, 0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(moonX, moonY, 54, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        ghost.idleFrames += dt;
+        ghost.phase += 0.09 * dt;
+        if (ghost.fleeFrames > 0) ghost.fleeFrames = Math.max(0, ghost.fleeFrames - dt);
 
-        // Spectral ghost trail following cursor
-        for (let i = ghostTrail.length - 1; i >= 0; i--) {
-          const g = ghostTrail[i];
-          g.life += dt;
-          const alpha = Math.max(0, 1 - g.life / 35);
-          ctx.fillStyle = `rgba(57, 255, 20, ${alpha * 0.28})`;
+        const hasPointer = pointerX > 0 && pointerY > 0;
+        const targetX = hasPointer ? pointerX : width * 0.5 + Math.cos(ghost.phase * 0.25) * 140;
+        const targetY = hasPointer ? pointerY : height * 0.4 + Math.sin(ghost.phase * 0.4) * 70;
+        const dx = targetX - ghost.x;
+        const dy = targetY - ghost.y;
+        const dist = Math.hypot(dx, dy);
+        const lookAngle = Math.atan2(dy, dx);
+
+        const isBreakdancing = hasPointer && ghost.idleFrames > 125 && ghost.fleeFrames <= 0;
+        const mode: 'follow' | 'flee' | 'breakdance' =
+          ghost.fleeFrames > 0 ? 'flee' : isBreakdancing ? 'breakdance' : 'follow';
+
+        if (mode === 'flee') {
+          // Keep bolting away from the pointer
+          const awayX = ghost.x - targetX;
+          const awayY = ghost.y - targetY;
+          const awayDist = Math.max(1, Math.hypot(awayX, awayY));
+          ghost.vx += (awayX / awayDist) * 0.55 * dt;
+          ghost.vy += (awayY / awayDist) * 0.55 * dt;
+          ghost.vx *= Math.pow(0.92, dt);
+          ghost.vy *= Math.pow(0.92, dt);
+        } else if (mode === 'breakdance') {
+          // Settle in place and spin / bounce to the beat
+          ghost.vx *= Math.pow(0.82, dt);
+          ghost.vy *= Math.pow(0.82, dt);
+
+          // Emit funky neon floor sparks while breakdancing
+          if (Math.random() < 0.35 * density && ghostWisps.length < 40) {
+            const dancePalette = ['#39ff14', '#ff7518', '#00e5ff', '#ff00ff'];
+            ghostWisps.push({
+              x: ghost.x + rand(-18, 18),
+              y: ghost.y + rand(8, 22),
+              life: 0,
+              color: dancePalette[Math.floor(Math.random() * dancePalette.length)],
+            });
+          }
+
+          // Pulsing beat ring under the breakdancing ghost
+          const ringR = 16 + ((ghost.phase * 9) % 28);
+          ctx.save();
+          ctx.strokeStyle = `rgba(57, 255, 20, ${Math.max(0, 0.55 - ringR / 60)})`;
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.arc(g.x, g.y - g.life * 0.4, (1 - alpha) * 14 + 4, 0, Math.PI * 2);
+          ctx.ellipse(ghost.x, ghost.y + 22, ringR, ringR * 0.35, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        } else {
+          // Follow pointer with smooth springy delay, stopping politely ~58px away
+          const desiredDist = 58;
+          if (dist > desiredDist) {
+            const pull = Math.min(0.055, (dist - desiredDist) * 0.00045);
+            ghost.vx += dx * pull * dt;
+            ghost.vy += dy * pull * dt;
+          }
+          ghost.vx *= Math.pow(0.89, dt);
+          ghost.vy *= Math.pow(0.89, dt);
+
+          if (Math.hypot(ghost.vx, ghost.vy) > 0.6 && Math.random() < 0.3 && ghostWisps.length < 40) {
+            ghostWisps.push({
+              x: ghost.x + rand(-6, 6),
+              y: ghost.y + 14,
+              life: 0,
+              color: 'rgba(57, 255, 20, 0.45)',
+            });
+          }
+        }
+
+        ghost.x += ghost.vx * dt;
+        ghost.y += (ghost.vy + Math.sin(ghost.phase * 1.4) * 0.35) * dt;
+
+        // Keep ghost inside the viewport margins
+        const margin = 38;
+        if (ghost.x < margin) {
+          ghost.x = margin;
+          ghost.vx = Math.abs(ghost.vx) * 0.7;
+        }
+        if (ghost.x > width - margin) {
+          ghost.x = width - margin;
+          ghost.vx = -Math.abs(ghost.vx) * 0.7;
+        }
+        if (ghost.y < margin + 30) {
+          ghost.y = margin + 30;
+          ghost.vy = Math.abs(ghost.vy) * 0.7;
+        }
+        if (ghost.y > height - margin) {
+          ghost.y = height - margin;
+          ghost.vy = -Math.abs(ghost.vy) * 0.7;
+        }
+
+        // Render ectoplasm / breakdance wisps behind the ghost
+        for (let i = ghostWisps.length - 1; i >= 0; i--) {
+          const w = ghostWisps[i];
+          w.life += dt;
+          const alpha = Math.max(0, 1 - w.life / 32);
+          ctx.save();
+          ctx.globalAlpha = alpha * 0.6;
+          ctx.fillStyle = w.color;
+          ctx.beginPath();
+          ctx.arc(w.x, w.y - w.life * 0.35, (1 - alpha) * 7 + 2.5, 0, Math.PI * 2);
           ctx.fill();
-          if (g.life >= 35) ghostTrail.splice(i, 1);
+          ctx.restore();
+          if (w.life >= 32) ghostWisps.splice(i, 1);
         }
 
-        // Bats flying & reacting to cursor
-        for (const b of bats) {
-          b.phase += (b.scared ? 0.42 : 0.2) * dt;
-          if (b.scared && b.scared > 0) b.scared -= dt;
-          b.x += b.vx * dt;
-          b.y += (b.vy + Math.sin(b.phase * 0.5) * 0.35) * dt;
-
-          if (b.x > width + 40) b.x = -35;
-          if (b.x < -40) b.x = width + 35;
-          if (b.y < 30) b.vy = Math.abs(b.vy) + 0.2;
-          if (b.y > height * 0.75) b.vy = -Math.abs(b.vy) - 0.2;
-
-          drawBat(ctx, b.x, b.y, b.size, b.phase, b.boss);
-        }
+        drawGhost(ctx, ghost.x, ghost.y, ghost.phase, ghost.vx, mode, lookAngle);
       }
 
       // =======================================================================
@@ -1092,8 +1273,24 @@ export function EventCanvas({
       pointerY = e.clientY;
       pointerSpeed = Math.hypot(pointerX - prevPointerX, pointerY - prevPointerY);
 
-      if (event === 'halloween' && Math.random() < 0.45) {
-        ghostTrail.push({ x: pointerX, y: pointerY, life: 0 });
+      if (event === 'halloween') {
+        ghost.idleFrames = 0;
+        const pvx = pointerX - prevPointerX;
+        const pvy = pointerY - prevPointerY;
+        const toGhostX = ghost.x - pointerX;
+        const toGhostY = ghost.y - pointerY;
+        const distToGhost = Math.hypot(toGhostX, toGhostY);
+
+        if (distToGhost > 1 && distToGhost < 230) {
+          // Dot product: positive when the pointer is moving towards the ghost
+          const approachSpeed = (pvx * toGhostX + pvy * toGhostY) / distToGhost;
+          if (approachSpeed > 2.2 || distToGhost < 75) {
+            ghost.fleeFrames = 36;
+            ghost.vx += (toGhostX / distToGhost) * 3.4;
+            ghost.vy += (toGhostY / distToGhost) * 3.4;
+            unlock('halloween', 'spooked-the-ghost');
+          }
+        }
       } else if (event === 'christmas' && pointerSpeed > 42) {
         // Rapidly shaking cursor shakes settled snow loose!
         for (let i = 0; i < snowBins; i++) {
@@ -1126,28 +1323,16 @@ export function EventCanvas({
       unlock(event, 'first-interaction');
 
       if (event === 'halloween') {
-        let hitBat = false;
-        for (const b of bats) {
-          if (Math.hypot(b.x - x, b.y - y) < b.size * 2.2) {
-            b.vx = (b.x - x) * 0.25 || 3.2;
-            b.vy = -2.8;
-            b.scared = 45;
-            hitBat = true;
-            batsClicked += 1;
-          }
-        }
-        if (hitBat && batsClicked === 3) {
-          bats.push({ x: -30, y: y, vx: 2.6, vy: -0.2, size: 24, phase: 0, boss: true });
-          unlock('halloween', 'boss-bat-summoned');
-        } else if (!hitBat && bats.length < 18) {
-          bats.push({
-            x,
-            y,
-            vx: rand(1.4, 2.8) * (Math.random() < 0.5 ? 1 : -1),
-            vy: rand(-1.2, -0.3),
-            size: rand(10, 15),
-            phase: 0,
-          });
+        const toGhostX = ghost.x - x;
+        const toGhostY = ghost.y - y;
+        const dist = Math.max(1, Math.hypot(toGhostX, toGhostY));
+        if (dist < 160) {
+          ghost.fleeFrames = 45;
+          ghost.vx = (toGhostX / dist) * 8.5;
+          ghost.vy = (toGhostY / dist) * 8.5;
+        } else {
+          // Clicking far away makes the ghost do an instant breakdance spin!
+          ghost.idleFrames = 140;
         }
       } else if (event === 'christmas') {
         // Carve a scoop out of the snowbank or puff snow into the air

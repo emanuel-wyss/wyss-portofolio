@@ -11,7 +11,7 @@ export const EVENT_CATALOG = [
     id: 'halloween',
     name: 'Halloween',
     window: 'Oct 28 – Oct 31',
-    interaction: 'Full moon, ghost trail & Boss Bat (click 3 bats)',
+    interaction: 'Ghost follows pointer with lag, flees when approached, breakdances when idle',
   },
   {
     id: 'christmas',

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 const events = [
-  ['halloween', 'Halloween — moon, ghost trail & boss bat'],
+  ['halloween', 'Halloween — stalking ghost (flees on approach, breakdances when idle)'],
   ['christmas', 'Christmas — snowbank accumulation & wind'],
   ['newyear', 'New Year — rockets & WYSS skywriting'],
   ['valentines', 'Valentine’s — heart constellation web'],
