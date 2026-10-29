@@ -16,6 +16,9 @@ const CHANGES = [
       'Lightbox zooms the clicked thumbnail into view and back again on close, over a transparent liquid-glass backdrop.',
       'Lightbox images are clamped to the viewport, with a full-resolution download button and keyboard/swipe navigation.',
       'Fixed site-wide click freeze caused by the app rendering its own <html>/<body> inside #app.',
+      'Switching images now melts one into the next: splash ripples on click/arrows, a linear wave when swiping, accent-tinted and blurred through the midpoint, with the frame morphing between aspect ratios.',
+      'Halloween ghost learned new breakdance moves (with cap and tracksuit) and occasionally turns into a see-through phantom.',
+      'Event sounds are now melodic: notes follow pointer position, a held tone tracks a pressed pointer, achievements play a short melody.',
     ],
   },
   {
