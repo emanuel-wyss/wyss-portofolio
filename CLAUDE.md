@@ -45,7 +45,7 @@ Always test locally before pushing or committing:
 
 1. `bun test` — run test suite
 2. `bun run build` — run production build
-3. `bun run dev` (or `bun --hot ./server/index.ts`) — verify local dev server works
+3. `bun run dev` (or `bun --hot ./server/index.ts`) — start local dev server to manually test and verify functionality before pushing
 
 ```ts#index.test.ts
 import { test, expect } from "bun:test";
