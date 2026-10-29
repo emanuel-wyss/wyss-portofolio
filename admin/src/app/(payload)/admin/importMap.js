@@ -22,6 +22,7 @@ import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997e
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { EventSettingsAutoFill as EventSettingsAutoFill_3091d4f700d6cf98b8d39fdedbc31385 } from '@/components/EventSettingsAutoFill'
+import { ColorPickerField as ColorPickerField_37fac220471b04d5e6dda304975d2c1e } from '@/components/ColorPickerField'
 import { EventPreviewField as EventPreviewField_d57aab921090b2f9ad2ce5665c79969b } from '@/components/EventPreviewField'
 import { DeploymentDashboardField as DeploymentDashboardField_fe6e4fb94302cefd1bacea54be98af40 } from '@/components/DeploymentDashboardField'
 import { AdminDashboard as AdminDashboard_d2e5e8cdcf265e3c61c4d683161d9698 } from '@/components/AdminDashboard'
@@ -54,6 +55,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/EventSettingsAutoFill#EventSettingsAutoFill": EventSettingsAutoFill_3091d4f700d6cf98b8d39fdedbc31385,
+  "@/components/ColorPickerField#ColorPickerField": ColorPickerField_37fac220471b04d5e6dda304975d2c1e,
   "@/components/EventPreviewField#EventPreviewField": EventPreviewField_d57aab921090b2f9ad2ce5665c79969b,
   "@/components/DeploymentDashboardField#DeploymentDashboardField": DeploymentDashboardField_fe6e4fb94302cefd1bacea54be98af40,
   "@/components/AdminDashboard#AdminDashboard": AdminDashboard_d2e5e8cdcf265e3c61c4d683161d9698,

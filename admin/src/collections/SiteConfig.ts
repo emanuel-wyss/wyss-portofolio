@@ -183,9 +183,27 @@ export const SiteConfig: GlobalConfig = {
             {
               type: 'row',
               fields: [
-                { name: 'announcement', type: 'text' },
-                { name: 'primaryColor', type: 'text' },
-                { name: 'accentColor', type: 'text' },
+                { name: 'announcement', label: 'Announcement', type: 'text' },
+                {
+                  name: 'primaryColor',
+                  label: 'Primary Color',
+                  type: 'text',
+                  admin: {
+                    components: {
+                      Field: '@/components/ColorPickerField#ColorPickerField',
+                    },
+                  },
+                },
+                {
+                  name: 'accentColor',
+                  label: 'Accent Color',
+                  type: 'text',
+                  admin: {
+                    components: {
+                      Field: '@/components/ColorPickerField#ColorPickerField',
+                    },
+                  },
+                },
               ],
             },
           ],
