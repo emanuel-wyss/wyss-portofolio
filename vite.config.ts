@@ -8,11 +8,31 @@ export default defineConfig({
     host: true,
     port: 4321,
     proxy: {
-      '/api': 'http://localhost:3000',
-      '/posts': 'http://localhost:3000',
-      '/snippets': 'http://localhost:3000',
-      '/gallery': 'http://localhost:3000',
-      '/health': 'http://localhost:3000',
+      '/api': {
+        target: 'https://wyss.rocks',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/posts': {
+        target: 'https://wyss.rocks',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/snippets': {
+        target: 'https://wyss.rocks',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/gallery': {
+        target: 'https://wyss.rocks',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/health': {
+        target: 'https://wyss.rocks',
+        changeOrigin: true,
+        secure: true,
+      },
     },
   },
   build: {
