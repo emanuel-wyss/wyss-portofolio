@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react';
-import type { SpecialEventType } from '../../lib/theme';
+import type { SpecialEventType, WeatherType } from '../../lib/theme';
 
 type Props = {
   event?: SpecialEventType;
+  weather?: WeatherType;
+  isDaytime?: boolean;
   reducedMotion: boolean;
   intensity?: 'quiet' | 'standard' | 'party';
   soundEnabled?: boolean;
@@ -137,11 +139,18 @@ function drawDecoratedEgg(
   ctx.restore();
 }
 
-export function EventCanvas({ event, reducedMotion, intensity = 'standard', soundEnabled = false }: Props) {
+export function EventCanvas({
+  event,
+  weather = 'sunny',
+  isDaytime = true,
+  reducedMotion,
+  intensity = 'standard',
+  soundEnabled = false,
+}: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!event || reducedMotion) return;
+    if (reducedMotion) return;
     const canvas = ref.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -161,6 +170,23 @@ export function EventCanvas({ event, reducedMotion, intensity = 'standard', soun
     let scrollY = window.scrollY;
 
     const density = intensity === 'quiet' ? 0.55 : intensity === 'party' ? 1.35 : 1;
+
+    // =========================================================================
+    // 0. WEATHER PARTICLE STATE — Always active based on live weather
+    // =========================================================================
+    type WeatherParticle = {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      size: number;
+      alpha: number;
+      phase: number;
+    };
+    type RainSplash = { x: number; y: number; r: number; maxR: number };
+    const weatherParticles: WeatherParticle[] = [];
+    const splashes: RainSplash[] = [];
+    let lightningFlash = 0;
 
     // =========================================================================
     // 1. HALLOWEEN STATE — Moon + swooping bats + ghost cursor trail
@@ -226,6 +252,48 @@ export function EventCanvas({ event, reducedMotion, intensity = 'standard', soun
     let tearFrames = 0;
 
     const initScene = () => {
+      if (weatherParticles.length === 0) {
+        const baseCount =
+          weather === 'rainy' || weather === 'stormy'
+            ? 85
+            : weather === 'snowy'
+              ? 65
+              : weather === 'windy'
+                ? 45
+                : weather === 'foggy'
+                  ? 18
+                  : 38;
+        const count = Math.round(baseCount * density);
+        for (let i = 0; i < count; i++) {
+          weatherParticles.push({
+            x: rand(0, width),
+            y: rand(0, height),
+            vx:
+              weather === 'windy'
+                ? rand(2.4, 5.2)
+                : weather === 'rainy' || weather === 'stormy'
+                  ? rand(-1.4, -0.6)
+                  : rand(-0.35, 0.35),
+            vy:
+              weather === 'rainy' || weather === 'stormy'
+                ? rand(6.5, 11.5)
+                : weather === 'snowy'
+                  ? rand(0.6, 1.5)
+                  : weather === 'windy'
+                    ? rand(-0.3, 0.5)
+                    : rand(-0.2, 0.25),
+            size:
+              weather === 'foggy'
+                ? rand(45, 95)
+                : weather === 'cloudy'
+                  ? rand(2.2, 4.8)
+                  : rand(1.4, 3.2),
+            alpha: rand(0.22, 0.68),
+            phase: rand(0, Math.PI * 2),
+          });
+        }
+      }
+
       if (event === 'halloween' && bats.length === 0) {
         const count = Math.round(8 * density);
         for (let i = 0; i < count; i++) {
@@ -384,6 +452,113 @@ export function EventCanvas({ event, reducedMotion, intensity = 'standard', soun
       const dt = Math.min(2, (time - last) / 16.67 || 1);
       last = time;
       ctx.clearRect(0, 0, width, height);
+
+      // =======================================================================
+      // 0. WEATHER PARTICLE RENDER (always active unless Christmas already snows)
+      // =======================================================================
+      if (!(event === 'christmas' && weather === 'snowy')) {
+        if (weather === 'stormy' && Math.random() < 0.004 * density) {
+          lightningFlash = 1;
+        }
+        if (lightningFlash > 0) {
+          ctx.fillStyle = `rgba(210, 230, 255, ${lightningFlash * 0.18})`;
+          ctx.fillRect(0, 0, width, height);
+          lightningFlash = Math.max(0, lightningFlash - 0.08 * dt);
+        }
+
+        for (const p of weatherParticles) {
+          p.phase += 0.04 * dt;
+          // Subtle cursor wind interaction
+          const dx = p.x - pointerX;
+          const dy = p.y - pointerY;
+          const dist = Math.hypot(dx, dy);
+          const windX = dist < 120 && dist > 1 ? (dx / dist) * 0.6 : 0;
+
+          if (weather === 'rainy' || weather === 'stormy') {
+            p.x += (p.vx + windX) * dt;
+            p.y += p.vy * dt;
+            ctx.strokeStyle = `rgba(130, 190, 255, ${p.alpha * 0.65})`;
+            ctx.lineWidth = weather === 'stormy' ? 1.5 : 1.1;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + p.vx * 1.8, p.y + p.vy * 1.3);
+            ctx.stroke();
+
+            if (p.y >= height - 4) {
+              if (splashes.length < 32 && Math.random() < 0.35) {
+                splashes.push({ x: p.x, y: height - 3, r: 1, maxR: rand(6, 13) });
+              }
+              p.y = -12;
+              p.x = rand(0, width + 80);
+            }
+            if (p.x < -40) p.x = width + 20;
+          } else if (weather === 'snowy') {
+            p.x += (p.vx + Math.sin(p.phase) * 0.35 + windX) * dt;
+            p.y += p.vy * dt;
+            ctx.fillStyle = `rgba(245, 250, 255, ${p.alpha * 0.8})`;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            if (p.y > height + 10) {
+              p.y = -10;
+              p.x = rand(0, width);
+            }
+          } else if (weather === 'windy') {
+            p.x += (p.vx + windX) * dt;
+            p.y += (p.vy + Math.sin(p.phase) * 0.3) * dt;
+            ctx.strokeStyle = `rgba(255, 215, 0, ${p.alpha * 0.35})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(p.x - p.vx * 5, p.y);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+            if (p.x > width + 40) {
+              p.x = -30;
+              p.y = rand(0, height);
+            }
+          } else if (weather === 'foggy') {
+            p.x += (0.22 + windX * 0.2) * dt;
+            const grad = ctx.createRadialGradient(p.x, p.y, 4, p.x, p.y, p.size);
+            grad.addColorStop(0, `rgba(200, 210, 220, ${p.alpha * 0.12})`);
+            grad.addColorStop(1, 'rgba(200, 210, 220, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            if (p.x - p.size > width) p.x = -p.size;
+          } else {
+            // cloudy or sunny / clear night stars
+            p.x += (p.vx + windX * 0.3) * dt;
+            p.y += (p.vy + Math.cos(p.phase) * 0.12) * dt;
+            if (p.x < 0) p.x += width;
+            if (p.x > width) p.x -= width;
+            if (p.y < 0) p.y += height;
+            if (p.y > height) p.y -= height;
+
+            const twinkle = 0.55 + 0.45 * Math.sin(p.phase * 1.4);
+            ctx.fillStyle =
+              weather === 'cloudy'
+                ? `rgba(195, 205, 220, ${p.alpha * 0.42 * twinkle})`
+                : isDaytime
+                  ? `rgba(255, 215, 80, ${p.alpha * 0.5 * twinkle})`
+                  : `rgba(240, 248, 255, ${p.alpha * 0.75 * twinkle})`;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * 0.75, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        for (let i = splashes.length - 1; i >= 0; i--) {
+          const s = splashes[i];
+          s.r += 0.45 * dt;
+          ctx.strokeStyle = `rgba(150, 205, 255, ${Math.max(0, (1 - s.r / s.maxR) * 0.5)})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.ellipse(s.x, s.y, s.r, s.r * 0.35, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          if (s.r >= s.maxR) splashes.splice(i, 1);
+        }
+      }
 
       // =======================================================================
       // 1. HALLOWEEN RENDER
@@ -859,6 +1034,7 @@ export function EventCanvas({ event, reducedMotion, intensity = 'standard', soun
     };
 
     const onPointerDown = (e: PointerEvent) => {
+      if (!event) return;
       const x = e.clientX;
       const y = e.clientY;
       playEventSound(soundEnabled, event, Math.floor(Math.random() * 6));
@@ -1011,8 +1187,8 @@ export function EventCanvas({ event, reducedMotion, intensity = 'standard', soun
       window.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [event, reducedMotion, intensity, soundEnabled]);
+  }, [event, weather, isDaytime, reducedMotion, intensity, soundEnabled]);
 
-  if (!event || reducedMotion) return null;
-  return <canvas ref={ref} className={`event-canvas event-canvas--${event}`} aria-hidden="true" />;
+  if (reducedMotion) return null;
+  return <canvas ref={ref} className={`event-canvas ${event ? `event-canvas--${event}` : ''}`} aria-hidden="true" />;
 }

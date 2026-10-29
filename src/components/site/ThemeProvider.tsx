@@ -172,7 +172,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       <div className="fx-layer fx-glitch" aria-hidden="true" />
       <div className="fx-layer fx-scanlines" aria-hidden="true" />
       <div className="fx-layer fx-event" aria-hidden="true" />
-      <EventCanvas event={state?.event} reducedMotion={state?.reducedMotion ?? true} intensity={eventSettings?.event_settings?.intensity || effectsIntensity} soundEnabled={soundEnabled} />
+      <EventCanvas
+        event={state?.event}
+        weather={state?.weather}
+        isDaytime={state?.isDaytime ?? true}
+        reducedMotion={state?.reducedMotion ?? true}
+        intensity={eventSettings?.event_settings?.intensity || effectsIntensity}
+        soundEnabled={soundEnabled}
+      />
     </ThemeContext.Provider>
   );
 }

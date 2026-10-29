@@ -1,47 +1,51 @@
 import { useEffect, useState } from 'react';
 import { getSiteConfig, type SiteConfig } from '../../lib/api';
-import { ALL_EVENTS, getEventWindow, type SpecialEventType } from '../../lib/theme';
+import { ALL_EVENTS, type ColorMode, type EffectsIntensity, type SpecialEventType } from '../../lib/theme';
 import { useTheme } from './ThemeProvider';
-import { ThemeToggle } from './ThemeToggle';
 
 const WEATHER_LABELS: Record<string, string> = {
-  sunny: 'Sunny',
-  cloudy: 'Cloudy',
-  rainy: 'Rainy',
-  foggy: 'Foggy',
-  stormy: 'Stormy',
-  windy: 'Windy',
-  snowy: 'Snowy',
+  sunny: 'sunny',
+  cloudy: 'cloudy',
+  rainy: 'rainy',
+  foggy: 'foggy',
+  stormy: 'stormy',
+  windy: 'windy',
+  snowy: 'snowy',
 };
 
 const SEASON_LABELS: Record<string, string> = {
-  spring: 'Spring',
-  summer: 'Summer',
-  autumn: 'Autumn',
-  winter: 'Winter',
+  spring: 'spring',
+  summer: 'summer',
+  autumn: 'autumn',
+  winter: 'winter',
 };
 
 const SPECIAL_LABELS: Record<string, string> = {
-  christmas: 'Christmas',
-  easter: 'Easter',
-  halloween: 'Halloween',
-  newyear: 'New Year',
-  valentines: "Valentine's",
+  christmas: 'christmas',
+  easter: 'easter',
+  halloween: 'halloween',
+  newyear: 'newyear',
+  valentines: 'valentines',
+  pride: 'pride',
+  swiss: 'swiss',
+  aprilfools: 'aprilfools',
 };
+
+const MODE_ORDER: ColorMode[] = ['auto', 'dark', 'light'];
+const INTENSITY_ORDER: EffectsIntensity[] = ['quiet', 'standard', 'party'];
 
 type FooterConfig = Pick<SiteConfig, 'tagline' | 'social_links' | 'cv_url' | 'event_settings'>;
 
 const DEFAULT_CONFIG: FooterConfig = {
   tagline: 'Building beautiful, functional web experiences',
   social_links: [
-    { platform: 'github', url: 'https://github.com' },
-    { platform: 'linkedin', url: 'https://linkedin.com' },
+    { platform: 'github', url: 'https://github.com/emanuel-wyss' },
+    { platform: 'linkedin', url: 'https://www.linkedin.com/in/emanuel-wyss/' },
   ],
 };
 
 export function SiteFooter() {
   const [config, setConfig] = useState<FooterConfig>(DEFAULT_CONFIG);
-  const [achievementCount, setAchievementCount] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -51,6 +55,7 @@ export function SiteFooter() {
         tagline: siteConfig.tagline || DEFAULT_CONFIG.tagline,
         social_links: siteConfig.social_links || DEFAULT_CONFIG.social_links,
         cv_url: siteConfig.cv_url,
+        event_settings: siteConfig.event_settings,
       });
     });
 
@@ -59,24 +64,21 @@ export function SiteFooter() {
     };
   }, []);
 
-  const { state, effectsPaused, toggleEffectsPaused, effectsIntensity, setIntensity, weatherNow, preferredEvent, setPreferredEventChoice, soundEnabled, setSoundEnabled } = useTheme();
+  const {
+    mode,
+    setMode,
+    state,
+    effectsPaused,
+    toggleEffectsPaused,
+    effectsIntensity,
+    setIntensity,
+    weatherNow,
+    preferredEvent,
+    setPreferredEventChoice,
+    soundEnabled,
+    setSoundEnabled,
+  } = useTheme();
 
-  useEffect(() => {
-    const update = () => {
-      try {
-        const data = JSON.parse(localStorage.getItem('wyss-event-achievements') || '{}');
-        setAchievementCount(Object.values(data as Record<string, string[]>).flat().length);
-      } catch { /* ignore */ }
-    };
-    update();
-    window.addEventListener('wyss-achievement', update);
-    return () => window.removeEventListener('wyss-achievement', update);
-  }, []);
-
-  const eventCountdown = state?.event
-    ? Math.max(0, getEventWindow(state.event).end.getTime() - Date.now())
-    : 0;
-  const eventDaysLeft = eventCountdown ? Math.ceil(eventCountdown / 86400000) : 0;
   const timezone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'local';
   const sourceLinks = [
     { label: 'Codeberg', url: 'https://codeberg.org/maenu/wyss-portofolio' },
@@ -85,7 +87,7 @@ export function SiteFooter() {
 
   const themeInfo = {
     mode: state ? state.resolved : 'dark',
-    daytime: state ? (state.isDaytime ? 'Day' : 'Night') : '—',
+    daytime: state ? (state.isDaytime ? 'day' : 'night') : '—',
     weather: state?.weather ? WEATHER_LABELS[state.weather] : '—',
     season:
       state && state.event
@@ -95,14 +97,39 @@ export function SiteFooter() {
           : '—',
   };
 
+  const cycleMode = () => {
+    const next = MODE_ORDER[(MODE_ORDER.indexOf(mode) + 1) % MODE_ORDER.length];
+    setMode(next);
+  };
+
+  const cycleIntensity = () => {
+    const next = INTENSITY_ORDER[(INTENSITY_ORDER.indexOf(effectsIntensity) + 1) % INTENSITY_ORDER.length];
+    setIntensity(next);
+  };
+
+  const cycleEvent = () => {
+    const options: Array<SpecialEventType | undefined> = [undefined, ...ALL_EVENTS];
+    const currentIdx = options.indexOf(preferredEvent);
+    const next = options[(currentIdx + 1) % options.length];
+    setPreferredEventChoice(next);
+  };
+
+  const wxSummary = `${themeInfo.weather}${weatherNow?.temperatureC != null ? ` ${weatherNow.temperatureC}°C` : ''}${weatherNow?.location ? ` @ ${weatherNow.location}` : ''}`;
+
   return (
     <footer className="site-footer">
       <div className="site-footer-content">
         <div className="footer-identity">
           <p className="muted">© {new Date().getFullYear()} Wyss. All rights reserved.</p>
-          <p className="footer-telemetry"><span>SYS</span> ONLINE · <span>API</span> OK · <span>WX</span> {weatherNow?.location || 'BERN'}</p>
+          <p className="footer-telemetry">
+            <span>SYS</span> ONLINE · <span>API</span> OK · <span>WX</span> {weatherNow?.location || 'BERN'}
+          </p>
           <nav className="footer-source" aria-label="Source repositories">
-            {sourceLinks.map((link) => <a key={link.label} href={link.url} target="_blank" rel="noreferrer">{link.label} ↗</a>)}
+            {sourceLinks.map((link) => (
+              <a key={link.label} href={link.url} target="_blank" rel="noreferrer">
+                {link.label} ↗
+              </a>
+            ))}
           </nav>
         </div>
 
@@ -119,36 +146,85 @@ export function SiteFooter() {
             Download CV
           </a>
         ) : null}
+      </div>
 
-        <div>
-          <p className="muted">CURRENT THEME</p>
-          <ul className="site-theme-meta">
-            <li>mode: {themeInfo.mode}</li>
-            <li>weather: {themeInfo.weather}{weatherNow?.temperatureC != null ? ` · ${weatherNow.temperatureC}°C` : ''}</li>
-            {weatherNow?.location ? <li>location: {weatherNow.location}</li> : null}
-            <li>daytime: {themeInfo.daytime}</li>
-            <li>season: {themeInfo.season}</li>
-            {state?.event ? <li aria-live="polite">event: {eventDaysLeft} day{eventDaysLeft === 1 ? '' : 's'} left</li> : null}
-            <li>timezone: {timezone}</li>
-          </ul>
-          {state?.event && config.event_settings?.announcement ? <p className="event-announcement">{config.event_settings.announcement}</p> : null}
-          <div className="footer-controls">
-            <ThemeToggle />
-            <button type="button" className="control-chip" onClick={toggleEffectsPaused} aria-pressed={effectsPaused}>
-              {effectsPaused ? '▶ effects' : 'Ⅱ effects'}
-            </button>
-            <details className="controls-menu">
-              <summary>⚙ controls</summary>
-              <div className="controls-popover">
-                <label><span>intensity</span><select value={effectsIntensity} onChange={(event) => setIntensity(event.target.value as typeof effectsIntensity)}><option value="quiet">quiet</option><option value="standard">standard</option><option value="party">party</option></select></label>
-                <label><span>event</span><select value={preferredEvent || ''} onChange={(event) => setPreferredEventChoice((event.target.value || undefined) as SpecialEventType | undefined)}><option value="">auto</option>{ALL_EVENTS.map((event) => <option key={event} value={event}>{event}</option>)}</select></label>
-                <label className="toggle-row"><span>sound</span><input type="checkbox" checked={soundEnabled} onChange={(event) => setSoundEnabled(event.target.checked)} /></label>
-              </div>
-            </details>
-          </div>
-          {achievementCount > 0 ? <p className="muted event-achievements">{achievementCount} discovery{achievementCount === 1 ? '' : 'ies'}</p> : null}
+      {/* Full-width concise terminal status + inline controls bar */}
+      <div className="site-theme-bar" role="region" aria-label="Current theme and effect controls">
+        <div className="site-theme-readout">
+          <span className="theme-bar-tag">CURRENT THEME</span>
+          <span>
+            mode:<b>{themeInfo.mode}</b>
+          </span>
+          <span className="sep">·</span>
+          <span>
+            wx:<b>{wxSummary}</b>
+          </span>
+          <span className="sep">·</span>
+          <span>
+            time:<b>{themeInfo.daytime}</b>
+          </span>
+          <span className="sep">·</span>
+          <span>
+            season:<b>{themeInfo.season}</b>
+          </span>
+          <span className="sep">·</span>
+          <span>
+            tz:<b>{timezone}</b>
+          </span>
+          {state?.event && config.event_settings?.announcement ? (
+            <>
+              <span className="sep">·</span>
+              <span className="event-announcement">{config.event_settings.announcement}</span>
+            </>
+          ) : null}
+        </div>
+
+        <div className="site-theme-actions">
+          <button
+            type="button"
+            className="term-chip"
+            onClick={cycleMode}
+            title="Click to cycle color mode (auto / dark / light)"
+          >
+            mode:{mode}
+          </button>
+          <button
+            type="button"
+            className="term-chip"
+            onClick={toggleEffectsPaused}
+            aria-pressed={effectsPaused}
+            title="Toggle visual effects"
+          >
+            fx:{effectsPaused ? 'paused' : 'on'}
+          </button>
+          <button
+            type="button"
+            className="term-chip"
+            onClick={cycleIntensity}
+            title="Click to cycle particle intensity (quiet / standard / party)"
+          >
+            int:{effectsIntensity}
+          </button>
+          <button
+            type="button"
+            className="term-chip"
+            onClick={cycleEvent}
+            title="Click to cycle event override (auto or specific event)"
+          >
+            event:{preferredEvent || 'auto'}
+          </button>
+          <button
+            type="button"
+            className="term-chip"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            aria-pressed={soundEnabled}
+            title="Toggle opt-in interaction sounds"
+          >
+            sfx:{soundEnabled ? 'on' : 'off'}
+          </button>
         </div>
       </div>
+
       <div className="site-footer-bottom">
         <p className="muted">{config.tagline}</p>
       </div>

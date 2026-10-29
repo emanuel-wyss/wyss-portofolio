@@ -52,23 +52,6 @@ body {
   background-position: center top;
 }
 
-/* Low-contrast network-map traces behind the workstation surface. */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: .18;
-  background:
-    radial-gradient(circle at 18% 22%, var(--accent) 0 1px, transparent 2px),
-    radial-gradient(circle at 78% 38%, var(--accent) 0 1px, transparent 2px),
-    radial-gradient(circle at 42% 76%, var(--accent) 0 1px, transparent 2px),
-    linear-gradient(24deg, transparent 49.8%, var(--border-color) 50%, transparent 50.2%),
-    linear-gradient(-18deg, transparent 49.8%, var(--border-color) 50%, transparent 50.2%);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 420px 300px, 520px 360px;
-}
-
 body::before {
   content: 'WYSS//ROCKS  •  SYSTEM ONLINE';
   position: fixed;
@@ -288,54 +271,86 @@ code {
   text-transform: capitalize;
 }
 
-.site-theme-meta {
-  list-style: none;
-  padding: 0;
-  margin-top: 0.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-}
-
-.footer-controls {
+.site-theme-bar {
+  max-width: 1200px;
+  margin: 0 auto 1.25rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
   display: flex;
   align-items: center;
-  gap: .5rem;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
   flex-wrap: wrap;
+  font: 11px var(--font-mono);
+  letter-spacing: 0.03em;
 }
 
-.control-chip,
-.controls-menu summary {
-  border: 1px solid var(--border-color);
-  background: transparent;
+.site-theme-readout {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
   color: var(--text-secondary);
-  padding: .35rem .55rem;
-  font: 10px var(--font-mono);
-  letter-spacing: .05em;
-  cursor: pointer;
-  list-style: none;
 }
-.control-chip:hover,
-.controls-menu summary:hover,
-.control-chip[aria-pressed='true'] { color: var(--accent); border-color: var(--accent); }
-.controls-menu { position: relative; }
-.controls-menu summary::-webkit-details-marker { display: none; }
-.controls-popover {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + .5rem);
-  z-index: 5;
-  min-width: 190px;
-  padding: .7rem;
+
+.site-theme-readout b {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.site-theme-readout .sep {
+  opacity: 0.45;
+}
+
+.theme-bar-tag {
+  color: var(--bg-primary);
+  background: var(--accent);
+  padding: 0.1rem 0.4rem;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  margin-right: 0.25rem;
+}
+
+.site-theme-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.term-chip {
   border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-  box-shadow: 0 10px 30px rgba(0,0,0,.3);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  padding: 0.2rem 0.5rem;
+  font: 11px var(--font-mono);
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
-.controls-popover label { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin: .4rem 0; font: 11px var(--font-mono); color: var(--text-secondary); }
-.controls-popover select { max-width: 105px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font: 11px var(--font-mono); }
-.toggle-row input { accent-color: var(--accent); }
+
+.term-chip::before {
+  content: '[';
+  color: var(--accent);
+  opacity: 0.65;
+  margin-right: 0.15rem;
+}
+
+.term-chip::after {
+  content: ']';
+  color: var(--accent);
+  opacity: 0.65;
+  margin-left: 0.15rem;
+}
+
+.term-chip:hover,
+.term-chip:focus-visible,
+.term-chip[aria-pressed='true'] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
 
 .site-footer-bottom {
   max-width: 1200px;
