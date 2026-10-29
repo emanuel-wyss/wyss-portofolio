@@ -149,4 +149,5 @@ function AboutPage() {
 const DEFAULT_SOCIALS = [
   { platform: 'github', url: 'https://github.com/emanuel-wyss' },
   { platform: 'linkedin', url: 'https://www.linkedin.com/in/emanuel-wyss/' },
+  { platform: 'instagram', url: 'https://www.instagram.com/maenu_wyss' },
 ];
