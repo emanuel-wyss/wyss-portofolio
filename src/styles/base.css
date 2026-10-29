@@ -1,0 +1,99 @@
+/* ===========================================================================
+   Base & Reset Styles
+   =========================================================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+body::before {
+  content: 'WYSS//ROCKS  •  SYSTEM ONLINE';
+  position: fixed;
+  right: 1rem;
+  bottom: .75rem;
+  z-index: 3;
+  color: var(--text-secondary);
+  opacity: .45;
+  font: 9px var(--font-pixel);
+  letter-spacing: .06em;
+  pointer-events: none;
+} 
+
+::selection {
+  color: var(--bg-primary);
+  background: var(--accent);
+}
+
+main {
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: var(--spacing-md);
+}
+
+h1 { font-size: 3rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+
+p {
+  margin-bottom: var(--spacing-md);
+  color: var(--text-secondary);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--text-primary);
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--accent-light);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+  position: relative;
+}
+
+.container::before {
+  content: attr(data-label);
+  position: absolute;
+  top: -1.25rem;
+  left: var(--spacing-lg);
+  color: var(--text-secondary);
+  opacity: .6;
+  font: 9px var(--font-pixel);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.muted {
+  color: var(--text-secondary);
+}

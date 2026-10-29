@@ -1,0 +1,32 @@
+/* ===========================================================================
+   Design Tokens & Variables
+   =========================================================================== */
+:root {
+  color-scheme: dark;
+  --bg-primary: #0a0a08;
+  --bg-secondary: #141410;
+  --text-primary: #f8f8f0;
+  --text-secondary: #c0c0a0;
+  --border-color: rgba(255, 215, 0, 0.15);
+  --accent: #ffd700;
+  --accent-light: #332e00;
+
+  --font-display: 'Monaspace Krypton', ui-monospace, monospace;
+  --font-body: 'Monaspace Argon', ui-monospace, monospace;
+  --font-mono: 'Monaspace Neon', ui-monospace, monospace;
+  --font-pixel: 'Silkscreen', 'Monaspace Neon', monospace;
+
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 4rem;
+  --spacing-2xl: 8rem;
+
+  --z-sticky: 200;
+}
+
+:root[data-mode='light'] {
+  color-scheme: light;
+  --border-color: rgba(138, 109, 0, 0.25);
+}
