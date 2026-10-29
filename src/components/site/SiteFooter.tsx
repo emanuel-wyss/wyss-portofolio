@@ -48,6 +48,9 @@ const DEFAULT_CONFIG: FooterConfig = {
 
 export function SiteFooter() {
   const [config, setConfig] = useState<FooterConfig>(DEFAULT_CONFIG);
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
 
   useEffect(() => {
     let mounted = true;
