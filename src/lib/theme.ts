@@ -441,6 +441,30 @@ function getEasterSunday(year: number): Date {
   return new Date(year, month - 1, day);
 }
 
+export interface EventWindow {
+  start: Date;
+  end: Date;
+}
+
+export function getEventWindow(event: SpecialEventType, year = new Date().getFullYear()): EventWindow {
+  const date = (month: number, day: number) => new Date(year, month - 1, day);
+  switch (event) {
+    case 'christmas': return { start: date(12, 22), end: date(12, 28) };
+    case 'newyear': return { start: date(12, 29), end: new Date(year + 1, 0, 3) };
+    case 'halloween': return { start: date(10, 28), end: date(10, 31) };
+    case 'valentines': return { start: date(2, 11), end: date(2, 14) };
+    case 'pride': return { start: date(6, 1), end: date(6, 30) };
+    case 'swiss': return { start: date(7, 29), end: date(8, 1) };
+    case 'aprilfools': return { start: date(4, 1), end: date(4, 1) };
+    case 'easter': {
+      const easter = getEasterSunday(year);
+      const start = new Date(easter); start.setDate(start.getDate() - 3);
+      const end = new Date(easter); end.setDate(end.getDate() + 1);
+      return { start, end };
+    }
+  }
+}
+
 function isWithin(now: Date, start: Date, end: Date): boolean {
   const value = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   return value >= start.getTime() && value <= end.getTime();

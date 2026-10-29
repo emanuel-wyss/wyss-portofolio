@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getSiteConfig, type SiteConfig } from '../../lib/api';
+import { getEventWindow } from '../../lib/theme';
 import { useTheme } from './ThemeProvider';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -59,6 +60,11 @@ export function SiteFooter() {
 
   const { state, effectsPaused, toggleEffectsPaused, weatherNow } = useTheme();
 
+  const eventCountdown = state?.event
+    ? Math.max(0, getEventWindow(state.event).end.getTime() - Date.now())
+    : 0;
+  const eventDaysLeft = eventCountdown ? Math.ceil(eventCountdown / 86400000) : 0;
+
   const themeInfo = {
     mode: state ? state.resolved : 'dark',
     daytime: state ? (state.isDaytime ? 'Day' : 'Night') : '—',
@@ -100,6 +106,7 @@ export function SiteFooter() {
             {weatherNow?.location ? <li>location: {weatherNow.location}</li> : null}
             <li>daytime: {themeInfo.daytime}</li>
             <li>season: {themeInfo.season}</li>
+            {state?.event ? <li aria-live="polite">event: {eventDaysLeft} day{eventDaysLeft === 1 ? '' : 's'} left</li> : null}
           </ul>
           <ThemeToggle />
           <button type="button" className="effects-toggle" onClick={toggleEffectsPaused} aria-pressed={effectsPaused}>
