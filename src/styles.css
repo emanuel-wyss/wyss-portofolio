@@ -45,6 +45,29 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.6;
+  background-image:
+    linear-gradient(rgba(255, 215, 0, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 215, 0, 0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: center top;
+}
+
+body::before {
+  content: 'WYSS//ROCKS  •  SYSTEM ONLINE';
+  position: fixed;
+  right: 1rem;
+  bottom: .75rem;
+  z-index: 3;
+  color: var(--text-secondary);
+  opacity: .45;
+  font: 10px var(--font-mono);
+  letter-spacing: .12em;
+  pointer-events: none;
+} 
+
+::selection {
+  color: var(--bg-primary);
+  background: var(--accent);
 }
 
 main {
@@ -102,6 +125,19 @@ code {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--spacing-lg);
+  position: relative;
+}
+
+.container::before {
+  content: attr(data-label);
+  position: absolute;
+  top: -1.25rem;
+  left: var(--spacing-lg);
+  color: var(--text-secondary);
+  opacity: .6;
+  font: 10px var(--font-mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
 }
 
 .muted {
@@ -113,31 +149,72 @@ code {
   top: 0;
   z-index: var(--z-sticky);
   border-bottom: 1px solid var(--border-color);
-  background: var(--bg-primary);
+  background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
   backdrop-filter: blur(10px);
+}
+
+.site-nav-terminal {
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 24px;
+  padding: 0 var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+  color: var(--text-secondary);
+  font: 10px var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.terminal-prompt { color: var(--accent); }
+.terminal-path { opacity: .7; }
+.terminal-status { margin-left: auto; }
+.terminal-status i {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: .35rem;
+  border-radius: 50%;
+  background: #39ff14;
+  box-shadow: 0 0 8px #39ff14;
 }
 
 .site-nav-inner {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--spacing-lg);
-  height: 56px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .site-logo {
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-weight: 700;
   font-size: 1.125rem;
   letter-spacing: 0.12em;
   color: var(--text-primary);
 }
 
+.logo-mark {
+  color: var(--accent);
+  opacity: .7;
+}
+
 .site-nav-links {
   display: flex;
-  gap: var(--spacing-lg);
+  align-items: center;
+  gap: .75rem;
+  font-family: var(--font-mono);
+}
+
+.nav-index {
+  color: var(--text-secondary);
+  opacity: .45;
+  font-size: .7rem;
 }
 
 .site-nav-links a {
@@ -148,12 +225,18 @@ code {
 
 .site-nav-links a.active,
 .site-nav-links a:hover {
-  color: var(--text-primary);
+  color: var(--accent);
+}
+
+.site-nav-links a.active::after {
+  content: ' ◂';
+  color: var(--accent);
 }
 
 .site-footer {
   border-top: 1px solid var(--border-color);
   padding: 4rem 2rem 2rem;
+  position: relative;
   margin-top: 8rem;
   background: rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(10px);
@@ -161,6 +244,7 @@ code {
 
 .site-footer-content {
   max-width: 1200px;
+  position: relative;
   margin: 0 auto 2rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -191,6 +275,7 @@ code {
 
 .site-footer-bottom {
   max-width: 1200px;
+  font-family: var(--font-mono);
   margin: 0 auto;
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--border-color);
@@ -421,6 +506,13 @@ code {
 }
 
 @media (max-width: 768px) {
+  .site-nav-terminal {
+    padding-inline: var(--spacing-md);
+    font-size: 9px;
+  }
+
+  .terminal-path { display: none; }
+
   .container,
   .site-nav-inner {
     padding: 0 var(--spacing-md);

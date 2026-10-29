@@ -15,7 +15,7 @@ function WorkPage() {
   const { github } = Route.useLoaderData();
 
   return (
-    <section className="work-page">
+    <section className="work-page" data-label="// workbench.exe">
       <div className="container">
         <h1>Work</h1>
         <p className="subtitle">Projects, posts, snippets, and galleries</p>

@@ -40,7 +40,7 @@ function AboutPage() {
 
   return (
     <section className="about-page">
-      <div className="container">
+      <div className="container" data-label="// profile.sys">
         <div className="about-header">
           <h1>{siteConfig?.siteName || 'Wyss'}</h1>
           <p className="location">Switzerland</p>
