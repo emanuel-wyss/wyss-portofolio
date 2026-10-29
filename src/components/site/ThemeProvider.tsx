@@ -15,7 +15,7 @@ import {
   setPreferredEvent,
   type SpecialEventType,
 } from '../../lib/theme';
-import { getWeather } from '../../lib/api';
+import { getSiteConfig, getWeather } from '../../lib/api';
 import { EventCanvas } from './EventCanvas';
 
 interface ThemeContextValue {
@@ -47,6 +47,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [preferredEvent, setPreferredEventState] = useState<SpecialEventType | undefined>();
   const weatherRef = useRef<WeatherType | undefined>(undefined);
   const [weatherNow, setWeatherNow] = useState<Awaited<ReturnType<typeof getWeather>>>(null);
+  const [eventSettings, setEventSettings] = useState<Awaited<ReturnType<typeof getSiteConfig>>>(null);
 
   // Hydrate stored preferences on mount (client only).
   useEffect(() => {
@@ -58,6 +59,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setEffectsIntensityState(intensity);
     setEffectsIntensity(intensity);
     setPreferredEventState(getPreferredEvent());
+  }, []);
+
+  useEffect(() => {
+    getSiteConfig().then(setEventSettings);
   }, []);
 
   // Fetch real weather once on mount, then refresh hourly.
@@ -103,6 +108,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     };
   }, [mode]);
 
+  useEffect(() => {
+    const settings = eventSettings?.event_settings;
+    if (!settings?.enabled) return;
+    const root = document.documentElement;
+    if (settings.primaryColor) root.style.setProperty('--primary', settings.primaryColor);
+    if (settings.accentColor) root.style.setProperty('--accent', settings.accentColor);
+  }, [eventSettings]);
+
   const setMode = (m: ColorMode) => {
     setStoredMode(m);
     setModeState(m);
@@ -133,7 +146,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       <div className="fx-layer fx-glitch" aria-hidden="true" />
       <div className="fx-layer fx-scanlines" aria-hidden="true" />
       <div className="fx-layer fx-event" aria-hidden="true" />
-      <EventCanvas event={state?.event} reducedMotion={state?.reducedMotion ?? true} intensity={effectsIntensity} />
+      <EventCanvas event={state?.event} reducedMotion={state?.reducedMotion ?? true} intensity={eventSettings?.event_settings?.intensity || effectsIntensity} />
     </ThemeContext.Provider>
   );
 }

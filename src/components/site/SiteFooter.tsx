@@ -123,6 +123,7 @@ export function SiteFooter() {
             {state?.event ? <li aria-live="polite">event: {eventDaysLeft} day{eventDaysLeft === 1 ? '' : 's'} left</li> : null}
             <li>timezone: {timezone}</li>
           </ul>
+          {state?.event && config.event_settings?.announcement ? <p className="event-announcement">{config.event_settings.announcement}</p> : null}
           <ThemeToggle />
           {achievementCount > 0 ? <p className="muted event-achievements">discoveries: {achievementCount}</p> : null}
           <label className="effects-intensity">
